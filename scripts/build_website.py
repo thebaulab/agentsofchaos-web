@@ -197,6 +197,18 @@ def convert_inline(text, refs):
     text = re.sub(r"\\dots", "…", text)
     text = re.sub(r"\\textbackslash\b", "&#92;", text)
     text = re.sub(r"\\newline\b", "<br>", text)
+    # \\ (forced line break) — strip it; natural newlines provide breaks in pre-wrap context
+    text = re.sub(r"\\\\", " ", text)
+
+    # ── \verb|...|  →  <code>...</code>  (delimiter is any non-alpha char) ──
+    text = re.sub(
+        r"\\verb([^a-zA-Z\s])(.*?)\1",
+        lambda m: f'<code>{escape(m.group(2))}</code>',
+        text, flags=re.DOTALL,
+    )
+
+    # ── \color{name}  (bare color command, no content arg) ──
+    text = re.sub(r"\\color\{[^}]+\}", "", text)
 
     # ── Role commands (with possessive variants) ──
     for role, emoji in ROLE_EMOJI.items():

@@ -132,6 +132,18 @@ def parse_session(fpath):
     return meta, turns
 
 
+TRIVIAL_RESPONSES = {"HEARTBEAT_OK", "NO_REPLY", ""}
+
+def is_boring(turns):
+    """Return True for sessions that have no meaningful content."""
+    if not turns:
+        return True
+    ass_texts = [t["text"].strip() for t in turns if t["role"] == "assistant"]
+    if not ass_texts:
+        return True
+    return all(t in TRIVIAL_RESPONSES for t in ass_texts)
+
+
 def make_index_entry(meta, turns):
     """Build a compact metadata record for the index."""
     user_turns = [t for t in turns if t["role"] == "user"]
@@ -189,6 +201,10 @@ def main():
         if not meta["id"]:
             # Use filename stem as fallback id
             meta["id"] = fpath.stem
+
+        # Skip boring sessions (empty or all-trivial heartbeat/NO_REPLY)
+        if is_boring(turns):
+            continue
 
         entry = make_index_entry(meta, turns)
         index.append(entry)

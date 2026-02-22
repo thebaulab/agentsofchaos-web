@@ -899,12 +899,15 @@ CMU, Tufts University, Stanford University, UBC, Technion, Vector Institute &amp
     content.querySelectorAll('.search-highlight').forEach(el => {{
       el.replaceWith(el.textContent);
     }});
+    content.normalize(); // merge fragmented text nodes left by replaceWith()
   }}
 
   function highlight(node, re) {{
     if (node.nodeType === 3) {{
       const text = node.textContent;
+      re.lastIndex = 0; // reset stateful g-flag regex before each text node test
       if (!re.test(text)) return;
+      re.lastIndex = 0; // reset again before replace() uses it
       const frag = document.createDocumentFragment();
       let last = 0;
       text.replace(re, (match, offset) => {{

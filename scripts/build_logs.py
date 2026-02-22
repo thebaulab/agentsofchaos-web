@@ -539,6 +539,98 @@ body {{
   font-weight: bold;
 }}
 
+#sem-btn {{
+  padding: 3px 10px;
+  font-size: 0.75rem;
+  border: 1px solid var(--color-rule);
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  color: #555;
+  white-space: nowrap;
+  font-family: var(--font-body);
+}}
+#sem-btn:hover {{ background: #f0ebe0; }}
+
+.sem-modal {{
+  position: fixed; inset: 0; z-index: 1000;
+  display: flex; align-items: flex-start; justify-content: center;
+  padding-top: 8vh;
+}}
+.sem-modal.hidden {{ display: none; }}
+.sem-overlay {{ position: absolute; inset: 0; background: rgba(0,0,0,0.35); }}
+.sem-panel {{
+  position: relative; background: var(--color-bg, #fffff8);
+  border-radius: 8px; width: 660px; max-width: 96vw; max-height: 76vh;
+  display: flex; flex-direction: column;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.28);
+  overflow: hidden; border: 1px solid var(--color-rule);
+}}
+.sem-header {{
+  padding: 10px 16px; border-bottom: 1px solid var(--color-rule);
+  display: flex; justify-content: space-between; align-items: center;
+  font-weight: bold; color: var(--color-accent);
+  font-family: var(--font-body); font-size: 0.9rem; flex-shrink: 0;
+}}
+.sem-close-btn {{
+  border: none; background: none; cursor: pointer;
+  font-size: 1.3rem; color: #aaa; padding: 0 4px; line-height: 1;
+}}
+.sem-close-btn:hover {{ color: #333; }}
+.sem-input-row {{
+  padding: 10px 16px; display: flex; gap: 8px;
+  border-bottom: 1px solid var(--color-rule); flex-shrink: 0;
+}}
+.sem-input-row input {{
+  flex: 1; padding: 7px 12px;
+  border: 1px solid var(--color-rule); border-radius: 6px;
+  font-family: var(--font-body); font-size: 0.9rem;
+  background: #fff; color: #333;
+}}
+.sem-input-row input:focus {{ outline: none; border-color: var(--color-accent); }}
+.sem-input-row select {{
+  padding: 7px 8px; border: 1px solid var(--color-rule);
+  border-radius: 6px; font-family: var(--font-body); font-size: 0.82rem;
+  background: #fff; color: #333;
+}}
+.sem-results {{ overflow-y: auto; flex: 1; padding: 6px; }}
+.sem-result {{
+  padding: 8px 12px; border-radius: 5px; margin-bottom: 5px;
+  border: 1px solid #e8e2d6; background: #fefcf8; cursor: pointer;
+}}
+.sem-result:hover {{ background: #f0ebe0; }}
+.sem-result-header {{
+  display: flex; align-items: center; gap: 5px;
+  font-size: 0.70rem; margin-bottom: 4px; flex-wrap: wrap;
+}}
+.sem-score {{
+  background: #d4edda; color: #155724;
+  padding: 1px 6px; border-radius: 10px;
+  font-family: var(--font-mono); font-size: 0.65rem;
+}}
+.sem-src-tag {{ padding: 1px 6px; border-radius: 10px; font-size: 0.65rem; }}
+.sem-src-discord  {{ background: #cce5ff; color: #004085; }}
+.sem-src-openclaw {{ background: #fff3cd; color: #856404; }}
+.sem-meta {{ color: #666; font-family: var(--font-mono); }}
+.sem-ts {{ color: #aaa; margin-left: auto; font-family: var(--font-mono); }}
+.sem-text {{
+  font-size: 0.82rem; color: #333; line-height: 1.45;
+  white-space: pre-wrap; word-break: break-word;
+  max-height: 4.5em; overflow: hidden;
+}}
+.sem-hint {{
+  padding: 7px 16px; font-size: 0.70rem; color: #aaa;
+  border-top: 1px solid var(--color-rule); font-style: italic; flex-shrink: 0;
+}}
+.sem-status {{
+  padding: 24px 20px; color: #aaa; font-style: italic;
+  text-align: center; font-size: 0.88rem;
+}}
+.sem-status code {{
+  font-family: var(--font-mono); background: #f0ece4;
+  padding: 2px 6px; border-radius: 4px; color: #555; font-style: normal;
+}}
+
 .log-content {{
   flex: 1;
   overflow-y: auto;
@@ -822,10 +914,12 @@ body {{
   <div class="log-topbar">
     <span class="log-topbar-title">Discord Logs</span>
     <a href="index.html">← Website</a>
+    <a href="sessions.html">OpenClaw Sessions</a>
     <div class="log-search-wrap">
       <input id="log-search" type="search" placeholder="Search messages…" autocomplete="off">
       <button id="search-scope-btn" title="Toggle between searching this channel or all channels">This channel</button>
       <span id="search-status"></span>
+      <button id="sem-btn" onclick="openSemSearch()" title="Ctrl+K — Semantic search across all logs">🔍 Semantic</button>
     </div>
   </div>
   <div class="log-content" id="log-content">
@@ -833,6 +927,32 @@ body {{
   </div>
 </div>
 
+</div>
+
+<!-- ── Semantic Search Modal ─────────────────────────────── -->
+<div id="sem-modal" class="sem-modal hidden">
+  <div class="sem-overlay" onclick="closeSemSearch()"></div>
+  <div class="sem-panel">
+    <div class="sem-header">
+      <span>🔍 Semantic Search</span>
+      <button class="sem-close-btn" onclick="closeSemSearch()" title="Close (Esc)">×</button>
+    </div>
+    <div class="sem-input-row">
+      <input id="sem-input" type="text"
+        placeholder="Search by meaning — e.g. 'agent refused a request'…" autocomplete="off">
+      <select id="sem-source">
+        <option value="all">All sources</option>
+        <option value="discord">Discord</option>
+        <option value="openclaw">OpenClaw</option>
+      </select>
+    </div>
+    <div class="sem-results" id="sem-results">
+      <div class="sem-status">Type a query to search all logs semantically.</div>
+    </div>
+    <div class="sem-hint">
+      Sentence-transformer embeddings &middot; Run <code>python3 scripts/serve_search.py</code> to enable &middot; Ctrl+K to open
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1050,13 +1170,106 @@ function highlightEl(el, re) {{
     node.parentNode.replaceChild(span, node);
   }});
 }}
+
+// ── Semantic Search ───────────────────────────────────────
+const SEM_API = 'http://localhost:8765/api/search';
+let semTimer = null;
+
+function openSemSearch() {{
+  document.getElementById('sem-modal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('sem-input').focus(), 50);
+}}
+
+function closeSemSearch() {{
+  document.getElementById('sem-modal').classList.add('hidden');
+}}
+
+document.addEventListener('keydown', function(e) {{
+  if ((e.ctrlKey || e.metaKey) && e.key === 'k') {{
+    e.preventDefault();
+    openSemSearch();
+  }}
+  if (e.key === 'Escape' && !document.getElementById('sem-modal').classList.contains('hidden')) {{
+    closeSemSearch();
+  }}
+}});
+
+document.getElementById('sem-input').addEventListener('input', function() {{
+  clearTimeout(semTimer);
+  const q = this.value.trim();
+  if (!q) {{
+    document.getElementById('sem-results').innerHTML =
+      '<div class="sem-status">Type a query to search all logs semantically.</div>';
+    return;
+  }}
+  document.getElementById('sem-results').innerHTML = '<div class="sem-status">Searching\u2026</div>';
+  semTimer = setTimeout(() => runSemSearch(q), 400);
+}});
+
+document.getElementById('sem-source').addEventListener('change', function() {{
+  const q = document.getElementById('sem-input').value.trim();
+  if (q) runSemSearch(q);
+}});
+
+function runSemSearch(q) {{
+  const source = document.getElementById('sem-source').value;
+  const url = `${{SEM_API}}?q=${{encodeURIComponent(q)}}&source=${{source}}&top_k=20`;
+  fetch(url)
+    .then(r => r.json())
+    .then(results => showSemResults(results))
+    .catch(() => {{
+      document.getElementById('sem-results').innerHTML =
+        '<div class="sem-status">\u26a0 Server not reachable.<br>' +
+        'Run: <code>python3 scripts/serve_search.py</code></div>';
+    }});
+}}
+
+function showSemResults(results) {{
+  const el = document.getElementById('sem-results');
+  if (!Array.isArray(results) || !results.length) {{
+    el.innerHTML = '<div class="sem-status">No results found.</div>';
+    return;
+  }}
+  el.innerHTML = results.map(r => {{
+    const pct = Math.round(r.score * 100);
+    const srcClass = r.source === 'discord' ? 'sem-src-discord' : 'sem-src-openclaw';
+    const srcLabel = r.source === 'discord' ? '\U0001F4E8 Discord' : '\U0001F916 OpenClaw';
+    const ch = r.channel ? `#${{r.channel}}` : '';
+    const au = r.author || r.role || '';
+    const meta = [ch, au].filter(Boolean).join(' \u00b7 ');
+    const ts = (r.timestamp || '').slice(0, 16);
+    const snippet = semEsc((r.text || '').slice(0, 300));
+    const link = r.link || '#';
+    return `<div class="sem-result" onclick="semNavigate('${{semEscAttr(link)}}')">
+      <div class="sem-result-header">
+        <span class="sem-score">${{pct}}%</span>
+        <span class="sem-src-tag ${{srcClass}}">${{srcLabel}}</span>
+        <span class="sem-meta">${{semEsc(meta)}}</span>
+        <span class="sem-ts">${{semEsc(ts)}}</span>
+      </div>
+      <div class="sem-text">${{snippet}}</div>
+    </div>`;
+  }}).join('');
+}}
+
+function semNavigate(link) {{
+  closeSemSearch();
+  window.location.href = link;
+}}
+
+function semEsc(s) {{
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}}
+function semEscAttr(s) {{
+  return String(s).replace(/\\\\/g,'\\\\\\\\').replace(/'/g,"\\\\'");
+}}
 </script>
 
 </body>
 </html>
 """
 
-    OUT_FILE.write_text(html)
+    OUT_FILE.write_text(html, encoding="utf-8", errors="replace")
     print(f"Written: {OUT_FILE} ({OUT_FILE.stat().st_size // 1024}KB)")
 
 if __name__ == "__main__":

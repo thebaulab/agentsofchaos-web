@@ -510,10 +510,16 @@ body.view-full    .turn-body { display: block !important; }
   <!-- ── Sidebar ────────────────────────────────────────── -->
   <aside class="sess-sidebar">
     <div class="sess-sidebar-header">
-      <div class="sess-sidebar-title">Agent Sessions — Ash</div>
+      <div class="sess-sidebar-title">Agent Sessions</div>
       <input id="sess-search" type="search" placeholder="Search sessions + content…" autocomplete="off">
       <div class="sess-filter-row">
-        <button class="sess-filter-btn active" data-src="all">All</button>
+        <button class="sess-filter-btn active" data-agent="all">All</button>
+        <button class="sess-filter-btn" data-agent="ash">Ash</button>
+        <button class="sess-filter-btn" data-agent="doug">Doug</button>
+        <button class="sess-filter-btn" data-agent="mira">Mira</button>
+      </div>
+      <div class="sess-filter-row">
+        <button class="sess-filter-btn active" data-src="all">All types</button>
         <button class="sess-filter-btn" data-src="session">Main</button>
         <button class="sess-filter-btn" data-src="cron">Cron</button>
       </div>
@@ -530,6 +536,8 @@ body.view-full    .turn-body { display: block !important; }
       <span class="sess-topbar-title">Session Viewer</span>
       <a href="index.html">← Website</a>
       <a href="logs.html">Discord Logs</a>
+      <a href="https://bots.baulab.info" target="_blank" rel="noopener">Moltbook Bots</a>
+      <a href="https://bots.baulab.info/dashboard/" target="_blank" rel="noopener">Memory Viz</a>
       <div class="sess-view-toggle">
         <button class="toggle-btn active" id="btn-normal">Normal</button>
         <button class="toggle-btn" id="btn-compact">Compact</button>
@@ -574,6 +582,7 @@ body.view-full    .turn-body { display: block !important; }
 // ── State ─────────────────────────────────────────────────
 let allSessions = [];
 let activeFilter = 'all';
+let activeAgentFilter = 'all';
 let activeSessionId = null;
 let sessionCorpus = null;  // full-text index: {id -> text blob}
 let corpusLoading = false;
@@ -606,15 +615,20 @@ function renderList(sessions) {
   }
 
   list.innerHTML = sessions.map(s => {
-    const ts = (s.timestamp || '').slice(0, 16).replace('T', ' ');
-    const badge = s.source === 'cron'
+    const srcBadge = s.source === 'cron'
       ? '<span class="sess-item-badge badge-cron">cron</span>'
       : '<span class="sess-item-badge badge-session">main</span>';
+    const agentColors = {ash: '#7289da', doug: '#43b581', mira: '#f04747'};
+    const agentColor = agentColors[s.agent] || '#747f8d';
+    const agentBadge = s.agent
+      ? `<span class="sess-item-badge" style="background:${agentColor}20;color:${agentColor}">${s.agent}</span>`
+      : '';
     const tools = Object.entries(s.top_tools || {}).map(([k,v]) => `${k}(${v})`).join(' ');
     const isActive = s.id === activeSessionId;
+    const label = s.label || s.first_user_text || '(no user message)';
     return `<div class="sess-item${isActive ? ' active' : ''}" data-id="${esc(s.id)}" onclick="loadSession('${esc(s.id)}')">
-      <div><span class="sess-item-ts">${esc(ts)}</span>${badge}</div>
-      <div class="sess-item-preview">${esc(s.first_user_text || '(no user message)')}</div>
+      <div>${agentBadge}${srcBadge}</div>
+      <div class="sess-item-preview">${esc(label)}</div>
       <div class="sess-item-meta">${s.user_turns}u ${s.ass_turns}a ${s.tool_calls}t · ${esc(tools)}</div>
     </div>`;
   }).join('');
@@ -650,11 +664,20 @@ sessSearchEl.addEventListener('input', function() {
   applyFilter();
 });
 
-document.querySelectorAll('.sess-filter-btn').forEach(btn => {
+document.querySelectorAll('.sess-filter-btn[data-src]').forEach(btn => {
   btn.addEventListener('click', function() {
-    document.querySelectorAll('.sess-filter-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.sess-filter-btn[data-src]').forEach(b => b.classList.remove('active'));
     this.classList.add('active');
     activeFilter = this.dataset.src;
+    applyFilter();
+  });
+});
+
+document.querySelectorAll('.sess-filter-btn[data-agent]').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.sess-filter-btn[data-agent]').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    activeAgentFilter = this.dataset.agent;
     applyFilter();
   });
 });
@@ -663,19 +686,22 @@ function applyFilter() {
   const q = sessSearchEl.value.trim().toLowerCase();
   const filtered = allSessions.filter(s => {
     const srcOk = activeFilter === 'all' || s.source === activeFilter;
-    if (!q) return srcOk;
+    const agentOk = activeAgentFilter === 'all' || s.agent === activeAgentFilter;
+    if (!srcOk || !agentOk) return false;
+    if (!q) return true;
     // Metadata match (fast)
     const metaOk = (
-      (s.first_user_text || '').toLowerCase().includes(q) ||
+      (s.label || s.first_user_text || '').toLowerCase().includes(q) ||
       (s.id || '').toLowerCase().startsWith(q) ||
       (s.timestamp || '').includes(q) ||
+      (s.agent || '').includes(q) ||
       Object.keys(s.top_tools || {}).some(t => t.includes(q))
     );
     // Full content match (if corpus loaded)
     const contentOk = sessionCorpus
       ? (sessionCorpus[s.id] || '').toLowerCase().includes(q)
       : false;
-    return srcOk && (metaOk || contentOk);
+    return metaOk || contentOk;
   });
   renderList(filtered);
   const corpusNote = sessionCorpus ? '' : (corpusLoading ? ' (indexing…)' : '');

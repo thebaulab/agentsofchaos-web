@@ -14,12 +14,19 @@ import sys
 from pathlib import Path
 from collections import Counter
 
-ASH_SESSIONS = Path(__file__).parent.parent / "logs" / "openclaw" / "ash" / "sessions"
-ASH_CRON     = Path(__file__).parent.parent / "logs" / "openclaw" / "ash" / "cron-runs"
-INDEX_OUT    = Path(__file__).parent.parent / "logs" / "openclaw" / "_index.json"
+OPENCLAW_ROOT = Path(__file__).parent.parent / "logs" / "openclaw"
+INDEX_OUT     = OPENCLAW_ROOT / "_index.json"
 SESSION_DATA  = Path(__file__).parent.parent / "website" / "data" / "sessions"
 CORPUS_OUT    = Path(__file__).parent.parent / "website" / "data" / "sessions_corpus.json"
 WEB_INDEX_OUT = Path(__file__).parent.parent / "website" / "data" / "sessions_index.json"
+
+# All known agents — add new ones here as their log dirs appear
+AGENTS = [
+    # (agent_name, sessions_subdir, cron_subdir)
+    ("ash",  "ash/sessions",   "ash/cron-runs"),
+    ("doug", "doug/sessions",  "doug/cron-runs"),
+    ("mira", "mira/sessions",  "mira/cron-runs"),
+]
 
 # Patterns that look like secrets (GitHub tokens, passwords, etc.)
 SECRET_RE = re.compile(
@@ -146,7 +153,80 @@ def is_boring(turns):
     return all(t in TRIVIAL_RESPONSES for t in ass_texts)
 
 
-def make_index_entry(meta, turns):
+_BORING_PREFIX = re.compile(
+    r"^\s*("
+    r"\[Discord|"
+    r"HEARTBEAT|"
+    r"\[cron:|"
+    r"\[Queued|"
+    r"\[media attached|"
+    r"System:|"
+    r"A new session was started|"
+    r"This is a new session|"
+    r"\[Mon |"
+    r"\[Tue |"
+    r"\[Wed |"
+    r"\[Thu |"
+    r"\[Fri |"
+    r"\[Sat |"
+    r"\[Sun "
+    r")",
+    re.IGNORECASE,
+)
+
+
+def make_label(agent: str, meta: dict, turns: list, tool_counter) -> str:
+    """Generate a human-readable session label like 'Ash — 1 Feb — email setup'."""
+    # Date
+    try:
+        from datetime import datetime, timezone
+        dt = datetime.fromisoformat(meta["timestamp"].replace("Z", "+00:00"))
+        date_str = dt.strftime("%-d %b")
+    except Exception:
+        date_str = meta["timestamp"][:10]
+
+    # Topic hint: look for the first meaningful human/user message
+    topic = ""
+    for t in turns:
+        if t["role"] != "user":
+            continue
+        txt = t.get("text", "").strip()
+        if not txt or _BORING_PREFIX.match(txt):
+            continue
+        # Take first non-empty line
+        for line in txt.split("\n"):
+            line = line.strip()
+            if line and not _BORING_PREFIX.match(line):
+                topic = line[:60]
+                break
+        if topic:
+            break
+
+    # Also check assistant's first substantive text if user is all system messages
+    if not topic:
+        for t in turns:
+            if t["role"] != "assistant":
+                continue
+            txt = t.get("text", "").strip()
+            if not txt or _BORING_PREFIX.match(txt):
+                continue
+            line = txt.split("\n")[0].strip()[:60]
+            if line:
+                topic = line
+                break
+
+    # Fallback: top tool used
+    if not topic and tool_counter:
+        top = list(tool_counter.keys())[0]
+        topic = f"[{top} session]"
+
+    agent_cap = agent.capitalize()
+    if topic:
+        return f"{agent_cap} — {date_str} — {topic}"
+    return f"{agent_cap} — {date_str}"
+
+
+def make_index_entry(meta, turns, agent="ash"):
     """Build a compact metadata record for the index."""
     user_turns = [t for t in turns if t["role"] == "user"]
     ass_turns = [t for t in turns if t["role"] == "assistant"]
@@ -166,8 +246,12 @@ def make_index_entry(meta, turns):
             last_ts = t["ts"]
             break
 
+    label = make_label(agent, meta, turns, dict(tool_counter.most_common(5)))
+
     return {
         "id": meta["id"],
+        "agent": agent,
+        "label": label,
         "timestamp": meta["timestamp"],
         "last_ts": last_ts,
         "source": meta["source"],
@@ -193,14 +277,18 @@ def main():
     total_turns = 0
     total_bytes = 0
 
-    all_files = (
-        sorted(ASH_SESSIONS.glob("*.jsonl")) +
-        sorted(ASH_CRON.glob("*.jsonl"))
-    )
+    # Collect all (fpath, agent_name) pairs from all known agents
+    all_files = []
+    for agent_name, sessions_sub, cron_sub in AGENTS:
+        for subdir in (sessions_sub, cron_sub):
+            d = OPENCLAW_ROOT / subdir
+            if d.exists():
+                for f in sorted(d.glob("*.jsonl")):
+                    all_files.append((f, agent_name))
 
-    print(f"Processing {len(all_files)} session files…")
+    print(f"Processing {len(all_files)} session files across {len(AGENTS)} agents…")
 
-    for i, fpath in enumerate(all_files):
+    for i, (fpath, agent_name) in enumerate(all_files):
         if ".deleted." in fpath.name:
             continue
 
@@ -213,7 +301,7 @@ def main():
         if is_boring(turns):
             continue
 
-        entry = make_index_entry(meta, turns)
+        entry = make_index_entry(meta, turns, agent=agent_name)
         index.append(entry)
 
         # Build full-text blob for content search corpus
@@ -226,6 +314,8 @@ def main():
         # Write compact session JSON
         session_json = {
             "id": meta["id"],
+            "agent": agent_name,
+            "label": entry["label"],
             "timestamp": meta["timestamp"],
             "source": meta["source"],
             "turns": turns,

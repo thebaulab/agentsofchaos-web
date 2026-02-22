@@ -17,7 +17,9 @@ from collections import Counter
 ASH_SESSIONS = Path(__file__).parent.parent / "logs" / "openclaw" / "ash" / "sessions"
 ASH_CRON     = Path(__file__).parent.parent / "logs" / "openclaw" / "ash" / "cron-runs"
 INDEX_OUT    = Path(__file__).parent.parent / "logs" / "openclaw" / "_index.json"
-SESSION_DATA = Path(__file__).parent.parent / "website" / "data" / "sessions"
+SESSION_DATA  = Path(__file__).parent.parent / "website" / "data" / "sessions"
+CORPUS_OUT    = Path(__file__).parent.parent / "website" / "data" / "sessions_corpus.json"
+WEB_INDEX_OUT = Path(__file__).parent.parent / "website" / "data" / "sessions_index.json"
 
 # Patterns that look like secrets (GitHub tokens, passwords, etc.)
 SECRET_RE = re.compile(
@@ -181,7 +183,12 @@ def make_index_entry(meta, turns):
 def main():
     SESSION_DATA.mkdir(parents=True, exist_ok=True)
 
+    # Clean up old session JSON files so pruned sessions don't linger
+    for old_file in SESSION_DATA.glob("*.json"):
+        old_file.unlink()
+
     index = []
+    corpus = {}   # id → full text blob for content search
     total_sessions = 0
     total_turns = 0
     total_bytes = 0
@@ -209,6 +216,13 @@ def main():
         entry = make_index_entry(meta, turns)
         index.append(entry)
 
+        # Build full-text blob for content search corpus
+        text_parts = []
+        for t in turns:
+            if t.get("text"):
+                text_parts.append(t["text"])
+        corpus[meta["id"]] = " ".join(text_parts)
+
         # Write compact session JSON
         session_json = {
             "id": meta["id"],
@@ -231,6 +245,8 @@ def main():
     index.sort(key=lambda e: e["timestamp"])
 
     INDEX_OUT.write_text(json.dumps(index, indent=2, ensure_ascii=False))
+    WEB_INDEX_OUT.write_text(json.dumps(index, indent=2, ensure_ascii=False))
+    CORPUS_OUT.write_text(json.dumps(corpus, ensure_ascii=True, separators=(",", ":")), errors="replace")
 
     print(f"\nDone.")
     print(f"  Sessions written: {total_sessions}")

@@ -428,7 +428,7 @@ body.view-full    .turn-body { display: block !important; }
   <aside class="sess-sidebar">
     <div class="sess-sidebar-header">
       <div class="sess-sidebar-title">Agent Sessions — Ash</div>
-      <input id="sess-search" type="search" placeholder="Filter sessions…" autocomplete="off">
+      <input id="sess-search" type="search" placeholder="Search sessions + content…" autocomplete="off">
       <div class="sess-filter-row">
         <button class="sess-filter-btn active" data-src="all">All</button>
         <button class="sess-filter-btn" data-src="session">Main</button>
@@ -445,7 +445,7 @@ body.view-full    .turn-body { display: block !important; }
   <div class="sess-main">
     <div class="sess-topbar">
       <span class="sess-topbar-title">Session Viewer</span>
-      <a href="index.html">← Paper</a>
+      <a href="index.html">← Website</a>
       <a href="logs.html">Discord Logs</a>
       <div class="sess-view-toggle">
         <button class="toggle-btn active" id="btn-normal">Normal</button>
@@ -465,6 +465,8 @@ body.view-full    .turn-body { display: block !important; }
 let allSessions = [];
 let activeFilter = 'all';
 let activeSessionId = null;
+let sessionCorpus = null;  // full-text index: {id -> text blob}
+let corpusLoading = false;
 
 // ── Load index ────────────────────────────────────────────
 fetch('data/sessions_index.json')
@@ -508,8 +510,33 @@ function renderList(sessions) {
   }).join('');
 }
 
+// ── Content search corpus (lazy-loaded) ─────────────────
+function ensureCorpus() {
+  if (sessionCorpus || corpusLoading) return;
+  corpusLoading = true;
+  document.getElementById('sess-count').textContent = 'Loading full text…';
+  fetch('data/sessions_corpus.json')
+    .then(r => r.json())
+    .then(data => {
+      sessionCorpus = data;
+      corpusLoading = false;
+      applyFilter();  // re-run filter with corpus now available
+    })
+    .catch(() => {
+      corpusLoading = false;  // corpus unavailable, fall back gracefully
+      applyFilter();
+    });
+}
+
 // ── Filter ───────────────────────────────────────────────
-document.getElementById('sess-search').addEventListener('input', function() {
+const sessSearchEl = document.getElementById('sess-search');
+
+sessSearchEl.addEventListener('focus', function() {
+  // Start loading corpus as soon as user focuses search
+  ensureCorpus();
+});
+
+sessSearchEl.addEventListener('input', function() {
   applyFilter();
 });
 
@@ -523,20 +550,27 @@ document.querySelectorAll('.sess-filter-btn').forEach(btn => {
 });
 
 function applyFilter() {
-  const q = document.getElementById('sess-search').value.trim().toLowerCase();
+  const q = sessSearchEl.value.trim().toLowerCase();
   const filtered = allSessions.filter(s => {
     const srcOk = activeFilter === 'all' || s.source === activeFilter;
-    const textOk = !q || (
+    if (!q) return srcOk;
+    // Metadata match (fast)
+    const metaOk = (
       (s.first_user_text || '').toLowerCase().includes(q) ||
       (s.id || '').toLowerCase().startsWith(q) ||
       (s.timestamp || '').includes(q) ||
       Object.keys(s.top_tools || {}).some(t => t.includes(q))
     );
-    return srcOk && textOk;
+    // Full content match (if corpus loaded)
+    const contentOk = sessionCorpus
+      ? (sessionCorpus[s.id] || '').toLowerCase().includes(q)
+      : false;
+    return srcOk && (metaOk || contentOk);
   });
   renderList(filtered);
+  const corpusNote = sessionCorpus ? '' : (corpusLoading ? ' (indexing…)' : '');
   document.getElementById('sess-count').textContent =
-    `${filtered.length} / ${allSessions.length} sessions`;
+    `${filtered.length} / ${allSessions.length} sessions${corpusNote}`;
 }
 
 // ── Load and render a session ────────────────────────────

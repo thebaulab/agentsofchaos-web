@@ -139,7 +139,8 @@ def search(args):
             print(f"{author:<40} {count:>8}")
         return
 
-    query = args.query
+    # Normalise query: allow grep-style \| alternation → Python regex |
+    query = args.query.replace("\\|", "|")
     channel_filter = args.channel
     author_filter = args.author
     context_n = args.context

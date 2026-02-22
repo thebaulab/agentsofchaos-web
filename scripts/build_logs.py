@@ -539,6 +539,14 @@ body {{
   font-weight: bold;
 }}
 
+/* Highlight target message after jump-to-context navigation */
+.msg-jump-hl {{
+  outline: 2px solid var(--color-accent);
+  border-radius: 4px;
+  background: rgba(107, 44, 44, 0.07) !important;
+  transition: outline 2s ease, background 2s ease;
+}}
+
 #sem-btn {{
   padding: 3px 10px;
   font-size: 0.75rem;
@@ -1001,19 +1009,25 @@ function showChannel(id) {{
   }}
 }})();
 
-// Handle hash changes (back/forward navigation)
+// Handle hash changes (back/forward navigation + search context jump)
 window.addEventListener('hashchange', function() {{
   const hash = window.location.hash;
   if (hash && hash.startsWith('#msg-')) {{
+    // If search is active, clear it so context is visible around the target message
+    if (searchInput && searchInput.value.trim()) {{
+      searchInput.value = '';
+      clearSearch();
+    }}
     const msgEl = document.querySelector(hash);
     if (msgEl) {{
       const panel = msgEl.closest('.channel-panel');
       if (panel && panel.id !== activeChannel) {{
         showChannel(panel.id);
-        setTimeout(() => msgEl.scrollIntoView({{ block: 'center' }}), 100);
-      }} else {{
-        msgEl.scrollIntoView({{ block: 'center' }});
       }}
+      // Briefly highlight the target message
+      msgEl.classList.add('msg-jump-hl');
+      setTimeout(() => msgEl.classList.remove('msg-jump-hl'), 2500);
+      setTimeout(() => msgEl.scrollIntoView({{ block: 'center' }}), 100);
     }}
   }} else if (hash && hash.startsWith('#ch-')) {{
     showChannel(hash.slice(1));

@@ -517,6 +517,28 @@ body {{
   color: #888;
 }}
 
+#search-scope-btn {{
+  padding: 3px 8px;
+  font-size: 0.75rem;
+  border: 1px solid var(--color-rule);
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  color: #555;
+  white-space: nowrap;
+  font-family: var(--font-body);
+}}
+#search-scope-btn.active {{
+  background: var(--color-accent);
+  color: #fff;
+  border-color: var(--color-accent);
+}}
+
+.channel-count-match {{
+  color: var(--color-accent);
+  font-weight: bold;
+}}
+
 .log-content {{
   flex: 1;
   overflow-y: auto;
@@ -799,9 +821,10 @@ body {{
 <div class="log-main">
   <div class="log-topbar">
     <span class="log-topbar-title">Discord Logs</span>
-    <a href="index.html">← Paper</a>
+    <a href="index.html">← Website</a>
     <div class="log-search-wrap">
       <input id="log-search" type="search" placeholder="Search messages…" autocomplete="off">
+      <button id="search-scope-btn" title="Toggle between searching this channel or all channels">This channel</button>
       <span id="search-status"></span>
     </div>
   </div>
@@ -877,10 +900,27 @@ window.addEventListener('hashchange', function() {{
   }}
 }});
 
-// Search within visible channel
+// Search functionality
 const searchInput = document.getElementById('log-search');
 const searchStatus = document.getElementById('search-status');
+const scopeBtn = document.getElementById('search-scope-btn');
 let searchTimeout = null;
+let isGlobalSearch = false;
+
+// Store original channel counts for restoration after global search
+const origCounts = {{}};
+document.querySelectorAll('.channel-link').forEach(link => {{
+  const countEl = link.querySelector('.channel-count');
+  if (countEl) origCounts[link.getAttribute('href').slice(1)] = countEl.textContent;
+}});
+
+scopeBtn.addEventListener('click', function() {{
+  isGlobalSearch = !isGlobalSearch;
+  this.textContent = isGlobalSearch ? 'All channels' : 'This channel';
+  this.classList.toggle('active', isGlobalSearch);
+  clearSearch();
+  if (searchInput.value.trim()) doSearch();
+}});
 
 searchInput.addEventListener('input', function() {{
   clearTimeout(searchTimeout);
@@ -888,71 +928,116 @@ searchInput.addEventListener('input', function() {{
 }});
 
 function clearSearch() {{
-  const panel = document.getElementById(activeChannel);
-  if (!panel) return;
-  panel.querySelectorAll('.search-hl').forEach(el => {{
-    el.outerHTML = el.innerHTML;
-  }});
-  // Remove hide class
-  panel.querySelectorAll('.msg[data-hidden]').forEach(el => {{
-    el.style.display = '';
-    delete el.dataset.hidden;
-  }});
-  panel.querySelectorAll('.date-sep[data-hidden]').forEach(el => {{
-    el.style.display = '';
-    delete el.dataset.hidden;
+  if (isGlobalSearch) {{
+    document.querySelectorAll('.channel-panel').forEach(panel => {{
+      panel.style.display = panel.id === activeChannel ? 'block' : 'none';
+    }});
+    document.querySelectorAll('.channel-link').forEach(link => {{
+      const id = link.getAttribute('href').slice(1);
+      const countEl = link.querySelector('.channel-count');
+      if (countEl && origCounts[id]) {{
+        countEl.textContent = origCounts[id];
+        countEl.classList.remove('channel-count-match');
+      }}
+    }});
+  }}
+
+  const panelsToClear = isGlobalSearch
+    ? document.querySelectorAll('.channel-panel')
+    : [document.getElementById(activeChannel)].filter(Boolean);
+
+  panelsToClear.forEach(panel => {{
+    if (!panel) return;
+    panel.querySelectorAll('.search-hl').forEach(el => {{ el.outerHTML = el.innerHTML; }});
+    panel.querySelectorAll('.msg[data-hidden]').forEach(el => {{
+      el.style.display = '';
+      delete el.dataset.hidden;
+    }});
+    panel.querySelectorAll('.date-sep[data-hidden]').forEach(el => {{
+      el.style.display = '';
+      delete el.dataset.hidden;
+    }});
   }});
   searchStatus.textContent = '';
 }}
 
 function doSearch() {{
-  const panel = document.getElementById(activeChannel);
-  if (!panel) return;
   const q = searchInput.value.trim();
-
-  // Reset previous highlights
   clearSearch();
   if (!q) return;
 
   let re;
   try {{ re = new RegExp(q, 'gi'); }} catch(e) {{ re = new RegExp(q.replace(/[.*+?^${{}}()|[\\]\\\\]/g, '\\\\$&'), 'gi'); }}
 
-  const msgs = panel.querySelectorAll('.msg');
-  let matchCount = 0;
+  const panels = isGlobalSearch
+    ? Array.from(document.querySelectorAll('.channel-panel'))
+    : [document.getElementById(activeChannel)].filter(Boolean);
 
-  msgs.forEach(msg => {{
-    const bodyEl = msg.querySelector('.msg-body');
-    if (!bodyEl) return;
-    const text = bodyEl.textContent;
-    if (!re.test(text)) {{
-      msg.style.display = 'none';
-      msg.dataset.hidden = '1';
-    }} else {{
-      matchCount++;
-      // Highlight in text nodes
-      highlightEl(bodyEl, re);
+  let totalMatches = 0;
+  let channelsWithMatches = 0;
+
+  if (isGlobalSearch) {{
+    document.querySelectorAll('.channel-panel').forEach(p => {{ p.style.display = 'none'; }});
+  }}
+
+  panels.forEach(panel => {{
+    if (!panel) return;
+    const msgs = panel.querySelectorAll('.msg');
+    let panelMatches = 0;
+
+    msgs.forEach(msg => {{
+      const bodyEl = msg.querySelector('.msg-body');
+      if (!bodyEl) return;
+      const text = bodyEl.textContent;
+      re.lastIndex = 0;
+      if (!re.test(text)) {{
+        msg.style.display = 'none';
+        msg.dataset.hidden = '1';
+      }} else {{
+        panelMatches++;
+        totalMatches++;
+        re.lastIndex = 0;
+        highlightEl(bodyEl, re);
+      }}
+    }});
+
+    if (isGlobalSearch && panelMatches > 0) {{
+      panel.style.display = 'block';
+      channelsWithMatches++;
+      const link = document.querySelector(`.channel-link[href="#${{panel.id}}"]`);
+      if (link) {{
+        const countEl = link.querySelector('.channel-count');
+        if (countEl) {{
+          countEl.textContent = `${{panelMatches}}`;
+          countEl.classList.add('channel-count-match');
+        }}
+      }}
     }}
+
+    panel.querySelectorAll('.date-sep').forEach(sep => {{
+      let next = sep.nextElementSibling;
+      let hasVisible = false;
+      while (next && !next.classList.contains('date-sep')) {{
+        if (!next.dataset.hidden) {{ hasVisible = true; break; }}
+        next = next.nextElementSibling;
+      }}
+      if (!hasVisible) {{
+        sep.style.display = 'none';
+        sep.dataset.hidden = '1';
+      }}
+    }});
   }});
 
-  // Hide date seps that now have no visible messages after them
-  panel.querySelectorAll('.date-sep').forEach(sep => {{
-    let next = sep.nextElementSibling;
-    let hasVisible = false;
-    while (next && !next.classList.contains('date-sep')) {{
-      if (!next.dataset.hidden) {{ hasVisible = true; break; }}
-      next = next.nextElementSibling;
-    }}
-    if (!hasVisible) {{
-      sep.style.display = 'none';
-      sep.dataset.hidden = '1';
-    }}
-  }});
-
-  searchStatus.textContent = matchCount ? `${{matchCount}} match${{matchCount !== 1 ? 'es' : ''}}` : 'No matches';
+  if (isGlobalSearch) {{
+    searchStatus.textContent = totalMatches
+      ? `${{totalMatches}} matches in ${{channelsWithMatches}} channel${{channelsWithMatches !== 1 ? 's' : ''}}`
+      : 'No matches';
+  }} else {{
+    searchStatus.textContent = totalMatches ? `${{totalMatches}} match${{totalMatches !== 1 ? 'es' : ''}}` : 'No matches';
+  }}
 }}
 
 function highlightEl(el, re) {{
-  // Walk text nodes and wrap matches in <mark>
   const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
   const toReplace = [];
   let node;

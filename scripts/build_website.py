@@ -516,7 +516,23 @@ def convert_block(text, refs):
             # Parse text arg
             rest_after_name = content[name_end + 1 :]
             text_content, after = get_arg(rest_after_name, 0)
-            text_html = convert_inline(text_content, refs)
+            # Process list environments inside spk text before inline conversion
+            def convert_spk_text(s):
+                env_pat = re.compile(
+                    r"\\begin\{(enumerate|itemize)\}(.*?)\\end\{\1\}",
+                    re.DOTALL)
+                parts = []
+                last = 0
+                for m2 in env_pat.finditer(s):
+                    if m2.start() > last:
+                        parts.append(convert_inline(s[last:m2.start()], refs))
+                    tag = "ol" if m2.group(1) == "enumerate" else "ul"
+                    parts.append(render_list(m2.group(2), tag))
+                    last = m2.end()
+                if last < len(s):
+                    parts.append(convert_inline(s[last:], refs))
+                return "".join(parts)
+            text_html = convert_spk_text(text_content)
             # Determine if thinking
             is_thinking = "\\textit{(thinking)}" in name or "(thinking)" in name
             cls = "spk-thinking" if is_thinking else "spk-line"

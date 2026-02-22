@@ -6,6 +6,9 @@ website/data/sessions/
 website/data/sessions_index.json
 website/logs.html
 
+# Claude's internal memory (not for sharing)
+.claude/
+
 # Python
 __pycache__/
 *.pyc

@@ -376,6 +376,8 @@ def build():
 body {{
   background: var(--color-bg);
   margin: 0;
+  padding: 0;
+  max-width: none;
   font-family: var(--font-body);
 }}
 

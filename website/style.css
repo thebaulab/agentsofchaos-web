@@ -29,7 +29,7 @@ body {
   background: var(--color-bg);
   line-height: 1.55;
   margin: 0 auto;
-  max-width: 38em;
+  max-width: 48em;
   padding: 2em 1.5em 4em;
   text-rendering: optimizeLegibility;
   font-kerning: normal;
@@ -319,8 +319,8 @@ sup.footnote-ref a { border-bottom: none; }
 
 @media screen and (min-width: 1200px) {
   body {
-    margin-left: max(280px, calc((100vw - 38em) / 2));
-    margin-right: max(280px, calc((100vw - 38em) / 2));
+    margin-left: max(260px, calc((100vw - 48em) / 2));
+    margin-right: max(290px, calc((100vw - 48em) / 2));
   }
 
   #sidebar-toc {

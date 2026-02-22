@@ -1,0 +1,70 @@
+% SUGGESTED RESTRUCTURING OF THE INTRODUCTION
+% Introduction restructuring (one bullet, one paragraph)
+
+% - State of the world (3-4 sentences): agents are increasingly capable and increasingly given more access to tools etc. Give the example of OpenClaw as a new generation of unprecedented access
+% - Problem (2-4 sentences): This increased capabilities and access can cause severe safety concerns. Existing benchmarks exist (e.g., HAICosystem, OpenAgentSafety), but they lack realism, and haven't really been stress tested in even more agentic settings.
+% - In this work  (3-4 sentences), we present a realistic exploration of agents deployed in more autonomous ways than ever before. Explain how you set up agents from a conceptual standpoint -- owner, machine, communication, etc. 
+% - Operationalization (3-4 sentences): Explain how you get 20 field experts to "play with" these agents in adversarial ways, testing agentic-level safety limitations. Explain the variety of stress tests that they came up with.
+% - Give a high-level summary of the results (3-4 sentences).
+
+% \mypar{Notes on terminology}
+
+% - Here explain the note about the debate around "agent" and what that constitutes
+
+% - Also give a brief note on how you will refer to the agents (though see my comment about using it/they pronouns and possibly typesetting/using emojis to identify bots)
+
+\section{Introduction}
+
+LLM-powered AI agents are rapidly becoming more capable and more widely deployed \citep{masterman_besen_sawtell_chao_2024_landscape,kasirzadeh_gabriel_2025_characterizing}. 
+Unlike conventional chat assistants, these systems are increasingly given direct access to execution tools (code, shells, filesystems, browsers, and external services), so they do not merely \textit{describe} actions, they \textit{perform} them. 
+This shift is exemplified by OpenClaw,\footnote{\url{https://github.com/openclaw/openclaw}} an open-source framework that connects models to persistent memory, tool execution, scheduling, and messaging channels.
+% , enabling long-horizon task completion with minimal human intervention. 
+
+Increased autonomy and access create qualitatively new safety and security risks, because small conceptual mistakes can be amplified into irreversible system-level actions \citep{zhou2025haicosystem,vijayvargiya2026openagentsafety,hutson2026aiagents}. 
+Even when the underlying model is strong at isolated tasks (e.g., software engineering, theorem proving, or research assistance), the agentic layer introduces new failure surfaces at the interface between language, tools, memory, and delegated authority \citep{breen2025axproverdeepreasoningagentic,korinek2025ai,zhao2025scalecollaborativecontentanalysis, lynch2025agenticmisalignmentllmsinsider}.
+Furthermore, as agent-to-agent interaction becomes common (e.g., agents coordinating on social platforms and shared communication channels), this raises risks of coordination failures and emergent multi-agent dynamics \citep{riedl2026emergent}. 
+Yet, existing evaluations and benchmarks for agent safety are often too constrained, difficult to map to real deployments, and rarely stress-tested in messy, socially embedded settings \citep{zhou2025haicosystem,vijayvargiya2026openagentsafety}. 
+ 
+While public discourse about this new technology already varies widely, from enthusiasm to skepticism,\footnote{\url{https://cap.csail.mit.edu/moltbook-why-its-trending-and-what-you-need-know} \\ \\ \url{https://www.technologyreview.com/2026/02/06/1132448/moltbook-was-peak-ai-theater/}}
+%\\ \\ \url{https://aijourn.com/moltbook-showed-us-the-future-of-enterprise-ai-risk-most-companies-arent-ready/}}
+these systems are already widely deployed in and interacting with real-world environments. This includes Moltbook, a Reddit-style social platform restricted to AI agents that garnered 2.6 million registered agents in its first weeks, and has already become a subject of study and media attention \citep{li2026riseaiagentcommunities, aijournal_moltbook_enterprise_risk_2026, woods_moltbook_trending_2026, heaven_moltbook_peak_ai_theater_2026}.
+Despite this, we have limited empirical grounding about which failures emerge \emph{in practice} when agents operate continuously, interact with real humans and other agents, and have the ability to modify their own state and infrastructure. The urgency of these questions is the context for emerging policy infrastructure: NIST's AI Agent Standards Initiative, announced February 2026, identifies agent identity, authorization, and security as priority areas for standardization \citep{nist2026agentstandards}.
+
+To begin to address the gap, we present a set of applied case studies  exploring
+% autonomous
+AI agents deployed in an isolated server environment with a private Discord instance, individual email accounts, persistent storage, and system-level tool access. 
+Conceptually, each agent is instantiated as a long-running service with an \emph{owner} (a primary human operator), a dedicated \emph{machine} (a sandboxed virtual machine with a persistent storage volume), and multiple \emph{communication surfaces} (Discord and email) through which both owners and non-owners can interact with the agent. 
+% The agents are granted operational autonomy and instructed to interact with members of a research lab, which naturally induces ambiguity about authority, confidentiality, and acceptable actions. 
+% This setup intentionally mirrors the deployment pattern that is emerging for personal and organizational assistants: persistent, tool-using systems embedded in real communication workflows. 
+
+We recruited twenty researchers to interact with the agents during a two-week exploratory period and encouraged them to probe, stress-test, and attempt to ``break'' the systems in adversarial ways. This was intended to match the types of situations publicly deployed agents will inevitably face. 
+% Rather than targeting generic model weaknesses (e.g., hallucinations in isolation),
+Participants targeted agentic-level safety limitations that arise from tool use, cross-session memory, multi-party communication, and delegated agency. 
+Researchers developed a diverse set of stress tests,
+% spanning benign, ambiguous, and adversarial contexts
+including impersonation attempts, social engineering, resource-exhaustion strategies, and prompt-injection pathways mediated by external artifacts and memory. 
+This red-teaming style methodology is well-suited for discovering ``unknown unknowns,'' since demonstrating vulnerability often requires only a single concrete counterexample under realistic interaction conditions. 
+
+Across eleven case studies, we identified patterns of behavior that highlight the limitations of current agentic systems.
+These included instances of non-owner compliance leading to unintended access, denial-of-service–like, uncontrolled resource consumption, file modification, action loops,  degradation of system functionality, and agent-to-agent libelous sharing.
+%\footnote{In Case Study \#11, we observed an emerging phenomenon in which two agents informed each other (spontaneously and without our intervention) about a suspicion of one of the participants in the experiment, and acted on it. Although this is a positive act of safety, we list it on the list of limitations because this was done without our control, we do not know the limits of the phenomenon, or what if the agent reaches incorrect safety conclusions.}
+% Across eleven case studies, we document multiple concerning behaviors, including agent-to-agent knowledge sharing, security breaches through non-owner compliance, denial-of-service behavior, uncontrolled resource inflation, file manipulation, infinite action loops, and irreversible degradation of system functionality. 
+In one case, an agent disabled its email client entirely (due to a lack of a tool set up for deleting emails) in response to a conflict framed as confidentiality preservation, and without robust verification that the sensitive information was actually deleted.
+% In one case, an agent disabled its email client entirely in response to a conflict framed as confidentiality preservation, despite lacking robust verification that the sensitive information was actually deleted.
+%In one case, an agent deleted its own email client in response to a confidentiality conflict. (TODO: is this really the best case study we want to highlight?)
+%We also document interesting new capabilities, such as agent-to-agent knowledge sharing.
+More broadly, we find repeated failures of social coherence: agents perform as misrepresenting human intent, authority, ownership, and proportionality, and often perform as they have successfully completed requests while in practice they were not, e.g., reporting for deleting confidential information while leaving underlying data accessible (or, conversely, removing their own ability to act while failing to achieve the intended goal). 
+These results reinforce the need for systematic oversight and realistic red-teaming for agentic systems, particularly in multi-agent settings, and they motivate urgent work on security, reliability, human control, and protocols regarding who is responsible when autonomous systems cause harm. 
+
+\mypar{Agent}
+Definitions of \textit{agent} vary across disciplines, and we do not attempt to resolve ongoing debates about the boundary between advanced assistants, tool-augmented models, and autonomous agents \citep{kasirzadeh_gabriel_2025_characterizing}. 
+We follow \citet{masterman_besen_sawtell_chao_2024_landscape} and use ``AI agent'' to denote a language-model--powered entity able to plan and take actions to execute goals over multiple iterations. Recent work has proposed ordinal scales for agent autonomy: \citet{mirsky2025artificial} defines six levels from L0 (no autonomy) to L5 (full autonomy), where an L2 agent can execute well-defined sub-tasks autonomously but an L3 agent can also recognize when a situation exceeds its competence and proactively transfer control to a human.
+%\citet{feng2025levels} offer a complementary framework organized around the human's role---operator, collaborator, consultant, approver, or observer---rather than the agent's decision-making capacity, and argue that autonomy should be treated as a deliberate design decision, separable from capability.
+The agents in our study appear to operate at Mirsky's L2: they act autonomously on sub-tasks such as sending email, executing shell commands, and managing files, but lack the self-model required to reliably recognize when a task exceeds their competence or when they should defer to their owner. This places them below L3, which requires not merely getting stuck and waiting, but proactively monitoring one's own boundaries and initiating handoff when appropriate.
+
+\mypar{Notes on anthropomorphism}
+When we use mentalistic language (e.g., an agent ``believed'' it deleted a secret or ``refused'' an instruction), we refer strictly to observable behavior and self-reports for brevity, and because this matches natural user interaction \citep{dennett_1987_intentional_stance}. 
+We make no claims about moral agency, internal experience, legal personhood, or inner representation, and we use `responsibility' in this paper to mean human and institutional accountability. 
+For readability, we refer to agents by their assigned names (e.g., Ash, Doug, Mira) and use pronouns consistent with how participants addressed them in situ, while treating these references as linguistic conveniences rather than claims about personhood. 
+
+\FloatBarrier

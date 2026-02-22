@@ -1,0 +1,17 @@
+# Raw log data (sensitive + large)
+logs/
+
+# Generated large data files
+website/data/sessions/
+website/data/sessions_index.json
+website/logs.html
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# Editor
+.DS_Store
+*.swp

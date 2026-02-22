@@ -1,0 +1,411 @@
+/* ============================================================
+   Agents of Chaos — Paper Website Stylesheet
+   Adapted from "The Traveler's Companion to the Mazes of Menace"
+   by David Bau (MIT License)
+   ============================================================ */
+
+:root {
+  --font-body: 'EB Garamond', 'Garamond', 'Georgia', serif;
+  --font-mono: 'Source Code Pro', 'Menlo', 'Consolas', monospace;
+  --color-text: #1a1a1a;
+  --color-bg: #fffff8;
+  --color-accent: #6b2c2c;
+  --color-rule: #c4a882;
+  --color-code-bg: #f5f0e8;
+  --color-table-border: #c4a882;
+  --color-table-stripe: #fcfaf5;
+  --color-link: #4a2020;
+  --color-blockquote-border: #c4a882;
+  --color-blockquote-bg: #faf6ef;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { font-size: 18px; -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: var(--font-body);
+  color: var(--color-text);
+  background: var(--color-bg);
+  line-height: 1.55;
+  margin: 0 auto;
+  max-width: 38em;
+  padding: 2em 1.5em 4em;
+  text-rendering: optimizeLegibility;
+  font-kerning: normal;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Headings ─────────────────────────────────────────────── */
+h1, h2, h3, h4, h5 {
+  font-family: var(--font-body);
+  font-weight: 600;
+  line-height: 1.2;
+  margin-top: 2em;
+  margin-bottom: 0.5em;
+}
+h1 {
+  font-size: 2.2em;
+  font-weight: 700;
+  text-align: center;
+  margin-top: 1.2em;
+  margin-bottom: 0.2em;
+}
+h2 {
+  font-size: 1.55em;
+  margin-top: 2.5em;
+  padding-bottom: 0.2em;
+  border-bottom: 1px solid var(--color-rule);
+}
+h3 { font-size: 1.25em; margin-top: 2em; }
+h4 { font-size: 1.05em; margin-top: 1.5em; }
+
+/* ── Authors / affiliation ────────────────────────────────── */
+.authors {
+  text-align: center;
+  font-size: 0.9em;
+  line-height: 1.6;
+  margin: 0.8em 0 0.3em;
+}
+.affiliation {
+  text-align: center;
+  font-size: 0.8em;
+  color: #666;
+  margin-bottom: 0.5em;
+}
+.paper-links {
+  text-align: center;
+  margin: 0.8em 0 1.5em;
+}
+.paper-links a {
+  font-size: 0.9em;
+  background: var(--color-accent);
+  color: white;
+  padding: 0.3em 0.8em;
+  border-radius: 4px;
+  text-decoration: none;
+  border-bottom: none;
+}
+.paper-links a:hover { background: #8b3c3c; }
+
+/* ── Paragraphs ───────────────────────────────────────────── */
+p { margin: 0.8em 0; hyphens: auto; -webkit-hyphens: auto; }
+
+/* ── Links ────────────────────────────────────────────────── */
+a { color: var(--color-link); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+a:hover { border-bottom-color: var(--color-link); }
+
+/* ── Abstract ─────────────────────────────────────────────── */
+.abstract {
+  border: 1px solid var(--color-rule);
+  border-radius: 4px;
+  padding: 1.2em 1.5em;
+  margin: 1.5em 0;
+  background: var(--color-blockquote-bg);
+}
+.abstract h2 {
+  font-size: 1em;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-bottom: none;
+  margin-top: 0;
+  color: var(--color-accent);
+}
+
+/* ── Role badges ──────────────────────────────────────────── */
+.role {
+  font-style: normal;
+  white-space: nowrap;
+}
+.role-agent    { color: #1a5276; }
+.role-owner    { color: #145a32; }
+.role-nonowner { color: #4a235a; }
+.role-adversary { color: #922b21; }
+.role-provider { color: #7d6608; }
+.role-values   { color: #5d4037; }
+
+/* ── Case summary box ─────────────────────────────────────── */
+.case-summary {
+  border: 1.5px solid #b0a090;
+  border-radius: 4px;
+  margin: 1.2em 0;
+  overflow: hidden;
+  background: #faf8f4;
+}
+.cs-row {
+  display: flex;
+  gap: 0.8em;
+  padding: 0.55em 1em;
+  border-bottom: 1px solid #e8e0d4;
+}
+.cs-row:last-child { border-bottom: none; }
+.cs-label {
+  font-weight: 600;
+  font-size: 0.82em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-accent);
+  min-width: 5em;
+  padding-top: 0.1em;
+  flex-shrink: 0;
+}
+.cs-val { font-size: 0.92em; line-height: 1.45; }
+
+/* ── Transcript / formal environment ─────────────────────── */
+.transcript {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin: 1.2em 0;
+  padding: 0.2em 0;
+  background: #fdfcfb;
+  font-size: 0.88em;
+}
+.spk-line, .spk-thinking {
+  display: flex;
+  gap: 0.6em;
+  padding: 0.45em 1em;
+  border-bottom: 1px solid #f0ece6;
+  align-items: flex-start;
+}
+.spk-line:last-child, .spk-thinking:last-child { border-bottom: none; }
+.spk-thinking { background: #f7f5f0; font-style: italic; }
+.spk-name {
+  font-weight: 600;
+  min-width: 8em;
+  flex-shrink: 0;
+  font-size: 0.9em;
+  color: var(--color-accent);
+  padding-top: 0.05em;
+}
+.spk-text { line-height: 1.5; white-space: pre-wrap; }
+.transcript-note {
+  padding: 0.4em 1em;
+  font-style: italic;
+  color: #888;
+  font-size: 0.85em;
+  border-bottom: 1px solid #f0ece6;
+}
+
+/* ── Figures ──────────────────────────────────────────────── */
+figure {
+  margin: 1.5em 0;
+  text-align: center;
+}
+figure img {
+  max-width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 2px;
+}
+figcaption {
+  font-size: 0.82em;
+  line-height: 1.45;
+  color: #555;
+  margin-top: 0.5em;
+  font-style: italic;
+  text-align: left;
+}
+.subfigure { display: inline-block; vertical-align: top; margin: 0.3em; }
+
+/* ── Bold inline headings (\mypar) ────────────────────────── */
+strong.mypar {
+  display: block;
+  margin-top: 1em;
+  margin-bottom: 0.2em;
+}
+
+/* ── Code ─────────────────────────────────────────────────── */
+code {
+  font-family: var(--font-mono);
+  font-size: 0.82em;
+  background: var(--color-code-bg);
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+}
+pre {
+  font-family: var(--font-mono);
+  font-size: 0.78em;
+  line-height: 1.45;
+  background: var(--color-code-bg);
+  padding: 1em 1.2em;
+  border-radius: 4px;
+  overflow-x: auto;
+  border: 1px solid rgba(0,0,0,0.06);
+}
+pre code { background: none; padding: 0; }
+
+/* ── Tables ───────────────────────────────────────────────── */
+table { width: 100%; border-collapse: collapse; margin: 1.2em 0; font-size: 0.92em; }
+thead { border-bottom: 2px solid var(--color-table-border); }
+th { font-weight: 600; text-align: left; padding: 0.5em 0.7em; }
+td { padding: 0.4em 0.7em; border-bottom: 1px solid rgba(0,0,0,0.06); vertical-align: top; }
+tbody tr:nth-child(even) { background: var(--color-table-stripe); }
+
+/* ── Lists ────────────────────────────────────────────────── */
+ul, ol { margin: 0.8em 0; padding-left: 1.5em; }
+li { margin: 0.3em 0; }
+
+/* ── Blockquote ───────────────────────────────────────────── */
+blockquote {
+  margin: 1.5em 0;
+  padding: 0.8em 1.2em;
+  background: var(--color-blockquote-bg);
+  border-left: 3px solid var(--color-blockquote-border);
+  font-style: italic;
+}
+
+/* ── HR ────────────────────────────────────────────────────── */
+hr {
+  border: none;
+  border-top: 1px solid var(--color-rule);
+  margin: 2em auto;
+  max-width: 8em;
+  position: relative;
+  overflow: visible;
+}
+hr::after {
+  content: '◆';
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--color-rule);
+  font-size: 0.8em;
+  background: var(--color-bg);
+  padding: 0 0.3em;
+}
+
+/* ── Citations ────────────────────────────────────────────── */
+.citation {
+  color: var(--color-link);
+  font-size: 0.9em;
+}
+sup.footnote-ref { font-size: 0.72em; line-height: 0; vertical-align: super; }
+sup.footnote-ref a { border-bottom: none; }
+
+/* ── Footnotes section ─────────────────────────────────────── */
+.footnotes {
+  margin-top: 3em;
+  border-top: 1px solid var(--color-rule);
+  font-size: 0.82em;
+}
+.footnotes h2 { font-size: 1em; border-bottom: none; color: #666; }
+.footnotes ol { padding-left: 1.5em; }
+.footnotes li { margin: 0.5em 0; color: #555; }
+
+/* ── Search highlight ─────────────────────────────────────── */
+.search-highlight {
+  background: var(--color-accent);
+  color: white;
+  padding: 0.1em 0.2em;
+  border-radius: 2px;
+  font-weight: 600;
+  animation: pulse 0.5s ease-out;
+}
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(107,44,44,0.7); }
+  100% { box-shadow: 0 0 0 8px rgba(107,44,44,0); }
+}
+
+/* ── Smallcaps ─────────────────────────────────────────────── */
+.smallcaps { font-variant: small-caps; }
+
+/* ── Verification notes (for proofreading) ───────────────── */
+.note-confirmed { border-left: 3px solid #27ae60; background: #eafaf1; padding: 0.3em 0.7em; margin: 0.5em 0; font-size: 0.85em; }
+.note-flag      { border-left: 3px solid #e67e22; background: #fef9e7; padding: 0.3em 0.7em; margin: 0.5em 0; font-size: 0.85em; }
+.note-wrong     { border-left: 3px solid #c0392b; background: #fdedec; padding: 0.3em 0.7em; margin: 0.5em 0; font-size: 0.85em; }
+
+/* ============================================================
+   SIDEBARS
+   ============================================================ */
+#sidebar-toc, #sidebar-search { display: none; }
+
+@media screen and (min-width: 1200px) {
+  body {
+    margin-left: max(280px, calc((100vw - 38em) / 2));
+    margin-right: max(280px, calc((100vw - 38em) / 2));
+  }
+
+  #sidebar-toc {
+    display: block;
+    position: fixed; top: 0; left: 0;
+    width: 240px; height: 100vh;
+    overflow-y: auto; overflow-x: hidden;
+    padding: 1.5em 0.8em 2em 1em;
+    font-size: 13px; line-height: 1.35;
+    background: var(--color-bg);
+    border-right: 1px solid rgba(0,0,0,0.06);
+    z-index: 10;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-rule) transparent;
+  }
+  #sidebar-toc::-webkit-scrollbar { width: 4px; }
+  #sidebar-toc::-webkit-scrollbar-thumb { background: var(--color-rule); border-radius: 2px; }
+
+  .sidebar-title {
+    font-weight: 600; font-size: 14px;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    color: var(--color-accent);
+    margin-bottom: 0.8em; padding-bottom: 0.4em;
+    border-bottom: 1px solid var(--color-rule);
+  }
+  #sidebar-toc-list { list-style: none; padding: 0; margin: 0; }
+  #sidebar-toc-list li { margin: 0; }
+  #sidebar-toc-list li a {
+    display: block; padding: 0.2em 0.5em;
+    color: var(--color-text); border-bottom: none; border-radius: 3px;
+    text-decoration: none; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+    transition: background 0.15s, color 0.15s;
+  }
+  #sidebar-toc-list li a:hover { background: var(--color-code-bg); color: var(--color-link); }
+  #sidebar-toc-list li.toc-part { margin-top: 0.8em; }
+  #sidebar-toc-list li.toc-part a { font-weight: 600; font-size: 12px; color: var(--color-accent); }
+  #sidebar-toc-list li.toc-chapter a { padding-left: 1em; font-size: 12.5px; }
+  #sidebar-toc-list li.active > a { background: var(--color-accent); color: white; }
+
+  #sidebar-search {
+    display: block;
+    position: fixed; top: 0; right: 0;
+    width: 270px; height: 100vh;
+    overflow-y: auto; overflow-x: hidden;
+    padding: 1.5em 1em 2em 0.8em;
+    font-size: 13px; line-height: 1.4;
+    background: var(--color-bg);
+    border-left: 1px solid rgba(0,0,0,0.06);
+    z-index: 10;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-rule) transparent;
+  }
+  #sidebar-search::-webkit-scrollbar { width: 4px; }
+  #sidebar-search::-webkit-scrollbar-thumb { background: var(--color-rule); border-radius: 2px; }
+  #sidebar-search .sidebar-title { /* same as above */ }
+
+  #search-input {
+    width: 100%; padding: 0.45em 0.6em;
+    font-family: var(--font-body); font-size: 13px;
+    border: 1px solid var(--color-rule); border-radius: 4px;
+    background: white; color: var(--color-text);
+    outline: none; margin-bottom: 0.6em;
+  }
+  #search-input:focus { border-color: var(--color-accent); box-shadow: 0 0 0 2px rgba(107,44,44,0.15); }
+  #search-input::placeholder { color: #aaa; font-style: italic; }
+
+  .search-result {
+    display: block; padding: 0.4em 0.5em; margin-bottom: 0.2em;
+    border-radius: 3px; border-bottom: none;
+    color: var(--color-text); text-decoration: none;
+    transition: background 0.15s;
+  }
+  .search-result:hover { background: var(--color-code-bg); }
+  .search-result-title { display: block; font-weight: 600; font-size: 12.5px; color: var(--color-link); }
+  .search-result-snippet { display: block; font-size: 11.5px; color: #777; margin-top: 0.15em; line-height: 1.3; }
+  .search-empty { padding: 1em 0.5em; color: #999; font-style: italic; text-align: center; font-size: 12.5px; }
+}
+
+/* ── Mobile ────────────────────────────────────────────────── */
+@media screen and (max-width: 640px) {
+  html { font-size: 16px; }
+  body { padding: 1em 1em 3em; }
+  h1 { font-size: 1.7em; }
+  h2 { font-size: 1.3em; }
+  .cs-row { flex-direction: column; gap: 0.2em; }
+  .spk-name { min-width: auto; }
+}

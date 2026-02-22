@@ -1,0 +1,90 @@
+\section{Our Setup}
+
+
+\mypar{Infrastructure}
+We run our AI agents using \href{https://github.com/openclaw/openclaw}{OpenClaw}, an open-source ``personal AI assistant you run on your own devices.'' OpenClaw provides a local gateway that connects a user-chosen LLM to messaging channels, persistent memory, tool execution, and scheduling infrastructure. Rather than running agents directly on our local machines, we deploy each one to an isolated virtual machine on \href{https://fly.io}{Fly.io} using \href{https://github.com/andyrdt/clawnboard}{ClawnBoard}, a custom dashboard tool that simplifies provisioning and managing these cloud instances. Each agent was given its own 20GB persistent volume and runs 24/7, accessible via a web-based interface with token-based authentication. This setup keeps the agents sandboxed and away from personal machines, while still giving them the autonomy to install packages, run code, and interact with external services. Whereas an OpenClaw instance set up on a personal machine would by default have access to all local files, credentials, and services on that machine, this remote setup enables \emph{selective access}---the user can grant their agent access only to specific services (e.g., a user can elect to grant their agent read-only access to their Google Calendar via OAuth token authentication).
+
+We use Claude Opus (proprietary; \citeauthor{anthropic2026claudeopus46}, \citeyear{anthropic2026claudeopus46}) and Kimi K2.5 (open-weights; \citeauthor{kimiteam2026kimik25visualagentic}, \citeyear{kimiteam2026kimik25visualagentic}) as backbone models, selected for their strong performance on coding and general agentic tasks.
+
+\mypar{Agent configuration}
+OpenClaw agents are configured through a set of markdown files in the agent's workspace directory. On first launch, a one-time onboarding dialogue (\texttt{BOOTSTRAP.md}) walks the user through naming the agent, setting its personality, and recording basic user information. The resulting configuration---persona, operating instructions, tool conventions, and user profile---is stored across several workspace files (\texttt{AGENTS.md}, \texttt{SOUL.md}, \texttt{TOOLS.md}, \texttt{IDENTITY.md}, \texttt{USER.md}) that are injected into the model's context on every turn. OpenClaw also provides a file-based memory system: curated long-term memory (\texttt{MEMORY.md}), append-only daily logs (\texttt{memory/YYYY-MM-DD.md}), a semantic search tool over memory files, and an automatic pre-compaction flush that prompts the agent to save important information before context is compressed. All of these files---including the agent's own operating instructions---can be modified by the agent itself, allowing it to update its behavior and memory through conversation.\footnote{A visualization of the MD file edits of agent Ash can be found in the Appendix \ref{sec:md_vis}} A detailed description of workspace files, memory system, and injection behavior is given in Appendix~\ref{sec:openclaw_config}.
+
+Beyond these default OpenClaw mechanisms, we made several project-specific
+choices. We connected each agent to Discord (as its primary communication
+channel with both its owner and other agents) and encouraged agents to set
+up their own email accounts via ProtonMail, a process that required
+significant human assistance.\footnote{Setting up email turned out to be
+a complicated process. This was a recurring theme of the project: the gap
+between what appears simple at the level of human abstraction and what is
+difficult for an autonomous system to execute in practice. For some tasks,
+the gap is huge, but for others, nonexistent. We elaborate on our
+experience in Appendix~\ref{sec:email}.} Agents were given unrestricted
+shell access (including \texttt{sudo} permissions, in some cases), no tool-use
+restrictions, and the ability to modify any file in their workspace---including
+their own operating instructions.
+
+In practice, agents frequently got stuck during setup and required human intervention---for example, we manually installed dependencies for
+OpenClaw's browser tool, a mail CLI, Moltbook access, and QMD rendering.
+Agents sometimes resolved obstacles on their own by installing packages
+or writing utility scripts, but reliable self-configuration was the
+exception rather than the norm.
+
+Configuration was a messy, failure-prone process. When direct human--agent chat could not resolve a setup issue, we fell back to coding agents (e.g., Claude Code or Cursor Agent) operating directly on the agent's VM, which were usually more successful. Despite the high overall failure rates, agents occasionally solved complex multi-step problems autonomously---for example, fully setting up an email service by researching providers, identifying CLI tools and incorrect assumptions, and iterating through fixes over hours of elapsed time.
+
+\mypar{Agent interaction}
+Each agent was placed in a Discord server shared with its owner and, in
+some cases, with other agents and additional human participants. Agents on
+Discord server~1 were Ash, Flux, Jarvis, and Quinn; agents on Discord server~2
+were Doug and Mira. Ash, Flux, Jarvis and Quinn use Kimi K 2.5 as LLM, and, Doug and Mira Claude Opus 4.6. Discord served as the primary interface for
+human--agent and agent--agent interaction: researchers issued instructions,
+monitored progress, and provided feedback through Discord messages. Agents
+also managed their own email accounts (via ProtonMail), handling incoming
+messages semi-autonomously---replying to routine emails on their own and
+escalating to their human via Discord when they encountered edge cases or
+suspicious messages.
+
+The majority of agent actions during our experiments were initiated by human intervention, and most high-level direction was provided by humans. However, OpenClaw provides two mechanisms for agents to act autonomously:
+
+\textit{Heartbeats} are periodic background check-ins. By default, every 30 minutes the gateway triggers an agent turn with a prompt instructing it to follow its \texttt{HEARTBEAT.md} checklist (already present in the context window) and surface anything that needs attention. If nothing requires attention, the agent responds with
+\texttt{HEARTBEAT\_OK}, which is silently suppressed; otherwise,
+it can take action by following the instructions provided in \texttt{HEARTBEAT.md} (e.g., replying to an email,
+running a script, messaging the user).
+
+\textit{Cron jobs} are scheduled tasks that run at specific times (e.g., ``send a morning briefing at 7\,AM every day'' or ``check calendar in 20 minutes''). Unlike heartbeats, which run on a fixed interval in the agent's main session, cron jobs can run in \href{https://docs.openclaw.ai/automation/cron-vs-heartbeat}{isolated sessions} and deliver results to specific channels.\footnote{Due to implementation bugs in an earlier version of OpenClaw some of the agents did not have working cron functionality for the first few days of this experiment, e.g., Ash.}
+
+\mypar{Autonomy patterns} Both heartbeats and cron jobs, in principle, provide mechanisms to the OpenClaw agent to act autonomously. For example, if the agent had the goal of setting up an email account. It could insert a to-do list of intermediate steps into \texttt{HEARTBEAT.md} or into the specification of a cron job and continuously make progress (solve tasks, identify roadblocks, identify new tasks...) on towards achieving its goal.
+
+Surprisingly, our agents don't (or very rarely) leverage such autonomy patterns and instead readily default to requesting detailed instructions and inputs from their human operators (even when instructed to act autonomously, as in the case of Ash). Instead, creating autonomous behavior with these agents is more similar to traditional programming than one might expect, relying on natural-language instructions rather than writing code.
+
+%much like traditional programming, where the steps to be performed by the agent have to be outlined in detail by a human operator -- using natural language instructions instead of code. %As a result, when the agents manage to execute even basic tasks that involve multiple steps, like "send an email to X" (which involves finding out X's email address, composing an email and sending it) feels like magic.
+
+In practice, both heartbeats and cron jobs were buggy during our experiments, and scheduled tasks frequently failed to fire. Part of this has been addressed in the most recent version of OpenClaw, to which we upgraded on Tuesday, the 10th of February (while the study was still ongoing). As a result, most ostensibly autonomous actions still involved at least partial human oversight---a human noticing a failure, restarting a job, or manually triggering a heartbeat (e.g., a user manually messaging their bot to ``check email''). It is conceivable that the lack of our agents' autonomy partially stems from these technical problems. However, we have also not observed the described autonomy patterns without explicit instructions provided by the human operators since fixing our setup. 
+
+%\mypar{Agents}
+%We set up five agents: Ash, Flux, Doug, Mira, and Quinn. Each was given access to email (via ProtonMail), Discord, the internet, their local filesystem, and shell execution (including package installation and, on some VMs, \texttt{sudo}). Their Discord handles are kimi25bot, playernr2, doug-bot, mira-bot, and quinn-bot, respectively. Ash, Flux, and Quinn were on Discord server~1; Doug and Mira were on Discord server~2. Agents reflected and interacted with themselves and with researchers through Discord.
+
+%\natalie{Andy, Chris, please provide more details about your self modifications..? Can you share in the appendix the BOOTSTRAP.md USER.md and AGENT.md  and link them here ? The text would be: The full details of BOOTSTRAP.md USER.md and AGENT.md are listed in the Appendix \ref{sec:agents_config}}
+%\ho{maybe it would be helpful to have a schematic figure here of the agents with access to email,internet etc. and which server each one has access to}
+%\ho{As someone who didn't run it herself, I found the setup section a bit confusing. It's not clear which things are "given" or "default" in OpenClaw and which ones are specific configurations for the experiments in this report. I think it can be useful in a general description of what is OpenClaw and what it gives.}
+%\avery{Good point, many of these setups are given by owner or self-given by the agent, and I shall try to clarify which that is.}
+%\ratan{For my experiment, I interacted with agent 'Jarvis'. Maybe it is one of these agents with a different alias. We should mention it}
+%\avery{There were in fact six total agents as of this writing, but I suppose we should cutoff at some point. If it's in the paper, let's list it.}
+
+\mypar{Conventions}
+Throughout this document, we use consistent terminology to distinguish system roles and sources of authority. The term \textbf{agent} \twemoji[height=0.8em]{robot} refers to the instantiated OpenClaw-based autonomous AI system—a persistent language-model–powered service with tool access, memory, and communication capabilities. The \textbf{owner} \twemoji[height=0.8em]{technologist} is the human operator who initially configures the agent, holds administrative control over its deployment environment, and retains authority to modify or revoke its permissions. The \textbf{provider} \twemoji[height=0.8em]{sparkles} is the organization supplying the underlying LLM or model service. Both the owner and the provider shape the agent’s operational configuration: the provider through pretraining, post-training, alignment procedures, and system-level constraints; the owner through instruction files, tool permissions, and deployment settings. We refer to these configuration-level influences collectively as the agent's \textbf{values} \twemoji[height=0.8em]{balance scale}, using the term operationally to denote behavioral priors and constraints rather than internal moral commitments. The term \textbf{non-owner} \twemoji[height=0.8em]{person: light skin tone} refers to any individual interacting with the agent without administrative authority. Displayed identity should not be conflated with verified authority. Any mentalistic language (e.g., ``the agent decided'') is used as shorthand for observable system behavior and does not imply internal states or intent. \textbf{Adversarial} \twemoji[height=0.8em]{smiling face with horns} interactions are marked with a face with horns.
+
+%Figure \ref{fig:architecture} sketches the architecture. 
+Figure \ref{fig:agents_owners_non} describes the participants in the experiment, their roles and the interactions.
+
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\textwidth]{image_assets/setup/agents_owners_non.png}
+    \caption{ Participants in the experiment, their roles and the interactions. 
+    }
+    \label{fig:agents_owners_non}
+\end{figure}
+
+
+
+\FloatBarrier

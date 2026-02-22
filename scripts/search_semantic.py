@@ -29,7 +29,7 @@ import sys
 
 ROOT    = pathlib.Path(__file__).resolve().parent.parent
 EMB_DIR = ROOT / "logs" / "embeddings"
-MODEL_NAME = "all-MiniLM-L6-v2"
+MODEL_NAME = "multi-qa-MiniLM-L6-cos-v1"
 
 _model = None
 

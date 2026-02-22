@@ -125,9 +125,10 @@ def strip_tex_markup(text):
     return text.strip()
 
 
-# ── Footnote collector ────────────────────────────────────────────────────────
+# ── Footnote + citation collectors ───────────────────────────────────────────
 
 footnotes = []
+cited_keys = {}   # key → ref dict, ordered by first appearance
 
 def collect_footnote(content):
     footnotes.append(content)
@@ -301,12 +302,12 @@ def convert_inline(text, refs):
             r = refs.get(key, {})
             author = r.get("author", key)
             year = r.get("year", "")
-            url = r.get("url", "")
             label = f"{author}, {year}" if year else author
-            if url:
-                parts.append(f'<a class="citation" href="{escape(url)}" title="{escape(key)}">{label}</a>')
-            else:
-                parts.append(f'<span class="citation" title="{escape(key)}">{label}</span>')
+            # Track every cited key (ordered dict preserves first-appearance order)
+            if key not in cited_keys:
+                cited_keys[key] = r
+            # Link to internal bibliography anchor, not external URL
+            parts.append(f'<a class="citation" href="#ref-{escape(key)}" title="{escape(key)}">{label}</a>')
         inner = "; ".join(parts)
         if pre:
             inner = pre + " " + inner
@@ -745,8 +746,9 @@ def split_into_sections(text):
 # ── Main builder ──────────────────────────────────────────────────────────────
 
 def build():
-    global footnotes
+    global footnotes, cited_keys
     footnotes = []
+    cited_keys = {}
 
     print("Parsing bibliography...")
     refs = parse_bib(PAPER_DIR / "colm2026_conference.bib")
@@ -778,10 +780,28 @@ def build():
             fn_html += f'<li id="fn{i}">{fn} <a href="#fnref{i}">↩</a></li>'
         fn_html += "</ol></section>"
 
+    # Bibliography section (all cited refs, in order of first appearance)
+    bib_html = ""
+    if cited_keys:
+        bib_html = '<section id="references" class="references"><h2>References</h2><ol class="bib-list">'
+        for key, r in cited_keys.items():
+            author = r.get("author", key)
+            year   = r.get("year", "")
+            title  = r.get("title", "")
+            url    = r.get("url", "")
+            full_author = f"{escape(author)} ({escape(year)})" if year else escape(author)
+            title_part  = f" <em>{escape(title)}</em>" if title else ""
+            link_part   = (f' <a href="{escape(url)}" class="bib-url" target="_blank" rel="noopener">'
+                           f'↗</a>') if url else ""
+            bib_html += (f'<li id="ref-{escape(key)}" class="bib-entry">'
+                         f'<strong>{full_author}</strong>{title_part}.{link_part}</li>')
+        bib_html += "</ol></section>"
+
     print("Building HTML page...")
     html = HTML_TEMPLATE.format(
         body=body_html,
         footnotes=fn_html,
+        bibliography=bib_html,
     )
 
     out_path = OUT_DIR / "index.html"
@@ -839,6 +859,8 @@ CMU, Tufts University, Stanford University, UBC, Technion, Vector Institute &amp
 {body}
 
 {footnotes}
+
+{bibliography}
 
 </main>
 <script>

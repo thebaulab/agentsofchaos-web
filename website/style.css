@@ -290,6 +290,34 @@ sup.footnote-ref a { border-bottom: none; }
 .footnotes ol { padding-left: 1.5em; }
 .footnotes li { margin: 0.5em 0; color: #555; }
 
+/* ── References / Bibliography ─────────────────────────────── */
+.references {
+  margin-top: 2.5em;
+  border-top: 1px solid var(--color-rule);
+  font-size: 0.82em;
+}
+.references h2 { font-size: 1.1em; color: #555; border-bottom: none; }
+.bib-list { padding-left: 1.5em; }
+.bib-entry {
+  margin: 0.55em 0;
+  color: #444;
+  line-height: 1.4;
+}
+.bib-entry:target {
+  background: rgba(107, 44, 44, 0.06);
+  outline: 2px solid var(--color-accent);
+  border-radius: 3px;
+  padding: 2px 4px;
+}
+.bib-url {
+  font-size: 0.85em;
+  color: var(--color-link);
+  margin-left: 4px;
+  text-decoration: none;
+  border-bottom: none !important;
+}
+.bib-url:hover { text-decoration: underline; }
+
 /* ── Search highlight ─────────────────────────────────────── */
 .search-highlight {
   background: var(--color-accent);

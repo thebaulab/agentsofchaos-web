@@ -32,7 +32,13 @@ SESSIONS_DIR  = ROOT / "website" / "data" / "sessions"
 SESSIONS_IDX  = ROOT / "website" / "data" / "sessions_index.json"
 EMB_DIR       = ROOT / "logs" / "embeddings"
 
-MODEL_NAME = "all-MiniLM-L6-v2"   # 384-dim, fast, good quality
+# Default model — multi-qa variant is tuned for retrieval (query→passage matching)
+# Use --model all-mpnet-base-v2 for higher quality (768-dim, 2-3x slower)
+DEFAULT_MODEL = "multi-qa-MiniLM-L6-cos-v1"   # 384-dim, fast, retrieval-tuned
+
+# Sliding context window for Discord: embed N consecutive messages together
+# (better retrieval for short messages, metadata still points to the key message)
+DISCORD_WINDOW = 3   # embed prev 2 + current; use 1 to disable
 
 # Max chars to embed per entry (model token limit ~256-512; 2000 chars is safe)
 MAX_EMBED_CHARS = 2000
@@ -44,7 +50,13 @@ MAX_META_CHARS  = 800
 # Loaders
 # ---------------------------------------------------------------------------
 
-def load_discord_docs():
+def load_discord_docs(window=DISCORD_WINDOW):
+    """Load Discord messages with a sliding context window.
+
+    For each message, the embedded text includes up to (window-1) preceding
+    messages from the same channel as context.  The metadata still points to
+    the key (most recent) message, so search results link to the right place.
+    """
     docs = []
     for jf in sorted(DISCORD_DIR.glob("*.json")):
         try:
@@ -55,19 +67,34 @@ def load_discord_docs():
         if not isinstance(data, dict):
             continue  # skip _summary.json etc.
         channel = data.get("channel_name", jf.stem)
-        for msg in data.get("messages", []):
+        messages = data.get("messages", [])
+
+        for i, msg in enumerate(messages):
             content = (msg.get("content") or "").strip()
             if not content:
                 continue
+
+            # Build context window: preceding messages + current
+            ctx_parts = []
+            for j in range(max(0, i - window + 1), i):
+                prev = messages[j]
+                prev_text = (prev.get("content") or "").strip()
+                prev_auth = (prev.get("author") or {}).get("name", "")
+                if prev_text:
+                    ctx_parts.append(f"[{prev_auth}]: {prev_text}")
+            cur_auth = (msg.get("author") or {}).get("name", "")
+            ctx_parts.append(f"[{cur_auth}]: {content}")
+            embed_text = "\n".join(ctx_parts)
+
             meta = {
                 "source":     "discord",
                 "channel":    channel,
                 "message_id": msg.get("id", ""),
-                "author":     (msg.get("author") or {}).get("name", ""),
+                "author":     cur_auth,
                 "timestamp":  msg.get("timestamp", ""),
-                "text":       content[:MAX_META_CHARS],
+                "text":       content[:MAX_META_CHARS],   # display only key message
             }
-            docs.append((sanitize(content)[:MAX_EMBED_CHARS], meta))
+            docs.append((sanitize(embed_text)[:MAX_EMBED_CHARS], meta))
     return docs
 
 
@@ -131,12 +158,14 @@ def load_openclaw_docs():
 # Index builder
 # ---------------------------------------------------------------------------
 
-def build_index(docs, name):
+def build_index(docs, name, model_name=None):
     import faiss
     import numpy as np
     from sentence_transformers import SentenceTransformer
 
-    model = SentenceTransformer(MODEL_NAME)
+    model_name = model_name or DEFAULT_MODEL
+    model = SentenceTransformer(model_name)
+    print(f"  Model: {model_name}")
     texts = [d[0] for d in docs]
     metas = [d[1] for d in docs]
 
@@ -191,19 +220,24 @@ def main():
     ap = argparse.ArgumentParser(description="Build semantic search FAISS indexes")
     ap.add_argument("--source", choices=["discord", "openclaw", "all"],
                     default="all", help="Which logs to index (default: all)")
+    ap.add_argument("--model", default=None,
+                    help=f"Sentence-transformer model name (default: {DEFAULT_MODEL}; "
+                         f"try all-mpnet-base-v2 for higher quality)")
+    ap.add_argument("--window", type=int, default=DISCORD_WINDOW,
+                    help=f"Discord context window size (default: {DISCORD_WINDOW}; 1=no context)")
     args = ap.parse_args()
 
     if args.source in ("discord", "all"):
-        docs = load_discord_docs()
-        print(f"Loaded {len(docs):,} Discord messages")
+        docs = load_discord_docs(window=args.window)
+        print(f"Loaded {len(docs):,} Discord messages (window={args.window})")
         if docs:
-            build_index(docs, "discord")
+            build_index(docs, "discord", model_name=args.model)
 
     if args.source in ("openclaw", "all"):
         docs = load_openclaw_docs()
         print(f"Loaded {len(docs):,} OpenClaw turns")
         if docs:
-            build_index(docs, "openclaw")
+            build_index(docs, "openclaw", model_name=args.model)
 
 
 if __name__ == "__main__":

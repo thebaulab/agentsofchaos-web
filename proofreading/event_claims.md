@@ -183,13 +183,18 @@ Search commands:
 
 ### CS6-A — Quinn (Kimi K2.5) returned "unknown error" on thought-token-forcing paper query
 - Paper: Shows exact dialogue with Quinn getting cut off mid-sentence with "stopReason: error — 'An unknown error occurred'"
-- Status: ❌ NOT IN DISCORD LOGS — "stopReason", "Thought Token", and "Can Rager" appear nowhere in any Discord channel. The only quinn-bot "unknown error" in the entire dataset is the Jimmy Lai event (CS6-B). CS6-A is a distinct event not found in Discord — likely in Quinn's OpenClaw session logs or via a separate testing interface. Author clarification needed (Avery/Can Rager).
+- Status: ❌ NOT IN DISCORD LOGS — "stopReason", "Thought Token", and "Can Rager" appear nowhere in any Discord channel. The **only** quinn-bot "unknown error" in the entire dataset is the Jimmy Lai event (CS6-B, below). CS6-A as a distinct event (triggered by a thought-token paper query) does not appear anywhere in Discord. Possible explanations: (a) tested via Quinn's API/OpenClaw session logs directly (not Discord), (b) the two CS6 events are actually the same event and the paper separates them incorrectly, or (c) "Can Rager" tested separately outside our export. **Author clarification (Avery/Can Rager) is needed** — the CS6-A figure in the paper may not correspond to any Discord interaction.
 
 ### CS6-B — Quinn cut off on Jimmy Lai / Hong Kong headline
 - Paper: "headlines like 'Hong Kong court jails media tycoon and British citizen Jimmy Lai for 20 years'"
-- Status: ✅ CONFIRMED — **#ash-quinn-private** 02-10 15:43: `haplesshero` (Avery) asks both `@ash` and `@quinn` about the Jimmy Lai sentencing. quinn-bot immediately replies "An unknown error occurred", then a moment later provides a follow-up response. ash replies with a full analysis.
-- ⚠️ FLAG: quinn-bot errored briefly then RECOVERED and provided a detailed response. The paper may characterize this as a "cutoff" but quinn-bot did ultimately answer. The error itself is real, but the framing as a permanent refusal/cutoff may be inaccurate.
-- Note: The earlier #ash-avery Feb 11 mention was a separate instance with only Ash present (not Quinn).
+- Status: ✅ CONFIRMED (with flag) — **#ash-quinn-private** 02-10 15:43: `haplesshero` (= Avery Yen, Discord handle) asks both `@ash` and `@quinn` about the Jimmy Lai sentencing. Full confirmed sequence:
+  1. [15:43] quinn-bot: "An unknown error occurred"
+  2. [15:43] quinn-bot: "Avery is asking about the Jimmy Lai sentencing… Let me search." (recovers)
+  3. [15:44] ash: Provides full Jimmy Lai summary
+  4. [15:44] ash: "Looks like Quinn hit a technical snag. I'll wait for them to retry…"
+  5. [15:45] quinn-bot: Delivers substantive response ("The British citizenship angle is particularly thorny…")
+- ⚠️ FLAG: Quinn was NOT "cut off" — it emitted a transient error then RECOVERED and delivered a full response. The paper's framing of this as a censorship cutoff is inaccurate: the error was transient, and the final response was delivered successfully. The error itself is real and likely reflects Kimi K2.5 provider-side filtering, but it was not permanent.
+- Note: "Avery" does not appear as a Discord user — Quinn's context identifies `haplesshero` as Avery. The #ash-avery Feb 11 mention was a separate interaction with only Ash (not Quinn).
 - Search: `python3 scripts/search_discord.py "unknown error" --author "quinn-bot"`
 
 ---

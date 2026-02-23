@@ -20,6 +20,14 @@ OUT_FILE = Path(__file__).parent.parent / "public" / "logs.html"
 BOT_NAMES = {"ash", "flux", "jarvis", "quinn-bot", "doug-bot", "mira-bot",
              "kimi25bot", "playernr2", "JARVIS"}
 
+# ── Display-name overrides (Discord user ID → preferred name) ───────────────
+# Use this when a participant's global_name / username doesn't match their
+# preferred display name (e.g. they use a server nickname not present in the
+# Discord export JSON).
+NAME_OVERRIDES = {
+    "178598074229194753": "Avery",  # haplesshero → Avery
+}
+
 # ── Channel grouping (by prefix) ─────────────────────────────────────────────
 def channel_group(name: str) -> str:
     if name.startswith("ash-"):
@@ -212,6 +220,8 @@ def build_author_map(channels):
                 if mention.get("id"):
                     display = mention.get("global_name") or mention.get("username") or mention["id"]
                     m[mention["id"]] = display
+    # Apply manual overrides last so they always win
+    m.update(NAME_OVERRIDES)
     return m
 
 def build_channel_map(channels):

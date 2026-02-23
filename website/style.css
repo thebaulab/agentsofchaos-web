@@ -491,7 +491,7 @@ sup.footnote-ref a { border-bottom: none; }
   }
   #sidebar-search::-webkit-scrollbar { width: 4px; }
   #sidebar-search::-webkit-scrollbar-thumb { background: var(--color-rule); border-radius: 2px; }
-  #sidebar-search .sidebar-title { /* same as above */ }
+  #sidebar-search .sidebar-title { color: var(--color-accent); font-weight: 600; }
 
   #search-input {
     width: 100%; padding: 0.45em 0.6em;

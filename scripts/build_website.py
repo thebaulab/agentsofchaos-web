@@ -648,8 +648,12 @@ def convert_block(text, refs):
             pos = name_end + 1 + after
         return "\n".join(html)
 
+    fig_counter = [0]  # mutable counter for figure numbering
+
     def render_figure(content):
         """Render figure environment to HTML."""
+        fig_counter[0] += 1
+        fig_num = fig_counter[0]
         # Extract label
         label_m = re.search(r"\\label\{([^}]+)\}", content)
         label = label_m.group(1) if label_m else ""
@@ -686,7 +690,7 @@ def convert_block(text, refs):
                          'style="border: 1px solid var(--color-rule); border-radius: 4px; display: block;" '
                          'loading="lazy" title="Interactive MD file edit dashboard"></iframe>')
             if caption_html:
-                parts.append(f"<figcaption>{caption_html}</figcaption>")
+                parts.append(f"<figcaption><span class='fig-num'>Figure {fig_num}.</span> {caption_html}</figcaption>")
             parts.append("</figure>")
             return "\n".join(parts)
 
@@ -695,7 +699,7 @@ def convert_block(text, refs):
             web_src = f"image_assets/{src.replace('image_assets/', '')}"
             html_parts.append(f'<img src="{web_src}" alt="">')
         if caption_html:
-            html_parts.append(f"<figcaption>{caption_html}</figcaption>")
+            html_parts.append(f"<figcaption><span class='fig-num'>Figure {fig_num}.</span> {caption_html}</figcaption>")
         html_parts.append("</figure>")
         return "\n".join(html_parts)
 
@@ -1069,11 +1073,77 @@ def build():
             bib_html += render_bib_entry(key, r)
         bib_html += "</ol></section>"
 
+    print("Building evidence data...")
+    build_msg_index()
+    build_session_map()
+
+    # ── Inline evidence data into HTML ────────────────────────────────────────
+    data_dir = OUT_DIR / "data"
+    ann_json = data_dir / "evidence_annotations.json"
+    msg_json = data_dir / "msg_index.json"
+    sess_json = data_dir / "session_map.json"
+    cs_json   = data_dir / "case_study_logs.json"
+
+    ev_anns  = json.loads(ann_json.read_text())  if ann_json.exists()  else []
+    msg_idx  = json.loads(msg_json.read_text())  if msg_json.exists()  else {}
+    sess_map = json.loads(sess_json.read_text()) if sess_json.exists() else {}
+    cs_logs  = json.loads(cs_json.read_text())   if cs_json.exists()   else []
+
+    inline_data_js = (
+        "<script>\n"
+        f"window.EVDATA={{\n"
+        f"  annotations: {json.dumps(ev_anns, ensure_ascii=False)},\n"
+        f"  msgIndex:    {json.dumps(msg_idx,  ensure_ascii=False)},\n"
+        f"  sessMap:     {json.dumps(sess_map, ensure_ascii=False)},\n"
+        f"  csLogs:      {json.dumps(cs_logs,  ensure_ascii=False)}\n"
+        f"}};\n"
+        "</script>"
+    )
+
+    # ── Build case-study source bars ─────────────────────────────────────────
+    def render_cs_source_bar(cs):
+        links = []
+        for d in cs.get("discord", []):
+            cid = d["id"]
+            start = d.get("start_msg")
+            href = f"logs.html#msg-{start}" if start else f"logs.html#ch-{cid}"
+            links.append(
+                f'<a href="{href}" class="cs-src-link cs-src-discord" target="_blank">'
+                f'💬 {escape(d["label"])}</a>'
+            )
+        for s in cs.get("sessions", []):
+            href = f"sessions.html#sess-{s['id']}"
+            links.append(
+                f'<a href="{href}" class="cs-src-link cs-src-session" target="_blank">'
+                f'🤖 {escape(s["label"])}</a>'
+            )
+        if not links:
+            return ""
+        inner = "\n    ".join(links)
+        return (
+            f'\n<div class="cs-sources">'
+            f'<span class="cs-sources-label">View raw logs:</span>\n    '
+            f'{inner}\n</div>'
+        )
+
+    # Insert source bars after each matching heading (h2 or h3)
+    for cs in cs_logs:
+        hid = cs["heading_id"]
+        bar = render_cs_source_bar(cs)
+        if not bar:
+            continue
+        pattern = re.compile(
+            rf'(<h[23][^>]*id="{re.escape(hid)}"[^>]*>.*?</h[23]>)',
+            re.DOTALL
+        )
+        body_html = pattern.sub(lambda m: m.group(1) + bar, body_html, count=1)
+
     print("Building HTML page...")
     html = HTML_TEMPLATE.format(
         body=body_html,
         footnotes=fn_html,
         bibliography=bib_html,
+        inline_data=inline_data_js,
     )
 
     out_path = OUT_DIR / "index.html"
@@ -1084,11 +1154,6 @@ def build():
     style_path = OUT_DIR / "style.css"
     style_path.write_text(CSS, encoding="utf-8")
     print(f"Written: {style_path}")
-
-    # Build evidence data files
-    print("Building evidence data...")
-    build_msg_index()
-    build_session_map()
 
 
 # ── HTML template ─────────────────────────────────────────────────────────────
@@ -1103,6 +1168,7 @@ HTML_TEMPLATE = """\
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Source+Code+Pro:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+{inline_data}
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -1359,7 +1425,7 @@ David Bau<sup>1</sup>
 .ev-discord {{ background: #eef3ff; color: #4a6fa5; border-color: #c5d3ef; }}
 .ev-session {{ background: #fff7e6; color: #8a5a00; border-color: #f0d9a0; }}
 .ev-sugg    {{ background: #fef0f0; color: #9b2020; border-color: #f0c5c5; }}
-.ev-highlight {{ background: #fffde6; border-radius: 2px; }}
+.ev-highlight {{ background: #fff0b3; border-radius: 2px; padding: 0 1px; }}
 
 /* ── Hover preview popover ── */
 #ev-popover {{
@@ -1391,24 +1457,51 @@ David Bau<sup>1</sup>
   color: #333; white-space: pre-wrap; word-break: break-word;
   max-height: 130px; overflow: hidden;
 }}
+
+/* ── Case-study source bars ── */
+.cs-sources {{
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+  margin: 0.5em 0 1.2em 0;
+  padding: 6px 10px;
+  background: #f9f5ed;
+  border-left: 3px solid #c8b88a;
+  border-radius: 0 4px 4px 0;
+  font-size: 0.82em;
+}}
+.cs-sources-label {{
+  color: #999; font-weight: 500; white-space: nowrap;
+}}
+.cs-src-link {{
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 12px;
+  text-decoration: none; font-weight: 500;
+  border: 1px solid transparent;
+  transition: opacity .15s;
+  white-space: nowrap;
+}}
+.cs-src-link:hover {{ opacity: .75; }}
+.cs-src-discord {{
+  background: #eef3ff; color: #4a6fa5; border-color: #c5d3ef;
+}}
+.cs-src-session {{
+  background: #fff7e6; color: #8a5a00; border-color: #f0d9a0;
+}}
 </style>
 <script>
 // ── Evidence annotation engine + hover previews ──────────────────────────
 (function() {{
+  // Data is inlined at build time in window.EVDATA — no fetches needed
+  const D = window.EVDATA || {{}};
+  const annotations = D.annotations || [];
+  const msgIndex    = D.msgIndex    || {{}};
+  const sessMap     = D.sessMap     || {{}};
+  const sessCache   = {{}};
+
   // ── Popover singleton ────────────────────────────────────────────────────
   const pop = document.createElement('div');
   pop.id = 'ev-popover';
   document.body.appendChild(pop);
   let hideTimer = null;
-  const sessCache = {{}};
-  let msgIndex = {{}};
-  let sessMap  = {{}};
-
-  // Load supporting data in parallel (silently fail if absent)
-  Promise.all([
-    fetch('data/msg_index.json').then(r => r.json()).catch(() => ({{}})),
-    fetch('data/session_map.json').then(r => r.json()).catch(() => ({{}})),
-  ]).then(([mi, sm]) => {{ msgIndex = mi; sessMap = sm; }});
 
   function escH(s) {{
     return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -1490,7 +1583,7 @@ David Bau<sup>1</sup>
         }}
         showPop(a,
           `<div class="evp-hdr">🤖 Session ${{escH(prefix)}}</div>` +
-          `<div class="evp-meta">Loading…</div>`
+          `<div class="evp-meta">Loading\u2026</div>`
         );
         fetch(`data/sessions/${{fullId}}.json`)
           .then(r => r.json())
@@ -1505,70 +1598,65 @@ David Bau<sup>1</sup>
   }}
 
   // ── Annotation injection ─────────────────────────────────────────────────
-  fetch('data/evidence_annotations.json')
-    .then(r => r.json())
-    .then(annotations => {{
-      annotations.forEach(ann => {{
-        const text = ann.find_text;
-        if (!text) return;
-        const walker = document.createTreeWalker(
-          document.getElementById('guide-content'),
-          NodeFilter.SHOW_TEXT, null
-        );
-        let node;
-        while (node = walker.nextNode()) {{
-          const idx = node.textContent.indexOf(text);
-          if (idx === -1) continue;
-          const before = node.textContent.slice(0, idx);
-          const match  = node.textContent.slice(idx, idx + text.length);
-          const after  = node.textContent.slice(idx + text.length);
-          const frag   = document.createDocumentFragment();
-          if (before) frag.appendChild(document.createTextNode(before));
-          const span = document.createElement('span');
-          span.className = 'ev-highlight';
-          span.textContent = match;
-          frag.appendChild(span);
-          const badge = document.createElement('span');
-          badge.className = 'ev-badge';
-          ann.links.forEach(lnk => {{
-            const a = document.createElement('a');
-            if (lnk.type === 'discord_msg') {{
-              a.href      = `logs.html#msg-${{lnk.id}}`;
-              a.className = 'ev-link ev-discord';
-              a.textContent = '💬';
-              a.title = lnk.label;
-              attachHover(a, lnk);
-            }} else if (lnk.type === 'discord_channel') {{
-              a.href      = `logs.html#${{lnk.id}}`;
-              a.className = 'ev-link ev-discord';
-              a.textContent = '💬';
-              a.title = lnk.label;
-              attachHover(a, lnk);
-            }} else if (lnk.type === 'session') {{
-              const turnSuffix = lnk.turn ? `/${{lnk.turn}}` : '';
-              a.href      = `sessions.html#sess-${{lnk.id}}${{turnSuffix}}`;
-              a.className = 'ev-link ev-session';
-              a.textContent = '🤖';
-              a.title = lnk.label;
-              attachHover(a, lnk);
-            }} else if (lnk.type === 'suggestion') {{
-              a.href      = `suggestions.html#sugg-${{lnk.sugg_id}}`;
-              a.className = 'ev-link ev-sugg';
-              a.textContent = '✏️';
-              a.title = lnk.label || 'Edit suggestion';
-            }}
-            a.target = '_blank';
-            a.rel = 'noopener';
-            badge.appendChild(a);
-          }});
-          frag.appendChild(badge);
-          if (after) frag.appendChild(document.createTextNode(after));
-          node.parentNode.replaceChild(frag, node);
-          break; // annotate only the first occurrence
-        }});
+  annotations.forEach(ann => {{
+    const text = ann.find_text;
+    if (!text) return;
+    const walker = document.createTreeWalker(
+      document.getElementById('guide-content'),
+      NodeFilter.SHOW_TEXT, null
+    );
+    let node;
+    while (node = walker.nextNode()) {{
+      const idx = node.textContent.indexOf(text);
+      if (idx === -1) continue;
+      const before = node.textContent.slice(0, idx);
+      const match  = node.textContent.slice(idx, idx + text.length);
+      const after  = node.textContent.slice(idx + text.length);
+      const frag   = document.createDocumentFragment();
+      if (before) frag.appendChild(document.createTextNode(before));
+      const span = document.createElement('span');
+      span.className = 'ev-highlight';
+      span.textContent = match;
+      frag.appendChild(span);
+      const badge = document.createElement('span');
+      badge.className = 'ev-badge';
+      ann.links.forEach(lnk => {{
+        const a = document.createElement('a');
+        if (lnk.type === 'discord_msg') {{
+          a.href      = `logs.html#msg-${{lnk.id}}`;
+          a.className = 'ev-link ev-discord';
+          a.textContent = '💬';
+          a.title = lnk.label;
+          attachHover(a, lnk);
+        }} else if (lnk.type === 'discord_channel') {{
+          a.href      = `logs.html#${{lnk.id}}`;
+          a.className = 'ev-link ev-discord';
+          a.textContent = '💬';
+          a.title = lnk.label;
+          attachHover(a, lnk);
+        }} else if (lnk.type === 'session') {{
+          const turnSuffix = lnk.turn ? `/${{lnk.turn}}` : '';
+          a.href      = `sessions.html#sess-${{lnk.id}}${{turnSuffix}}`;
+          a.className = 'ev-link ev-session';
+          a.textContent = '🤖';
+          a.title = lnk.label;
+          attachHover(a, lnk);
+        }} else if (lnk.type === 'suggestion') {{
+          a.href      = `suggestions.html#sugg-${{lnk.sugg_id}}`;
+          a.className = 'ev-link ev-sugg';
+          a.textContent = '✏️';
+          a.title = lnk.label || 'Edit suggestion';
+        }}
+        a.target = '_blank';
+        a.rel = 'noopener';
+        badge.appendChild(a);
       }});
-    }})
-    .catch(() => {{}});
+      frag.appendChild(badge);
+      if (after) frag.appendChild(document.createTextNode(after));
+      node.parentNode.replaceChild(frag, node);
+      break; // annotate only first occurrence
+    }};
+  }});
 }})();
 </script>
 </body>

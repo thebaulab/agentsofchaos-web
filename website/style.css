@@ -212,6 +212,11 @@ figcaption {
   font-style: italic;
   text-align: left;
 }
+.fig-num {
+  font-style: normal;
+  font-weight: 600;
+  color: #444;
+}
 .subfigure { display: inline-block; vertical-align: top; margin: 0.3em; }
 
 /* ── Bold inline headings (\mypar) ────────────────────────── */

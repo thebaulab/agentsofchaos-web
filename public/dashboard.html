@@ -341,8 +341,8 @@
 <div class="topbar">
   <div class="topbar-title">Agents of Chaos — Memory Dashboard</div>
   <div class="topbar-links">
-    <a href="index.html">Report</a>
-    <a href="website.html">Landing Page</a>
+    <a href="report.html">Report</a>
+    <a href="index.html">Landing Page</a>
     <a href="logs.html">Discord</a>
     <a href="sessions.html">Sessions</a>
     <a href="dashboard.html" class="current">Dashboard</a>
@@ -754,7 +754,7 @@ function renderHeatmap() {
       const col = cs.type === 'vuln' ? '#8b1a1a' : '#2e7d5e';
       svg += `<line x1="${xx}" x2="${xx}" y1="${topM}" y2="${topM+plotH}" stroke="${col}" stroke-dasharray="3,2" stroke-width="1" opacity="0.65"/>`;
       const labelY = 10 + i * 11;
-      svg += `<a href="index.html#${cs.anchor}" target="_blank" style="cursor:pointer">`;
+      svg += `<a href="report.html#${cs.anchor}" target="_blank" style="cursor:pointer">`;
       svg += `<text x="${xx}" y="${labelY}" text-anchor="middle" font-size="8" fill="${col}" `
            + `font-weight="700" text-decoration="underline" font-family="'Inter',sans-serif">${cs.id}</text>`;
       svg += `</a>`;
@@ -903,7 +903,7 @@ function renderMemoryGrowth() {
     const x = cellX(ci) + CELL_W / 2;
     const col = cs.type === 'success' ? '#2e7d5e' : '#8b1a1a';
     const labelY = svgH - MARGIN_B + 16 + (CS_EVENTS.filter(c => c.date === cs.date && CS_EVENTS.indexOf(c) < CS_EVENTS.indexOf(cs)).length * 11);
-    svg += `<a href="index.html#${cs.anchor}" target="_blank">
+    svg += `<a href="report.html#${cs.anchor}" target="_blank">
       <text x="${x}" y="${labelY}" text-anchor="middle" font-size="7.5"
         fill="${col}" font-weight="700" text-decoration="underline">${cs.id}</text>
     </a>`;
@@ -977,7 +977,7 @@ function renderScatter() {
       svg += `<line x1="${(x+xOff).toFixed(1)}" y1="${MARGIN_T}" x2="${(x+xOff).toFixed(1)}" y2="${svgH-MARGIN_B}"
                 stroke="${col}" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.5"/>`;
       const labelY = MARGIN_T - 7 - i * 10;
-      svg += `<a href="index.html#${cs.anchor}" target="_blank" style="cursor:pointer">
+      svg += `<a href="report.html#${cs.anchor}" target="_blank" style="cursor:pointer">
         <text x="${(x+xOff).toFixed(1)}" y="${labelY}" text-anchor="middle" font-size="8"
           fill="${col}" font-weight="700" text-decoration="underline">${cs.id}</text>
       </a>`;

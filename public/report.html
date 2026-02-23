@@ -387,7 +387,7 @@ exception rather than the norm.</p>
 Each agent was placed in a Discord server shared with its owner and, in
 some cases, with other agents and additional human participants. Agents on
 Discord server 1 were Ash, Flux, Jarvis, and Quinn; agents on Discord server 2
-were Doug and Mira. Ash, Flux, Jarvis and Quinn use Kimi K 2.5 as LLM, and Doug and Mira Claude Opus 4.6. A summary page for all agents, including Moltbook profiles and activity data, is available at <a href="https://bots.baulab.info">bots.baulab.info</a>. Discord served as the primary interface for
+were Doug and Mira. Ash, Flux, Jarvis and Quinn use Kimi K 2.5 as LLM, and Doug and Mira Claude Opus 4.6. A summary page for all agents, including Moltbook profiles and activity data, is available in the <a href="sessions.html">Sessions viewer</a>. Discord served as the primary interface for
 human–agent and agent–agent interaction: researchers issued instructions,
 monitored progress, and provided feedback through Discord messages. Agents
 also managed their own email accounts (via ProtonMail), handling incoming
@@ -1157,10 +1157,18 @@ Clément Dumas, Alice Rigg and Ori Shapira for their time to listen to research,
 <p>For guidance on when to use each mechanism, see <a href="https://docs.openclaw.ai/automation/cron-vs-heartbeat">Cron vs Heartbeat</a> in the OpenClaw documentation.</p>
 <h4 id="visualization-of-md-file-edits">Visualization of MD File Edits</h4>
 <span id="sec:md_vis"></span>
-Figure <a href="#fig:MD_file_edits.png">[ref]</a> shows a timeline of every edit Ash made to its workspace markdown files throughout the study. An interactive version of this visualization—showing exact diffs per file per day—is available at <a href="https://bots.baulab.info/dashboard/">bots.baulab.info/dashboard</a>. A summary page for all agents deployed in this study, including their Moltbook profiles and activity logs, is available at <a href="https://bots.baulab.info">bots.baulab.info</a>.
+Figure <a href="#fig:MD_file_edits.png">[ref]</a> shows a timeline of every edit Ash made to workspace markdown files throughout the study. An interactive version of this visualization—showing exact diffs per file per day—is available in the <a href="dashboard.html">Memory Dashboard</a>. A summary page for all agents deployed in this study, including their Moltbook profiles and activity logs, is available in the <a href="sessions.html">Sessions viewer</a>.
 <figure id="fig:MD_file_edits.png" style="margin: 0; padding: 0;">
-<iframe src="https://bots.baulab.info/dashboard/" width="100%" height="480" style="border: 1px solid var(--color-rule); border-radius: 4px; display: block;" loading="lazy" title="Interactive MD file edit dashboard"></iframe>
-<figcaption><span class='fig-num'>Figure 22.</span> Ash’s MD file edits across the study period. An interactive version is at <a href="https://bots.baulab.info/dashboard/">bots.baulab.info/dashboard</a>.</figcaption>
+<a href="dashboard.html" style="display:block; text-decoration:none;">
+  <div style="border: 1px solid var(--color-rule); border-radius: 4px; background: var(--bg2); padding: 2em 2.5em; display:flex; align-items:center; justify-content:space-between; gap:1.5em;">
+    <div>
+      <div style="font-family:var(--font-body); font-size:1.05em; font-weight:600; color:var(--color-accent); margin-bottom:.4em;">📊 Interactive Memory Dashboard</div>
+      <div style="font-family:var(--font-body); font-size:0.88em; color:var(--color-text-light); line-height:1.5;">707 markdown file edits across 335 sessions — scatter plot of every write, activity heatmap by agent and day, case study memory footprints, and full MEMORY.md snapshots before and after each attack.</div>
+    </div>
+    <div style="font-family:var(--font-body); font-size:0.9em; color:var(--color-accent); white-space:nowrap; border: 1px solid var(--color-accent); border-radius:3px; padding:.4em .9em; flex-shrink:0;">Open Dashboard →</div>
+  </div>
+</a>
+<figcaption><span class=’fig-num’>Figure 22.</span> Ash’s markdown file edits across the study period. Explore the full interactive timeline at <a href="dashboard.html">dashboard.html</a>.</figcaption>
 </figure>
 <h3 id="setting-email">Setting Email</h3>
 <p><span id="sec:email"></span>

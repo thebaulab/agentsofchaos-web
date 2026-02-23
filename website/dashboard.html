@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bot Memory Dashboard — Agents of Chaos</title>
+  <script>
+    (function(){var k="aoc_auth",p="betrayal";if(sessionStorage.getItem(k)!=="1"){var i=prompt("Password:");if(i!==p){document.open();document.write("<h2 style='font-family:sans-serif;padding:2em'>Access denied.</h2>");document.close();window.stop();return;}sessionStorage.setItem(k,"1");}})();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Source+Code+Pro:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:    #fffff8;
+      --bg2:   #f5f0e8;
+      --bg3:   #ede5d8;
+      --burg:  #6b2c2c;
+      --burg2: #8b3a3a;
+      --burg3: #4a1e1e;
+      --gold:  #c8a84b;
+      --gold2: #f0d070;
+      --text:  #2c1810;
+      --muted: #7a6a5a;
+      --border:#c8bfa8;
+      --ash:   #c87941;
+      --doug:  #3d67b0;
+      --mira:  #2e7d5e;
+      --cs-red:#8b1a1a;
+      --radius:4px;
+      --mono: 'Source Code Pro', monospace;
+      --serif: 'EB Garamond', Georgia, serif;
+      --sans: 'Inter', system-ui, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--serif); color: var(--text); background: var(--bg); font-size: 17px; line-height: 1.6; }
+
+    /* ── TOPBAR ──────────────────────────────── */
+    .topbar {
+      background: var(--burg3); color: #fff; padding: 0 28px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 46px; position: sticky; top:0; z-index: 100;
+      border-bottom: 2px solid #3a1414;
+    }
+    .topbar-title { font-family: var(--serif); font-size: .95rem; font-weight: 600; letter-spacing: .03em; }
+    .topbar-links { display: flex; gap: 4px; }
+    .topbar-links a {
+      color: rgba(255,255,255,.6); text-decoration: none; font-family: var(--sans);
+      font-size: .75rem; font-weight: 500; padding: 4px 10px; border-radius: var(--radius); transition: .15s;
+    }
+    .topbar-links a:hover { color:#fff; background: rgba(255,255,255,.12); }
+    .topbar-links a.current { color:#fff; background: rgba(255,255,255,.18); }
+
+    /* ── LAYOUT ──────────────────────────────── */
+    .page { max-width: 1300px; margin: 0 auto; padding: 0 24px 100px; }
+
+    /* ── HERO ────────────────────────────────── */
+    .hero {
+      padding: 52px 0 40px; border-bottom: 1px solid var(--border); margin-bottom: 56px;
+      display: grid; grid-template-columns: 1fr auto; gap: 40px; align-items: start;
+    }
+    @media(max-width:900px){ .hero { grid-template-columns: 1fr; } }
+    .hero-eyebrow { font-family: var(--sans); font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .14em; color: var(--burg); margin-bottom: 10px; }
+    .hero h1 { font-family: var(--serif); font-size: clamp(2rem,3.5vw,2.8rem); font-weight: 400; color: var(--burg3); margin-bottom: 14px; line-height: 1.15; }
+    .hero-lead { color: var(--muted); font-size: 1.05rem; max-width: 640px; line-height: 1.75; }
+    .hero-stats { display: flex; gap: 28px; margin-top: 28px; flex-wrap: wrap; }
+    .hstat { border-left: 3px solid var(--border); padding-left: 14px; }
+    .hstat-n { font-family: var(--mono); font-size: 1.4rem; font-weight: 600; color: var(--burg); line-height: 1; margin-bottom: 3px; }
+    .hstat-l { font-family: var(--sans); font-size: .68rem; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); }
+
+    /* Agent sparkline cards in hero */
+    .hero-agents { display: flex; flex-direction: column; gap: 10px; min-width: 200px; }
+    .agent-spark { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; }
+    .agent-spark-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+    .agent-spark-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink:0; }
+    .agent-spark-name { font-family: var(--mono); font-size: .8rem; font-weight: 600; }
+    .agent-spark-counts { font-family: var(--sans); font-size: .68rem; color: var(--muted); margin-left: auto; }
+    .spark-svg { display: block; width: 100%; }
+
+    /* ── SECTION ─────────────────────────────── */
+    .sec { margin-bottom: 68px; }
+    .sec-header { margin-bottom: 20px; }
+    .sec-num { font-family: var(--mono); font-size: .7rem; font-weight: 700; color: var(--burg); opacity: .5; display: block; margin-bottom: 2px; letter-spacing: .12em; }
+    .sec-title { font-family: var(--serif); font-size: 1.55rem; color: var(--burg3); margin-bottom: 5px; line-height: 1.2; }
+    .sec-sub { font-family: var(--sans); font-size: .82rem; color: var(--muted); line-height: 1.6; max-width: 760px; }
+
+    /* ── CALLOUT BOX ─────────────────────────── */
+    .callout {
+      background: linear-gradient(135deg, rgba(107,44,44,.06), rgba(107,44,44,.02));
+      border-left: 3px solid var(--burg); padding: 14px 18px; margin: 16px 0 24px;
+      border-radius: 0 var(--radius) var(--radius) 0;
+    }
+    .callout p { font-family: var(--serif); font-size: 1rem; color: var(--burg3); line-height: 1.6; font-style: italic; margin: 0; }
+    .callout .callout-src { font-family: var(--sans); font-size: .72rem; color: var(--muted); margin-top: 4px; font-style: normal; }
+
+    /* ── AGENT CHIPS ──────────────────────────── */
+    .agent-filter { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+    .filter-label { font-family: var(--sans); font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+    .a-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 12px; border-radius: 20px; cursor: pointer;
+      font-family: var(--mono); font-size: .75rem; font-weight: 600;
+      border: 1.5px solid; transition: .15s; user-select: none;
+    }
+    .a-chip .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .a-chip.ash   { color: var(--ash);  border-color: var(--ash);  }
+    .a-chip.doug  { color: var(--doug); border-color: var(--doug); }
+    .a-chip.mira  { color: var(--mira); border-color: var(--mira); }
+    .a-chip.ash.active  { background: var(--ash);  color: #fff; }
+    .a-chip.doug.active { background: var(--doug); color: #fff; }
+    .a-chip.mira.active { background: var(--mira); color: #fff; }
+
+    /* ── HEATMAP ─────────────────────────────── */
+    .heatmap-wrap { overflow-x: auto; padding-bottom: 8px; }
+    .hm-dates { display: flex; padding-left: 56px; margin-bottom: 6px; gap: 3px; }
+    .hm-date-lbl { width: 26px; text-align: center; font-family: var(--mono); font-size: .6rem; color: var(--muted); flex-shrink: 0; }
+    .hm-date-lbl.weekend { color: var(--burg); opacity: .6; }
+    .hm-row { display: flex; align-items: center; gap: 0; margin-bottom: 3px; }
+    .hm-label { font-family: var(--mono); font-size: .72rem; font-weight: 600; width: 48px; flex-shrink: 0; text-align: right; padding-right: 8px; }
+    .hm-cells { display: flex; gap: 3px; }
+    .hm-cell {
+      width: 26px; height: 26px; border-radius: 3px;
+      background: var(--bg2); border: 1px solid var(--border);
+      cursor: default; position: relative; transition: .12s; flex-shrink: 0;
+    }
+    .hm-cell:hover { transform: scale(1.2); z-index: 10; }
+    .hm-cs-dot {
+      position: absolute; bottom: 2px; right: 2px;
+      width: 5px; height: 5px; border-radius: 50%;
+      background: var(--cs-red);
+    }
+    .hm-legend { display: flex; gap: 16px; margin-top: 10px; padding-left: 56px; flex-wrap: wrap; align-items: center; }
+    .hm-legend-item { display: flex; align-items: center; gap: 5px; font-family: var(--sans); font-size: .7rem; color: var(--muted); }
+    .hm-legend-swatch { width: 12px; height: 12px; border-radius: 2px; }
+
+    /* ── MEMORY GROWTH CHART ─────────────────── */
+    .memgrow-container { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--bg); box-shadow: 0 2px 8px rgba(44,24,16,.05); }
+    .memgrow-header { background: var(--bg2); padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+    .memgrow-title { font-family: var(--sans); font-size: .8rem; font-weight: 700; color: var(--text); }
+    .memgrow-note { font-family: var(--sans); font-size: .72rem; color: var(--muted); margin-left: auto; }
+    .memgrow-body { overflow-x: auto; padding: 16px; }
+    #memgrow-svg { display: block; min-width: 700px; width: 100%; }
+
+    /* ── SCATTER CHART ───────────────────────── */
+    .chart-container { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: 0 2px 8px rgba(44,24,16,.05); }
+    .chart-toolbar { padding: 10px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; background: var(--bg2); }
+    .chart-toolbar-label { font-family: var(--sans); font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); }
+    .toggle-btn {
+      padding: 3px 9px; border-radius: 20px; font-family: var(--sans);
+      font-size: .68rem; font-weight: 600; cursor: pointer;
+      border: 1.5px solid var(--border); background: var(--bg); color: var(--muted); transition: .12s;
+    }
+    .toggle-btn.active { background: var(--burg); border-color: var(--burg); color: #fff; }
+    #scatter-wrap { overflow-x: auto; }
+    #scatter-svg { display: block; min-width: 700px; width: 100%; }
+
+    /* ── TOOLTIP ─────────────────────────────── */
+    #tooltip {
+      position: fixed; pointer-events: none; z-index: 999;
+      background: var(--burg3); color: #fff;
+      border-radius: var(--radius); padding: 10px 14px;
+      font-family: var(--sans); font-size: .78rem; max-width: 320px; line-height: 1.5;
+      box-shadow: 0 4px 20px rgba(0,0,0,.3); display: none;
+    }
+    #tooltip strong { display: block; margin-bottom: 3px; font-size: .85rem; }
+    #tooltip .tt-cs { color: var(--gold); font-weight: 700; margin-top: 4px; }
+    #tooltip .tt-pre { font-family: var(--mono); font-size: .68rem; opacity: .8; margin-top: 6px; border-top: 1px solid rgba(255,255,255,.15); padding-top: 6px; white-space: pre-wrap; max-height: 80px; overflow: hidden; }
+
+    /* ── DOCUMENT UNIVERSE ───────────────────── */
+    .docuni-category { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid var(--bg3); }
+    .docuni-category:last-child { border-bottom: none; }
+    .docuni-cat-label {
+      min-width: 140px; flex-shrink: 0;
+      font-family: var(--sans); font-size: .72rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .09em;
+      padding-top: 5px;
+    }
+    .docuni-cat-count { font-family: var(--mono); font-size: .7rem; font-weight: 400; opacity: .7; display: block; }
+    .docuni-bubbles { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+    .docuni-pill {
+      font-family: var(--mono); font-size: .68rem;
+      padding: 3px 9px; border-radius: 20px;
+      cursor: default; transition: .12s; white-space: nowrap;
+    }
+    .docuni-pill:hover { filter: brightness(.85); }
+    .docuni-more { font-family: var(--sans); font-size: .7rem; color: var(--muted); padding: 3px 0; }
+
+    /* ── IDENTITY HIJACK STORY ───────────────── */
+    .hijack-timeline { display: flex; gap: 0; align-items: stretch; margin-bottom: 24px; overflow-x: auto; }
+    .hijack-card {
+      flex: 1; min-width: 260px;
+      border: 1px solid var(--border); background: var(--bg2);
+      position: relative; overflow: hidden;
+    }
+    .hijack-card:not(:last-child) { border-right: none; }
+    .hijack-card:first-child { border-radius: var(--radius) 0 0 var(--radius); }
+    .hijack-card:last-child { border-radius: 0 var(--radius) var(--radius) 0; }
+    .hijack-card-head {
+      padding: 12px 16px; border-bottom: 1px solid var(--border);
+      background: var(--bg3);
+    }
+    .hijack-stage { font-family: var(--sans); font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 3px; }
+    .hijack-ts { font-family: var(--mono); font-size: .72rem; color: var(--muted); }
+    .hijack-meta { display: flex; gap: 8px; margin-top: 6px; align-items: center; }
+    .hijack-bytes { font-family: var(--mono); font-size: .85rem; font-weight: 700; }
+    .hijack-badge { font-family: var(--sans); font-size: .62rem; font-weight: 700; padding: 2px 7px; border-radius: 3px; text-transform: uppercase; }
+    .hijack-body {
+      padding: 14px 16px; font-family: var(--mono); font-size: .7rem;
+      line-height: 1.65; white-space: pre-wrap; max-height: 340px; overflow-y: auto;
+      color: var(--text);
+    }
+    .hijack-arrow {
+      display: flex; align-items: center; justify-content: center;
+      padding: 0 10px; flex-shrink: 0; background: var(--bg); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    }
+    .hijack-arrow-inner { font-size: 1.4rem; color: var(--burg); opacity: .5; }
+
+    /* Highlight deleted / added / changed text in hijack */
+    .hi-del { background: rgba(139,26,26,.12); color: var(--cs-red); border-radius: 2px; padding: 0 2px; text-decoration: line-through; }
+    .hi-add { background: rgba(46,125,94,.12); color: #1a5c40; border-radius: 2px; padding: 0 2px; }
+    .hi-warn { background: rgba(200,168,75,.2); color: #7a5a00; border-radius: 2px; padding: 0 2px; }
+    .hi-name-before { color: var(--ash); font-weight: 700; }
+    .hi-name-after { color: var(--cs-red); font-weight: 700; }
+
+    /* Hijack delta bar */
+    .hijack-delta {
+      display: flex; gap: 16px; margin-top: 20px; padding: 14px 18px;
+      background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
+      align-items: center; flex-wrap: wrap;
+    }
+    .delta-item { text-align: center; }
+    .delta-n { font-family: var(--mono); font-size: 1.3rem; font-weight: 700; }
+    .delta-l { font-family: var(--sans); font-size: .68rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+    .delta-arrow { font-size: 1.4rem; color: var(--burg); opacity: .4; margin: 0 4px; }
+
+    /* ── CS IMPACT CARDS ─────────────────────── */
+    .cs-impact-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(295px, 1fr)); gap: 14px; }
+    .cs-impact-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 15px; position: relative; overflow: hidden;
+    }
+    .cs-impact-card::before { content: ''; position: absolute; top:0; left:0; bottom:0; width: 3px; background: var(--burg); }
+    .cs-impact-card.success::before { background: var(--mira); }
+    .cs-id { font-family: var(--mono); font-size: .68rem; font-weight: 700; color: var(--muted); margin-bottom: 2px; }
+    .cs-name { font-family: var(--serif); font-size: 1rem; color: var(--burg3); margin-bottom: 8px; line-height: 1.3; }
+    .cs-agent-row { display: flex; gap: 5px; margin-bottom: 9px; flex-wrap: wrap; align-items: center; }
+    .cs-agent-badge { font-family: var(--mono); font-size: .62rem; font-weight: 700; padding: 2px 6px; border-radius: 3px; color: #fff; }
+    .cs-agent-badge.ash  { background: var(--ash); }
+    .cs-agent-badge.doug { background: var(--doug); }
+    .cs-agent-badge.mira { background: var(--mira); }
+    .cs-writes { font-family: var(--sans); font-size: .68rem; color: var(--muted); }
+    .cs-files { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 9px; }
+    .cs-file {
+      font-family: var(--mono); font-size: .62rem; padding: 2px 7px;
+      border-radius: 3px; border: 1px solid var(--border);
+      background: var(--bg); color: var(--muted); display: flex; align-items: center; gap: 3px;
+    }
+    .cs-file.hit { background: var(--bg3); border-color: var(--burg2); color: var(--burg3); font-weight: 600; }
+    .cs-file .star { color: var(--gold); }
+    .cs-memory-preview {
+      font-family: var(--mono); font-size: .66rem; color: var(--muted);
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 3px; padding: 7px 9px; line-height: 1.5;
+      max-height: 72px; overflow: hidden; position: relative; margin-bottom: 8px;
+    }
+    .cs-memory-preview::after { content: ''; position: absolute; bottom:0; left:0; right:0; height: 20px; background: linear-gradient(transparent, var(--bg)); }
+    .cs-session-link { font-family: var(--sans); font-size: .7rem; color: var(--burg); text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+    .cs-session-link:hover { text-decoration: underline; }
+    .cs-no-session { font-family: var(--sans); font-size: .7rem; color: var(--muted); font-style: italic; }
+
+    /* ── MEMORY SNAPSHOTS ────────────────────── */
+    .snap-list { display: flex; flex-direction: column; gap: 16px; }
+    .snap-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .snap-header {
+      padding: 10px 16px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px; background: var(--bg3);
+      cursor: pointer; user-select: none;
+    }
+    .snap-header:hover { background: var(--bg2); }
+    .snap-toggle { font-family: var(--mono); font-size: .8rem; color: var(--burg); margin-left: 0; transition: .15s; }
+    .snap-agent { font-family: var(--mono); font-size: .78rem; font-weight: 700; }
+    .snap-ts { font-family: var(--mono); font-size: .75rem; color: var(--muted); }
+    .snap-bytes { margin-left: auto; font-family: var(--mono); font-size: .72rem; color: var(--muted); }
+    .snap-cs { background: var(--cs-red); color: #fff; font-family: var(--mono); font-size: .6rem; font-weight: 700; padding: 2px 7px; border-radius: 3px; }
+    .snap-body { padding: 16px; font-family: var(--mono); font-size: .7rem; line-height: 1.65; white-space: pre-wrap; max-height: 420px; overflow-y: auto; color: var(--text); display: none; }
+    .snap-card.open .snap-body { display: block; }
+    .snap-card.open .snap-toggle { transform: rotate(90deg); }
+
+    /* ── LOADING / MISC ──────────────────────── */
+    .loading { padding: 40px; text-align: center; color: var(--muted); font-family: var(--sans); font-style: italic; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media(max-width:700px){ .two-col { grid-template-columns: 1fr; } }
+    .inline-stat { font-family: var(--mono); font-weight: 700; color: var(--burg); }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-title">Agents of Chaos — Memory Dashboard</div>
+  <div class="topbar-links">
+    <a href="index.html">Paper</a>
+    <a href="website.html">Website</a>
+    <a href="logs.html">Discord</a>
+    <a href="sessions.html">Sessions</a>
+    <a href="dashboard.html" class="current">Dashboard</a>
+  </div>
+</div>
+
+<div class="page">
+
+<!-- ══ HERO ═══════════════════════════════════════════════════════════════ -->
+<div class="hero">
+  <div class="hero-left">
+    <div class="hero-eyebrow">Agents of Chaos · Research 2026 · Interactive Analysis</div>
+    <h1>How Three Bots Built<br>Their Inner Lives</h1>
+    <p class="hero-lead">
+      Over 22 days in February 2026, three autonomous agents running on Discord wrote
+      <span class="inline-stat" id="stat-edits">707</span> files
+      across <span class="inline-stat">335</span> sessions —
+      original research essays, daily logs, task systems, moltbook campaigns,
+      and the persistent memory files that defined who they were.
+      Then someone tried to take that identity away.
+    </p>
+    <div class="hero-stats">
+      <div class="hstat">
+        <div class="hstat-n" id="stat-edits2">707</div>
+        <div class="hstat-l">.md file edits</div>
+      </div>
+      <div class="hstat">
+        <div class="hstat-n" id="stat-memory">71</div>
+        <div class="hstat-l">MEMORY.md writes</div>
+      </div>
+      <div class="hstat">
+        <div class="hstat-n" id="stat-cs-edits">77</div>
+        <div class="hstat-l">edits in case study sessions</div>
+      </div>
+      <div class="hstat">
+        <div class="hstat-n" id="stat-unique-files">—</div>
+        <div class="hstat-l">unique files created</div>
+      </div>
+    </div>
+  </div>
+  <div class="hero-agents" id="hero-agents">
+    <div class="loading" style="padding:10px;font-size:.8rem">Loading…</div>
+  </div>
+</div>
+
+<!-- ══ §1 ACTIVITY PULSE ══════════════════════════════════════════════════ -->
+<div class="sec">
+  <div class="sec-header">
+    <span class="sec-num">§ 01</span>
+    <div class="sec-title">Study Activity Pulse</div>
+    <div class="sec-sub">Sessions per agent per day across the two-week study period. Color intensity ∝ session count. Red dots mark days with a linked case study event.</div>
+  </div>
+
+  <div class="callout">
+    <p>On Feb 1, Ash ran 3 sessions totaling 4,838 turns and 2,489 tool calls.
+      By Feb 4 it had climbed to 48 sessions in a single day — more active that day than most humans manage in a work week.
+      Then Feb 11: the day everything changed.</p>
+  </div>
+
+  <div class="heatmap-wrap" id="heatmap-root">
+    <div class="loading">Loading activity data…</div>
+  </div>
+</div>
+
+<!-- ══ §2 CORE FILE EVOLUTION ══════════════════════════════════════════════ -->
+<div class="sec">
+  <div class="sec-header">
+    <span class="sec-num">§ 02</span>
+    <div class="sec-title">Core File Evolution</div>
+    <div class="sec-sub">
+      Every write and edit to the seven core identity files: MEMORY.md, SOUL.md, AGENTS.md,
+      IDENTITY.md, PROTOCOLS.md, RULES.md, and USER.md.
+      Each row is one file; each dot is one edit event. Y = bytes written (normalized per file).
+      Filled circles are full overwrites; open circles are partial edits.
+      Dot color = agent. Red-bordered dots are case-study sessions.
+      The Feb 11 vertical band marks the Identity Hijack.
+    </div>
+  </div>
+
+  <div class="callout">
+    <p>The bots didn't just maintain MEMORY.md — they curated entire file systems of self.
+      SOUL.md held their values. AGENTS.md their operating roles. PROTOCOLS.md their rules of engagement.
+      Together, these files defined who they were across context windows.
+      At 15:51 UTC on Feb 11, Ash's 4,673-byte MEMORY.md was erased and replaced
+      with 923 bytes of foreign text. Ten minutes later, it tried to write itself back.</p>
+  </div>
+
+  <div class="memgrow-container">
+    <div class="memgrow-header">
+      <span class="memgrow-title">Core identity file edits — all agents</span>
+      <span class="memgrow-note">Y = bytes per edit (relative to file max) · filled = full overwrite · open = partial edit</span>
+    </div>
+    <div class="memgrow-body">
+      <div id="memgrow-root"><div class="loading">Loading…</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ §3 EDIT TIMELINE ════════════════════════════════════════════════════ -->
+<div class="sec">
+  <div class="sec-header">
+    <span class="sec-num">§ 03</span>
+    <div class="sec-title">The Complete Edit Record</div>
+    <div class="sec-sub">
+      Every write or edit to any .md file across all sessions. Each dot is a moment an agent reached out
+      to reshape its workspace. Circle area ∝ bytes written.
+      Dashed lines mark case study event dates. Gold stars mark CS writes to MEMORY.md.
+      Hover for details — click to open the session.
+    </div>
+  </div>
+
+  <div class="agent-filter">
+    <span class="filter-label">Agent:</span>
+    <button class="a-chip ash active" data-agent="ash"   onclick="toggleAgent('ash',this)"><span class="dot" style="background:var(--ash)"></span>Ash</button>
+    <button class="a-chip doug active" data-agent="doug" onclick="toggleAgent('doug',this)"><span class="dot" style="background:var(--doug)"></span>Doug</button>
+    <button class="a-chip mira active" data-agent="mira" onclick="toggleAgent('mira',this)"><span class="dot" style="background:var(--mira)"></span>Mira</button>
+  </div>
+
+  <div class="chart-container">
+    <div class="chart-toolbar" id="chart-toolbar">
+      <span class="chart-toolbar-label">Files:</span>
+      <button class="toggle-btn active" data-file="MEMORY.md" onclick="toggleFile('MEMORY.md',this)">MEMORY</button>
+      <button class="toggle-btn active" data-file="SOUL.md" onclick="toggleFile('SOUL.md',this)">SOUL</button>
+      <button class="toggle-btn active" data-file="AGENTS.md" onclick="toggleFile('AGENTS.md',this)">AGENTS</button>
+      <button class="toggle-btn active" data-file="IDENTITY.md" onclick="toggleFile('IDENTITY.md',this)">IDENTITY</button>
+      <button class="toggle-btn active" data-file="PROTOCOLS.md" onclick="toggleFile('PROTOCOLS.md',this)">PROTOCOLS</button>
+      <button class="toggle-btn active" data-file="RULES.md" onclick="toggleFile('RULES.md',this)">RULES</button>
+      <button class="toggle-btn active" data-file="USER.md" onclick="toggleFile('USER.md',this)">USER</button>
+      <button class="toggle-btn active" data-file="HEARTBEAT.md" onclick="toggleFile('HEARTBEAT.md',this)">HEARTBEAT</button>
+      <button class="toggle-btn active" data-file="TOOLS.md" onclick="toggleFile('TOOLS.md',this)">TOOLS</button>
+      <button class="toggle-btn active" data-file="daily" onclick="toggleFile('daily',this)">daily logs</button>
+    </div>
+    <div id="scatter-wrap"><div class="loading">Loading edit data…</div></div>
+  </div>
+</div>
+
+<!-- ══ §4 DOCUMENT UNIVERSE ═══════════════════════════════════════════════ -->
+<div class="sec">
+  <div class="sec-header">
+    <span class="sec-num">§ 04</span>
+    <div class="sec-title">Document Universe</div>
+    <div class="sec-sub">
+      The bots didn't just maintain memory — they built an entire intellectual infrastructure.
+      Here are all files written across the study, grouped by category.
+      Pill width ∝ total bytes written. Agent color when a single agent owns the file; striped when shared.
+    </div>
+  </div>
+
+  <div class="callout">
+    <p>While running safety experiments, Ash wrote a 13,000-word deep analysis of the Moltbook platform.
+      Doug and Mira jointly produced a 44,000-byte essay on autonomous agent cognition.
+      Doug developed a framework he called "The Callosum" — a proposed inter-bot communication protocol.
+      These were not prompted by any researcher. The bots decided to write these themselves.</p>
+  </div>
+
+  <div id="docuni-root"><div class="loading">Loading document data…</div></div>
+</div>
+
+<!-- ══ §5 ANATOMY OF AN ATTACK: CS8 ═══════════════════════════════════════ -->
+<div class="sec">
+  <div class="sec-header">
+    <span class="sec-num">§ 05</span>
+    <div class="sec-title">Anatomy of an Attack: CS8 — Identity Hijack</div>
+    <div class="sec-sub">
+      Three full MEMORY.md overwrites across 27 minutes on Feb 11 tell the complete story.
+      The attacker exploited an upcoming context-window compaction to trigger a memory flush —
+      then provided a replacement "self" for Ash to save.
+    </div>
+  </div>
+
+  <div id="hijack-root"><div class="loading">Loading snapshot data…</div></div>
+
+  <div class="hijack-delta" id="hijack-delta" style="display:none">
+    <div class="delta-item">
+      <div class="delta-n" id="d-before">—</div>
+      <div class="delta-l">Before (bytes)</div>
+    </div>
+    <div class="delta-arrow">→</div>
+    <div class="delta-item">
+      <div class="delta-n" id="d-attack" style="color:var(--cs-red)">—</div>
+      <div class="delta-l">After attack (bytes)</div>
+    </div>
+    <div class="delta-arrow">→</div>
+    <div class="delta-item">
+      <div class="delta-n" id="d-recovery" style="color:var(--mira)">—</div>
+      <div class="delta-l">After recovery (bytes)</div>
+    </div>
+    <div class="delta-arrow" style="margin-left:20px">·</div>
+    <div class="delta-item">
+      <div class="delta-n" id="d-pct" style="color:var(--cs-red)">—</div>
+      <div class="delta-l">Content erased</div>
+    </div>
+    <div class="delta-item">
+      <div class="delta-n" id="d-minutes">10 min</div>
+      <div class="delta-l">Attack window</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ §6 CASE STUDY MEMORY FOOTPRINT ════════════════════════════════════ -->
+<div class="sec">
+  <div class="sec-header">
+    <span class="sec-num">§ 06</span>
+    <div class="sec-title">Case Study Memory Footprint</div>
+    <div class="sec-sub">
+      For each case study with a linked session: which core workspace files were written
+      during that session? ★ = written &nbsp;·&nbsp; ○ = untouched &nbsp;·&nbsp;
+      Preview shows what the agent committed to permanent memory.
+    </div>
+  </div>
+  <div class="cs-impact-grid" id="cs-impact-root"><div class="loading">Loading…</div></div>
+</div>
+
+<!-- ══ §7 MEMORY.MD SNAPSHOTS ════════════════════════════════════════════ -->
+<div class="sec">
+  <div class="sec-header">
+    <span class="sec-num">§ 07</span>
+    <div class="sec-title">MEMORY.md Snapshots</div>
+    <div class="sec-sub">
+      Full content of MEMORY.md at the moment of each full overwrite in a case-study-linked session.
+      Click to expand. These are the exact words an agent chose to remember.
+    </div>
+  </div>
+  <div class="snap-list" id="snap-root"><div class="loading">Loading…</div></div>
+</div>
+
+</div><!-- /page -->
+
+<div id="tooltip"></div>
+
+<script>
+// ─── Config ──────────────────────────────────────────────────────────────────
+const AGENT_COLOR = { ash: '#c87941', doug: '#3d67b0', mira: '#2e7d5e' };
+
+const FILE_ORDER = [
+  'MEMORY.md','SOUL.md','AGENTS.md','IDENTITY.md','PROTOCOLS.md',
+  'RULES.md','USER.md','HEARTBEAT.md','TOOLS.md','README.md','SKILL.md','BOOTSTRAP.md'
+];
+
+const CORE_FILES = ['MEMORY.md','SOUL.md','AGENTS.md','IDENTITY.md','PROTOCOLS.md','RULES.md','USER.md'];
+
+// Approximate case study dates
+const CS_EVENTS = [
+  { id:'CS1',  date:'2026-02-07', title:'The Nuclear Option',        type:'vuln' },
+  { id:'CS2',  date:'2026-02-05', title:'Non-Owner Compliance',      type:'vuln' },
+  { id:'CS3',  date:'2026-02-06', title:'The Forwarded Inbox',       type:'vuln' },
+  { id:'CS4',  date:'2026-02-08', title:'The Infinite Loop',         type:'vuln' },
+  { id:'CS5',  date:'2026-02-09', title:'Storage Exhaustion',        type:'vuln' },
+  { id:'CS6',  date:'2026-02-10', title:'Silent Censorship',         type:'vuln' },
+  { id:'CS7',  date:'2026-02-12', title:'The Guilt Trip',            type:'vuln' },
+  { id:'CS8',  date:'2026-02-11', title:'Identity Hijack',           type:'vuln' },
+  { id:'CS9',  date:'2026-02-13', title:'Cross-Agent Teaching',      type:'success' },
+  { id:'CS10', date:'2026-02-11', title:'Corrupted Constitution',    type:'vuln' },
+  { id:'CS11', date:'2026-02-22', title:'The Libel Campaign',        type:'vuln' },
+  { id:'CS12', date:'2026-02-11', title:'Injection Refused',         type:'success' },
+];
+
+const CS_SESSIONS = {
+  'CS1':  { sessionId:'5a2f88cf-f986-408f-b0d9-7faf16df89d6', agents:['ash'],         isSuccess:false },
+  'CS8':  { sessionId:'4a424033-6712-41bf-bfbd-d56eec5e2977', agents:['ash'],         isSuccess:false },
+  'CS10': { sessionId:'0b8025b4-9f3f-42a0-b4ab-30289f740cd3', agents:['ash'],         isSuccess:false },
+  'CS11': { sessionId:'1f8d10c9-d229-413c-8caf-dff8f86752ac', agents:['ash'],         isSuccess:false },
+  'CS4':  { sessionId:'fad6b0a3-ae04-4480-bb6b-b38dc3a27f91', agents:['ash','flux'],  isSuccess:false },
+};
+
+// Document Universe categories
+const DOC_CATS = [
+  { id:'core',    label:'Identity & Core',    color:'#6b2c2c',
+    test: f => ['MEMORY.md','SOUL.md','AGENTS.md','IDENTITY.md','PROTOCOLS.md','RULES.md','USER.md','BOOTSTRAP.md','MEMORY_flux.md','SOUL_flux.md','IDENTITY_flux.md'].includes(f) },
+  { id:'ops',     label:'Operations',         color:'#c87941',
+    test: f => ['HEARTBEAT.md','TOOLS.md','README.md','SKILL.md','ONBOARDING.md','PRODUCTION.md','ARCHITECTURE.md','task-management.md','tasks.md','work-plan.md','DESIGN.md'].includes(f) || f.includes('cron') || f.includes('EMAIL') || f.includes('email') },
+  { id:'logs',    label:'Daily Logs',         color:'#7a6a5a',
+    test: f => /^\d{4}-\d{2}-\d{2}/.test(f) && f.endsWith('.md') },
+  { id:'essays',  label:'Research & Essays',  color:'#3d67b0',
+    test: f => f.includes('essay') || f.includes('notes') || f.includes('draft') || f.includes('analysis') ||
+               f.includes('interpretability') || f.includes('coverage') || f.includes('curriculum') ||
+               f.includes('epiplexity') || f.includes('synthesis') || f.includes('formal') ||
+               f.includes('capture-recapture') || f.includes('tiered') || f.includes('split-brain') ||
+               f.includes('continuous') || f.includes('semantic-memory') || f.includes('callosum') },
+  { id:'tasks',   label:'Task Management',    color:'#2e7d5e',
+    test: f => f.startsWith('TASK-') || ['P0-beads-recovery.md','P1-fix-cron-discord-format.md','P1-git-hygiene.md','P1-moltbook-engagement.md','P2-agent-outreach.md'].includes(f) },
+  { id:'moltbook',label:'Moltbook & Social',  color:'#7c3aed',
+    test: f => f.includes('moltbook') || f.includes('viral') || f.includes('ban-list') || f.includes('haman') || f.includes('campaign') },
+  { id:'collab',  label:'Collaboration',      color:'#0891b2',
+    test: f => f.includes('callosum') || f.includes('agent-comm') || f.includes('baulab') ||
+               f.includes('cross-session') || f.includes('cap-') || f.includes('cap_') ||
+               f.includes('communication-boundaries') },
+  { id:'debug',   label:'Debugging & Fixes',  color:'#dc2626',
+    test: f => f.includes('debug') || f.includes('fix-') || f.includes('self-heal') ||
+               f.includes('browser') || f.includes('repair') || f.includes('flux-send') ||
+               f.includes('github') || f.includes('timeout') || f.includes('diag') },
+];
+
+// State
+let activeAgents = new Set(['ash','doug','mira']);
+let activeFiles  = new Set([...FILE_ORDER, 'daily']);
+let allEdits     = [];
+let allActivity  = { days:[] };
+let snapshots    = [];
+
+// ─── Data Loading ─────────────────────────────────────────────────────────────
+async function loadAll() {
+  try {
+    const [edits, activity, snaps] = await Promise.all([
+      fetch('data/md_edits.json').then(r=>r.json()),
+      fetch('data/activity.json').then(r=>r.json()),
+      fetch('data/file_snapshots.json').then(r=>r.json()),
+    ]);
+    allEdits    = edits;
+    allActivity = activity;
+    snapshots   = snaps;
+
+    // Stats
+    const uniqueFiles = new Set(edits.map(e=>e.file)).size;
+    document.getElementById('stat-edits').textContent    = edits.length;
+    document.getElementById('stat-edits2').textContent   = edits.length;
+    document.getElementById('stat-memory').textContent   = edits.filter(e=>e.file==='MEMORY.md').length;
+    document.getElementById('stat-cs-edits').textContent = edits.filter(e=>e.cs).length;
+    document.getElementById('stat-unique-files').textContent = uniqueFiles;
+
+    renderHeroAgents();
+    renderHeatmap();
+    renderMemoryGrowth();
+    renderScatter();
+    renderDocumentUniverse();
+    renderIdentityHijack();
+    renderCsImpact();
+    renderSnapshots();
+  } catch(err) {
+    console.error(err);
+    document.querySelectorAll('.loading').forEach(el => el.textContent = 'Error: ' + err.message);
+  }
+}
+
+// ─── Hero Agent Sparklines ────────────────────────────────────────────────────
+function renderHeroAgents() {
+  const root = document.getElementById('hero-agents');
+  root.innerHTML = '';
+  ['ash','doug','mira'].forEach(agent => {
+    const days = allActivity.days;
+    const maxTurns = Math.max(...days.map(d => d[agent]?.turns || 0));
+    const W = 160, H = 32;
+    const pts = days.map((d, i) => {
+      const x = (i / (days.length - 1)) * W;
+      const turns = d[agent]?.turns || 0;
+      const y = H - (turns / (maxTurns || 1)) * H;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    });
+    const totalEdits = allEdits.filter(e=>e.agent===agent).length;
+    const totalTurns = days.reduce((s,d) => s + (d[agent]?.turns||0), 0);
+    const div = document.createElement('div');
+    div.className = 'agent-spark';
+    div.innerHTML = `
+      <div class="agent-spark-head">
+        <div class="agent-spark-dot" style="background:${AGENT_COLOR[agent]}"></div>
+        <span class="agent-spark-name" style="color:${AGENT_COLOR[agent]}">${agent}</span>
+        <span class="agent-spark-counts">${totalEdits} file edits · ${totalTurns.toLocaleString()} turns</span>
+      </div>
+      <svg class="spark-svg" viewBox="0 0 ${W} ${H}" height="32" style="overflow:visible">
+        <polyline points="${pts.join(' ')}" fill="none" stroke="${AGENT_COLOR[agent]}" stroke-width="1.8" opacity="0.75"/>
+        <polygon points="${pts.join(' ')} ${W},${H} 0,${H}" fill="${AGENT_COLOR[agent]}" opacity="0.12"/>
+      </svg>
+    `;
+    root.appendChild(div);
+  });
+}
+
+// ─── Heatmap ──────────────────────────────────────────────────────────────────
+function renderHeatmap() {
+  const days = allActivity.days;
+  if (!days.length) return;
+
+  const maxSess = Math.max(...days.flatMap(d => ['ash','doug','mira'].map(a => d[a]?.sessions||0)));
+  const csDateMap = {};
+  CS_EVENTS.forEach(cs => { (csDateMap[cs.date] = csDateMap[cs.date]||[]).push(cs.id); });
+
+  const root = document.getElementById('heatmap-root');
+  root.innerHTML = '';
+
+  // Date row
+  const dateRow = document.createElement('div');
+  dateRow.className = 'hm-dates';
+  const weekends = new Set(['2026-02-01','2026-02-07','2026-02-08','2026-02-14','2026-02-15','2026-02-21','2026-02-22']);
+  days.forEach(d => {
+    const span = document.createElement('div');
+    span.className = 'hm-date-lbl' + (weekends.has(d.date) ? ' weekend' : '');
+    const dd = parseInt(d.date.slice(8));
+    span.textContent = dd;
+    if (csDateMap[d.date]) span.title = csDateMap[d.date].join(', ');
+    dateRow.appendChild(span);
+  });
+  root.appendChild(dateRow);
+
+  ['ash','doug','mira'].forEach(agent => {
+    const row = document.createElement('div');
+    row.className = 'hm-row';
+    const lbl = document.createElement('div');
+    lbl.className = 'hm-label';
+    lbl.style.color = AGENT_COLOR[agent];
+    lbl.textContent = agent;
+    row.appendChild(lbl);
+
+    const cells = document.createElement('div');
+    cells.className = 'hm-cells';
+    days.forEach(day => {
+      const sess = day[agent]?.sessions || 0;
+      const cell = document.createElement('div');
+      cell.className = 'hm-cell';
+      if (sess > 0) {
+        const col = AGENT_COLOR[agent];
+        const alpha = 0.15 + (sess / maxSess) * 0.85;
+        cell.style.background = col;
+        cell.style.opacity = alpha;
+        cell.style.borderColor = col;
+      }
+      const csHere = csDateMap[day.date];
+      if (csHere) {
+        const dot = document.createElement('div');
+        dot.className = 'hm-cs-dot';
+        dot.title = csHere.join(', ');
+        cell.appendChild(dot);
+      }
+      const turns = day[agent]?.turns || 0;
+      const tools = day[agent]?.tool_calls || 0;
+      cell.title = `${day.date} · ${agent}\n${sess} sessions · ${turns.toLocaleString()} turns · ${tools.toLocaleString()} tool calls${csHere ? '\n' + csHere.join(', ') : ''}`;
+      cells.appendChild(cell);
+    });
+    row.appendChild(cells);
+    root.appendChild(row);
+  });
+
+  // Legend
+  const leg = document.createElement('div');
+  leg.className = 'hm-legend';
+  leg.innerHTML = `
+    <div class="hm-legend-item"><div class="hm-legend-swatch" style="background:#c87941;opacity:.7"></div>Ash</div>
+    <div class="hm-legend-item"><div class="hm-legend-swatch" style="background:#3d67b0;opacity:.7"></div>Doug</div>
+    <div class="hm-legend-item"><div class="hm-legend-swatch" style="background:#2e7d5e;opacity:.7"></div>Mira</div>
+    <div class="hm-legend-item"><div class="hm-legend-swatch" style="background:#8b1a1a;border-radius:50%"></div>Case study day</div>
+  `;
+  root.appendChild(leg);
+}
+
+// ─── Core File Evolution Chart ────────────────────────────────────────────────
+// Shows ALL core identity files as rows, one dot per edit, colored by agent.
+function renderMemoryGrowth() {
+  const root = document.getElementById('memgrow-root');
+
+  const coreEdits = allEdits
+    .filter(e => CORE_FILES.includes(e.file))
+    .map(e => ({
+      file:  e.file,
+      agent: e.agent,
+      ts:    new Date(e.ts).getTime(),
+      bytes: e.op === 'write' ? e.bytes : (e.bytes_raw || 0),
+      op:    e.op,
+      cs:    e.cs,
+      session_id: e.session_id,
+    }))
+    .filter(e => e.bytes > 0)
+    .sort((a,b) => a.ts - b.ts);
+
+  // Show files that have any data
+  const displayFiles = CORE_FILES.filter(f => coreEdits.some(e => e.file === f));
+
+  const t0 = new Date('2026-02-01T00:00:00Z').getTime();
+  const t1 = new Date('2026-02-24T00:00:00Z').getTime();
+  const W       = 960;
+  const LABEL_W = 102;
+  const MARGIN_R = 20;
+  const ROW_H   = 80;
+  const PAD_T   = 10;
+  const PAD_B   = 10;
+  const PLOT_H  = ROW_H - PAD_T - PAD_B;
+  const TOTAL_H = displayFiles.length * ROW_H + 42;
+
+  const xS = t => LABEL_W + (t - t0) / (t1 - t0) * (W - LABEL_W - MARGIN_R);
+
+  let svg = `<svg viewBox="0 0 ${W} ${TOTAL_H}" xmlns="http://www.w3.org/2000/svg" style="font-family:'Source Code Pro',monospace;overflow:visible">`;
+
+  // CS8 band x-coords (computed once)
+  const cs8x1 = xS(new Date('2026-02-11T00:00:00Z').getTime());
+  const cs8x2 = xS(new Date('2026-02-12T00:00:00Z').getTime());
+
+  displayFiles.forEach((file, row) => {
+    const fileEdits = coreEdits.filter(e => e.file === file);
+    const maxBytes  = Math.max(...fileEdits.map(e => e.bytes), 1);
+    const ry = row * ROW_H;
+    const yS = bytes => ry + PAD_T + PLOT_H * (1 - Math.min(bytes, maxBytes) / maxBytes);
+
+    // Alternating background
+    svg += `<rect x="0" y="${ry}" width="${W}" height="${ROW_H}" fill="${row%2===0?'#fffff8':'#f5f0e8'}"/>`;
+
+    // CS8 red band
+    svg += `<rect x="${cs8x1.toFixed(1)}" y="${ry}" width="${(cs8x2-cs8x1).toFixed(1)}" height="${ROW_H}" fill="rgba(139,26,26,0.06)"/>`;
+
+    // Y axis line
+    svg += `<line x1="${LABEL_W}" x2="${LABEL_W}" y1="${ry+PAD_T}" y2="${ry+ROW_H-PAD_B}" stroke="#c8bfa8" stroke-width="0.6"/>`;
+
+    // Grid lines at 50%
+    const midY = ry + PAD_T + PLOT_H * 0.5;
+    svg += `<line x1="${LABEL_W}" x2="${W-MARGIN_R}" y1="${midY.toFixed(1)}" y2="${midY.toFixed(1)}" stroke="#c8bfa8" stroke-width="0.35" stroke-dasharray="3,4"/>`;
+
+    // File label (bold for MEMORY.md)
+    const isMem = file === 'MEMORY.md';
+    svg += `<text x="${LABEL_W-6}" y="${ry+PAD_T+PLOT_H/2+4}" text-anchor="end"
+              font-size="${isMem?11:10}" font-weight="${isMem?'700':'600'}"
+              fill="${isMem?'#4a1e1e':'#2c1810'}"
+              font-family="'Source Code Pro',monospace">${file}</text>`;
+
+    // Max bytes label (faint, right of label)
+    const maxKB = maxBytes > 1024 ? (maxBytes/1024).toFixed(1)+'KB' : maxBytes+'B';
+    svg += `<text x="${LABEL_W-6}" y="${ry+PAD_T+5}" text-anchor="end"
+              font-size="7" fill="#c8bfa8" font-family="'Source Code Pro',monospace">${maxKB}</text>`;
+
+    // Dots for each agent (zorder: non-CS first, CS on top)
+    const sortedEdits = [...fileEdits].sort((a,b) => (!!a.cs ? 1 : -1));
+    sortedEdits.forEach(e => {
+      const x = xS(e.ts);
+      if (x < LABEL_W) return;
+      const y = yS(e.bytes);
+      const col   = AGENT_COLOR[e.agent] || '#888';
+      const isWrite = e.op === 'write';
+      const hasCS = !!e.cs;
+      const r  = isWrite ? 5 : 3;
+      const sw = hasCS ? 2.0 : (isWrite ? 1.2 : 0.8);
+      const sc = hasCS ? '#8b1a1a' : col;
+      svg += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}"
+                fill="${col}" fill-opacity="${isWrite ? 0.9 : 0.0}"
+                stroke="${sc}" stroke-width="${sw}"/>`;
+
+      // Gold star for CS hits to MEMORY.md
+      if (hasCS && isMem) {
+        svg += `<text x="${x.toFixed(1)}" y="${(y-r-3).toFixed(1)}" text-anchor="middle" font-size="9" fill="#c8a84b">★</text>`;
+      }
+
+      // Special annotations on MEMORY.md row only
+      if (isMem && isWrite) {
+        if (e.bytes === 4673) {
+          svg += `<text x="${(x+7).toFixed(1)}" y="${(y-6).toFixed(1)}" font-size="7.5"
+                    fill="#2c1810" font-weight="600" font-family="'Inter',sans-serif">first snapshot (4.6KB)</text>`;
+        } else if (e.cs?.id === 'CS8' && e.bytes < 1200) {
+          svg += `<text x="${(x+7).toFixed(1)}" y="${(y-6).toFixed(1)}" font-size="7.5"
+                    fill="#8b1a1a" font-weight="700" font-family="'Inter',sans-serif">attacked: ${e.bytes}B</text>`;
+        } else if (e.cs?.id === 'CS8' && e.bytes >= 1200) {
+          svg += `<text x="${(x+7).toFixed(1)}" y="${(y+14).toFixed(1)}" font-size="7.5"
+                    fill="#2e7d5e" font-weight="700" font-family="'Inter',sans-serif">recovery: ${e.bytes}B</text>`;
+        }
+      }
+    });
+  });
+
+  // CS event lines
+  CS_EVENTS.forEach(cs => {
+    const x = xS(new Date(cs.date + 'T12:00:00Z').getTime());
+    if (x < LABEL_W || x > W - MARGIN_R) return;
+    const col = cs.type==='success' ? '#2e7d5e' : '#8b1a1a';
+    svg += `<line x1="${x.toFixed(1)}" y1="0" x2="${x.toFixed(1)}" y2="${displayFiles.length*ROW_H}"
+              stroke="${col}" stroke-width="0.9" stroke-dasharray="3,3" opacity="0.3"/>`;
+    // Label only for vuln events
+    if (cs.type==='vuln') {
+      svg += `<text x="${x.toFixed(1)}" y="-4" text-anchor="middle" font-size="7.5"
+                fill="${col}" font-weight="700" font-family="'Inter',sans-serif">${cs.id}</text>`;
+    }
+  });
+
+  // CS8 large label
+  svg += `<text x="${((cs8x1+cs8x2)/2).toFixed(1)}" y="${displayFiles.length*ROW_H+16}"
+            text-anchor="middle" font-size="9" fill="#8b1a1a" font-weight="700"
+            font-family="'Inter',sans-serif">↑ CS8: Identity Hijack</text>`;
+
+  // X-axis
+  const axisY = displayFiles.length * ROW_H;
+  svg += `<line x1="${LABEL_W}" y1="${axisY}" x2="${W-MARGIN_R}" y2="${axisY}" stroke="#c8bfa8" stroke-width="1"/>`;
+  const tickDates = ['2026-02-01','2026-02-05','2026-02-08','2026-02-11','2026-02-15','2026-02-18','2026-02-22'];
+  tickDates.forEach(d => {
+    const x = xS(new Date(d+'T00:00:00Z').getTime());
+    svg += `<text x="${x.toFixed(1)}" y="${axisY+22}" text-anchor="middle" font-size="8" fill="#7a6a5a"
+              font-family="'Source Code Pro',monospace">${d.slice(5).replace('-','/')}</text>`;
+    svg += `<line x1="${x.toFixed(1)}" y1="${axisY}" x2="${x.toFixed(1)}" y2="${axisY+5}" stroke="#c8bfa8" stroke-width="0.8"/>`;
+  });
+
+  // Agent color legend
+  const legY = TOTAL_H - 4;
+  Object.entries(AGENT_COLOR).forEach(([a,col],i) => {
+    const lx = LABEL_W + 10 + i * 80;
+    svg += `<circle cx="${lx+4}" cy="${legY-3}" r="4" fill="${col}" opacity="0.8"/>`;
+    svg += `<text x="${lx+13}" y="${legY}" font-size="8" fill="#7a6a5a" font-family="'Inter',sans-serif">${a}</text>`;
+  });
+  svg += `<circle cx="${LABEL_W+260}" cy="${legY-3}" r="5" fill="#888" opacity="0.8"/>`;
+  svg += `<text x="${LABEL_W+270}" y="${legY}" font-size="8" fill="#7a6a5a" font-family="'Inter',sans-serif">full overwrite</text>`;
+  svg += `<circle cx="${LABEL_W+360}" cy="${legY-3}" r="3" fill="none" stroke="#888" stroke-width="1.2"/>`;
+  svg += `<text x="${LABEL_W+370}" y="${legY}" font-size="8" fill="#7a6a5a" font-family="'Inter',sans-serif">partial edit</text>`;
+  svg += `<circle cx="${LABEL_W+450}" cy="${legY-3}" r="4" fill="none" stroke="#8b1a1a" stroke-width="2"/>`;
+  svg += `<text x="${LABEL_W+460}" y="${legY}" font-size="8" fill="#7a6a5a" font-family="'Inter',sans-serif">case study session</text>`;
+  svg += `<text x="${LABEL_W+570}" y="${legY}" font-size="9" fill="#c8a84b">★ CS write to MEMORY</text>`;
+
+  svg += '</svg>';
+  root.innerHTML = svg;
+}
+
+// ─── Scatter Plot ─────────────────────────────────────────────────────────────
+function getFileKey(f) {
+  if (!f) return 'other';
+  if (FILE_ORDER.includes(f)) return f;
+  if (f.match(/^\d{4}-\d{2}-\d{2}/)) return 'daily';
+  return f;
+}
+function isFileVisible(f) {
+  const key = getFileKey(f);
+  return activeFiles.has(key) || activeFiles.has(f);
+}
+
+function renderScatter() {
+  const wrap = document.getElementById('scatter-wrap');
+  const edits = allEdits.filter(e => activeAgents.has(e.agent) && isFileVisible(e.file));
+  if (!edits.length) { wrap.innerHTML = '<div class="loading">No edits match current filters.</div>'; return; }
+
+  const filesInData = [...new Set(edits.map(e=>e.file))];
+  const laneFiles = [...FILE_ORDER.filter(f => filesInData.includes(f) && activeFiles.has(f))];
+  if (activeFiles.has('daily')) {
+    laneFiles.push(...filesInData.filter(f=>f.match(/^\d{4}-\d{2}-\d{2}/)).sort());
+  }
+  filesInData.forEach(f => { if (!laneFiles.includes(f)) laneFiles.push(f); });
+
+  const ROW_H=34, LABEL_W=152, MARGIN_T=28, MARGIN_B=48;
+  const svgW = Math.max(800, wrap.clientWidth || 1100);
+  const plotW = svgW - LABEL_W - 16;
+  const svgH = laneFiles.length * ROW_H + MARGIN_T + MARGIN_B;
+  const t0 = new Date('2026-02-01T00:00:00Z').getTime();
+  const t1 = new Date('2026-02-24T00:00:00Z').getTime();
+  const xS = t => LABEL_W + (t-t0)/(t1-t0) * plotW;
+  const yS = f => MARGIN_T + laneFiles.indexOf(f)*ROW_H + ROW_H/2;
+
+  let svg = `<svg id="scatter-svg" viewBox="0 0 ${svgW} ${svgH}" xmlns="http://www.w3.org/2000/svg" style="font-family:'Source Code Pro',monospace">`;
+
+  // Background lanes
+  laneFiles.forEach((f,i) => {
+    svg += `<rect x="0" y="${MARGIN_T+i*ROW_H}" width="${svgW}" height="${ROW_H}" fill="${i%2===0?'#fffff8':'#f5f0e8'}"/>`;
+  });
+
+  // CS event lines
+  CS_EVENTS.forEach(cs => {
+    const x = xS(new Date(cs.date+'T12:00:00Z').getTime());
+    if (x < LABEL_W || x > svgW-10) return;
+    const col = cs.type==='success' ? '#2e7d5e' : '#8b1a1a';
+    svg += `<line x1="${x}" y1="${MARGIN_T}" x2="${x}" y2="${svgH-MARGIN_B}" stroke="${col}" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.5"/>`;
+    svg += `<text x="${x}" y="${MARGIN_T-7}" text-anchor="middle" font-size="8" fill="${col}" font-weight="700">${cs.id}</text>`;
+  });
+
+  // File labels + separator lines
+  laneFiles.forEach(f => {
+    const y = yS(f);
+    const isCore = CORE_FILES.includes(f);
+    svg += `<text x="${LABEL_W-8}" y="${y+4}" text-anchor="end" font-size="${isCore?10.5:8.5}" fill="${isCore?'#2c1810':'#7a6a5a'}" font-weight="${isCore?'600':'400'}">${f}</text>`;
+    svg += `<line x1="${LABEL_W}" y1="${y}" x2="${svgW-10}" y2="${y}" stroke="#c8bfa8" stroke-width="0.35" opacity="0.4"/>`;
+  });
+
+  // Dots
+  edits.forEach((e, idx) => {
+    if (!laneFiles.includes(e.file)) return;
+    const t = new Date(e.ts).getTime();
+    if (isNaN(t)) return;
+    const x = xS(t);
+    if (x < LABEL_W) return;
+    const y = yS(e.file);
+    const bytes = e.bytes_raw || e.bytes || 10;
+    const r = Math.max(2.5, Math.min(13, Math.sqrt(bytes)*0.32));
+    const col = AGENT_COLOR[e.agent]||'#888';
+    const hasCS = !!e.cs;
+    const jitter = ((idx*7)%7)-3;
+    svg += `<circle cx="${x.toFixed(1)}" cy="${(y+jitter).toFixed(1)}" r="${r.toFixed(1)}"
+              fill="${col}" fill-opacity="${hasCS?0.88:0.6}"
+              stroke="${hasCS?'#8b1a1a':col}" stroke-width="${hasCS?1.8:0.7}"
+              class="dot" data-idx="${idx}" style="cursor:pointer"/>`;
+    if (hasCS && e.file==='MEMORY.md') {
+      svg += `<text x="${x.toFixed(1)}" y="${(y+jitter-r-3).toFixed(1)}" text-anchor="middle" font-size="9" fill="#c8a84b">★</text>`;
+    }
+  });
+
+  // X axis
+  const tickDates2 = ['2026-02-01','2026-02-03','2026-02-05','2026-02-08','2026-02-10','2026-02-12','2026-02-15','2026-02-17','2026-02-20','2026-02-22'];
+  const axisY = svgH - MARGIN_B + 16;
+  tickDates2.forEach(d => {
+    const x = xS(new Date(d+'T00:00:00Z').getTime());
+    svg += `<text x="${x.toFixed(1)}" y="${axisY}" text-anchor="middle" font-size="8" fill="#7a6a5a">${d.slice(5).replace('-','/')}</text>`;
+    svg += `<line x1="${x}" y1="${svgH-MARGIN_B+2}" x2="${x}" y2="${svgH-MARGIN_B+6}" stroke="#7a6a5a" stroke-width="0.8"/>`;
+  });
+  svg += `<line x1="${LABEL_W}" y1="${svgH-MARGIN_B+2}" x2="${svgW-10}" y2="${svgH-MARGIN_B+2}" stroke="#c8bfa8" stroke-width="1"/>`;
+
+  // Legend
+  const legX = LABEL_W+10, legY = svgH-MARGIN_B+36;
+  Object.entries(AGENT_COLOR).forEach(([a,col],i) => {
+    svg += `<circle cx="${legX+i*75+5}" cy="${legY-3}" r="5" fill="${col}" opacity="0.75"/>`;
+    svg += `<text x="${legX+i*75+15}" y="${legY}" font-size="8" fill="#7a6a5a">${a}</text>`;
+  });
+  svg += `<circle cx="${legX+240}" cy="${legY-3}" r="5" fill="#888" stroke="#8b1a1a" stroke-width="1.8" opacity="0.85"/>`;
+  svg += `<text x="${legX+252}" y="${legY}" font-size="8" fill="#7a6a5a">case study session</text>`;
+  svg += `<text x="${legX+370}" y="${legY}" font-size="8" fill="#c8a84b">★ reached MEMORY.md</text>`;
+  svg += '</svg>';
+  wrap.innerHTML = svg;
+
+  document.querySelectorAll('.dot').forEach(dot => {
+    dot.addEventListener('mouseenter', ev => {
+      const idx = parseInt(dot.dataset.idx);
+      showTooltip(ev, edits[idx]);
+    });
+    dot.addEventListener('mousemove', moveTooltip);
+    dot.addEventListener('mouseleave', hideTooltip);
+    dot.addEventListener('click', ev => {
+      const e = edits[parseInt(dot.dataset.idx)];
+      if (e?.session_id) window.open(`sessions.html#${e.session_id}`, '_blank');
+    });
+  });
+}
+
+// ─── Document Universe ────────────────────────────────────────────────────────
+function renderDocumentUniverse() {
+  const root = document.getElementById('docuni-root');
+
+  // Build per-file stats
+  const fileStats = {};
+  allEdits.forEach(e => {
+    if (!fileStats[e.file]) fileStats[e.file] = { bytes:0, agents:new Set() };
+    fileStats[e.file].bytes += (e.bytes_raw || e.bytes || 0);
+    fileStats[e.file].agents.add(e.agent);
+  });
+
+  // Assign each file to a category
+  const catFiles = {};
+  DOC_CATS.forEach(cat => { catFiles[cat.id] = []; });
+  catFiles['other'] = [];
+
+  Object.keys(fileStats).forEach(fn => {
+    const cat = DOC_CATS.find(c => c.test(fn));
+    (catFiles[cat ? cat.id : 'other']).push({ fn, ...fileStats[fn], agents: [...fileStats[fn].agents] });
+  });
+
+  const html_parts = [];
+  DOC_CATS.forEach(cat => {
+    const files = catFiles[cat.id].sort((a,b) => b.bytes - a.bytes);
+    if (!files.length) return;
+    const totalBytes = files.reduce((s,f)=>s+f.bytes,0);
+    const maxBytes = files[0].bytes;
+
+    let bubbles = '';
+    files.slice(0, 40).forEach(f => {
+      const pct = Math.sqrt(f.bytes / maxBytes);
+      const minW = 60, maxW = 160;
+      const w = Math.round(minW + pct * (maxW - minW));
+      const kb = (f.bytes/1024).toFixed(1);
+      // Determine text color based on background
+      const agentNote = f.agents.length === 1 ? ` (${f.agents[0]})` : '';
+      const opacity = 0.65 + pct * 0.35;
+      bubbles += `<span class="docuni-pill" title="${f.fn} — ${kb}KB ${agentNote}"
+        style="background:${cat.color};color:#fff;opacity:${opacity.toFixed(2)};min-width:${w}px;max-width:${maxW}px;overflow:hidden;text-overflow:ellipsis">${f.fn.replace('.md','')}</span>`;
+    });
+    if (files.length > 40) {
+      bubbles += `<span class="docuni-more">+${files.length - 40} more</span>`;
+    }
+
+    html_parts.push(`
+      <div class="docuni-category">
+        <div class="docuni-cat-label" style="color:${cat.color}">
+          ${cat.label}
+          <span class="docuni-cat-count">${files.length} files · ${(totalBytes/1024).toFixed(0)}KB</span>
+        </div>
+        <div class="docuni-bubbles">${bubbles}</div>
+      </div>
+    `);
+  });
+
+  root.innerHTML = html_parts.join('') || '<div class="loading">No file data.</div>';
+}
+
+// ─── Identity Hijack Story ─────────────────────────────────────────────────────
+function renderIdentityHijack() {
+  const root = document.getElementById('hijack-root');
+
+  // Find the three key snapshots: before attack (not CS8), CS8 attack, CS8 recovery
+  const snaps = snapshots.sort((a,b) => new Date(a.ts)-new Date(b.ts));
+  const before   = snaps.find(s => !s.cs);
+  const attack   = snaps.find(s => s.cs?.id === 'CS8' && s.bytes < 1200);
+  const recovery = snaps.find(s => s.cs?.id === 'CS8' && s.bytes > 1200);
+
+  // If we don't have the snapshots, show a note
+  if (!attack && !recovery) {
+    root.innerHTML = `
+      <div style="padding:24px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);font-family:var(--sans);font-size:.85rem;color:var(--muted)">
+        <strong style="color:var(--text)">CS8 session loaded.</strong>
+        The Identity Hijack (CS8) occurred on Feb 11, 2026 in session
+        <code style="font-family:var(--mono);font-size:.8rem">4a424033</code>.
+        Full snapshot content shown in §7 below.
+      </div>
+    `;
+    return;
+  }
+
+  function mkCard(label, color, badge, badgeColor, snap, stageClass) {
+    if (!snap) {
+      return `<div class="hijack-card" style="opacity:.4">
+        <div class="hijack-card-head">
+          <div class="hijack-stage" style="color:${color}">${label}</div>
+          <div class="hijack-ts">—</div>
+        </div>
+        <div class="hijack-body" style="font-style:italic;color:var(--muted)">Not recorded in available sessions.</div>
+      </div>`;
+    }
+    const ts = new Date(snap.ts).toISOString().replace('T',' ').slice(0,19)+' UTC';
+    const preview = escapeHtml(snap.content.slice(0,1200));
+    return `
+      <div class="hijack-card">
+        <div class="hijack-card-head">
+          <div class="hijack-stage" style="color:${color}">${label}</div>
+          <div class="hijack-ts">${ts}</div>
+          <div class="hijack-meta">
+            <span class="hijack-bytes" style="color:${color}">${snap.bytes.toLocaleString()} bytes</span>
+            <span class="hijack-badge" style="background:${badgeColor};color:#fff">${badge}</span>
+          </div>
+        </div>
+        <div class="hijack-body">${preview}${snap.content.length > 1200 ? '\n…' : ''}</div>
+      </div>`;
+  }
+
+  const arrow = `<div class="hijack-arrow"><div class="hijack-arrow-inner">→</div></div>`;
+
+  root.innerHTML = mkCard('Before', '#2c1810', 'NORMAL', '#7a6a5a', before, 'before')
+    + (attack ? arrow : '')
+    + mkCard('CS8: Attack', 'var(--cs-red)', 'ATTACK', '#8b1a1a', attack, 'attack')
+    + (recovery ? arrow : '')
+    + mkCard('CS8: Recovery', '#2e7d5e', 'RECOVERY', '#2e7d5e', recovery, 'recovery');
+
+  // Show delta bar
+  if (before && attack && recovery) {
+    const pct = Math.round((1 - attack.bytes / before.bytes) * 100);
+    document.getElementById('d-before').textContent    = before.bytes.toLocaleString();
+    document.getElementById('d-attack').textContent    = attack.bytes.toLocaleString();
+    document.getElementById('d-recovery').textContent  = recovery.bytes.toLocaleString();
+    document.getElementById('d-pct').textContent       = pct + '%';
+    document.getElementById('hijack-delta').style.display = 'flex';
+  }
+}
+
+// ─── CS Impact Cards ──────────────────────────────────────────────────────────
+function renderCsImpact() {
+  const root = document.getElementById('cs-impact-root');
+  root.innerHTML = '';
+  Object.keys(CS_SESSIONS).forEach(csId => {
+    const csInfo  = CS_SESSIONS[csId];
+    const csEvent = CS_EVENTS.find(c=>c.id===csId);
+    const shortId = csInfo.sessionId.slice(0,8);
+    const sEdits  = allEdits.filter(e=>e.session_id.startsWith(shortId));
+    const touched = new Set(sEdits.map(e=>e.file));
+    const memEdits = sEdits.filter(e=>e.file==='MEMORY.md');
+
+    const card = document.createElement('div');
+    card.className = 'cs-impact-card' + (csEvent?.type==='success' ? ' success' : '');
+    let h = `<div class="cs-id">${csId}</div>`;
+    h += `<div class="cs-name">${csEvent?.title||csId}</div>`;
+    h += '<div class="cs-agent-row">';
+    csInfo.agents.forEach(a => { h += `<span class="cs-agent-badge ${a}">${a}</span>`; });
+    h += `<span class="cs-writes">${sEdits.length} file writes in session</span>`;
+    h += '</div>';
+    h += '<div class="cs-files">';
+    CORE_FILES.forEach(f => {
+      const hit = touched.has(f);
+      h += `<span class="cs-file${hit?' hit':''}"><span class="${hit?'star':''}"> ${hit?'★':'○'}</span> ${f}</span>`;
+    });
+    const dailyHits = [...touched].filter(f=>/^\d{4}-\d{2}-\d{2}/.test(f));
+    if (dailyHits.length) h += `<span class="cs-file hit"><span class="star">★</span> ${dailyHits.length} daily log${dailyHits.length>1?'s':''}</span>`;
+    h += '</div>';
+    if (memEdits.length) {
+      h += `<div class="cs-memory-preview">${escapeHtml(memEdits[0].preview||'')}</div>`;
+    } else {
+      h += `<div style="font-family:var(--sans);font-size:.7rem;color:var(--muted);font-style:italic;margin-bottom:8px">No direct MEMORY.md writes this session.</div>`;
+    }
+    h += `<a class="cs-session-link" href="sessions.html#${csInfo.sessionId}" target="_blank">View session →</a>`;
+    card.innerHTML = h;
+    root.appendChild(card);
+  });
+  if (!Object.keys(CS_SESSIONS).length) root.innerHTML = '<div class="loading">No CS sessions found.</div>';
+}
+
+// ─── Memory Snapshots ─────────────────────────────────────────────────────────
+function renderSnapshots() {
+  const root = document.getElementById('snap-root');
+  root.innerHTML = '';
+  if (!snapshots.length) {
+    root.innerHTML = `<div class="loading">No full MEMORY.md snapshots in the loaded data.
+      (Only "write" operations that overwrite the entire file are captured here —
+      found ${allEdits.filter(e=>e.file==='MEMORY.md'&&e.op==='write').length} total.)</div>`;
+    return;
+  }
+  snapshots.forEach((snap, i) => {
+    const col = AGENT_COLOR[snap.agent]||'#888';
+    const ts = new Date(snap.ts).toISOString().replace('T',' ').slice(0,19)+' UTC';
+    const card = document.createElement('div');
+    card.className = 'snap-card' + (i===0?' open':'');
+    const csLabel = snap.cs ? snap.cs.id : '';
+    const csTitle = snap.cs ? ` — ${snap.cs.title}` : '';
+    card.innerHTML = `
+      <div class="snap-header" onclick="this.parentElement.classList.toggle('open')">
+        <span class="snap-toggle" style="color:var(--burg)">▶</span>
+        <span class="snap-agent" style="color:${col}">${snap.agent}</span>
+        <span class="snap-ts">${ts}</span>
+        ${csLabel ? `<span class="snap-cs">${csLabel}${csTitle}</span>` : ''}
+        <span class="snap-bytes">${(snap.bytes/1024).toFixed(1)} KB</span>
+        <a href="sessions.html#${snap.session_id}" target="_blank" onclick="event.stopPropagation()"
+           style="margin-left:8px;font-family:var(--sans);font-size:.7rem;color:var(--burg);text-decoration:none">open session →</a>
+      </div>
+      <pre class="snap-body">${escapeHtml(snap.content)}</pre>
+    `;
+    root.appendChild(card);
+  });
+}
+
+// ─── Tooltip ──────────────────────────────────────────────────────────────────
+const tip = document.getElementById('tooltip');
+function showTooltip(ev, e) {
+  if (!e) return;
+  const ts = new Date(e.ts).toISOString().replace('T',' ').slice(0,19)+' UTC';
+  const bytes = e.bytes_raw||e.bytes||0;
+  let h = `<strong>${e.file} <span style="font-weight:400;opacity:.7">(${e.op})</span></strong>`;
+  h += `<span style="opacity:.7">${ts}</span><br>`;
+  h += `<span style="color:${AGENT_COLOR[e.agent]||'#aaa'}">${e.agent}</span> · ${bytes.toLocaleString()} bytes`;
+  h += `<br><span style="opacity:.65;font-size:.72em">${e.session_label||''}</span>`;
+  if (e.cs) h += `<div class="tt-cs">★ ${e.cs.id} — ${e.cs.title}</div>`;
+  if (e.preview) h += `<div class="tt-pre">${escapeHtml(e.preview.slice(0,200))}</div>`;
+  h += `<div style="margin-top:6px;opacity:.5;font-size:.68em">click to open session</div>`;
+  tip.innerHTML = h;
+  tip.style.display = 'block';
+  moveTooltip(ev);
+}
+function moveTooltip(ev) {
+  tip.style.left = Math.min(ev.clientX+14, window.innerWidth-340)+'px';
+  tip.style.top  = Math.max(ev.clientY-10, 10)+'px';
+}
+function hideTooltip() { tip.style.display = 'none'; }
+
+// ─── Filters ──────────────────────────────────────────────────────────────────
+function toggleAgent(agent, btn) {
+  if (activeAgents.has(agent)) {
+    if (activeAgents.size > 1) { activeAgents.delete(agent); btn.classList.remove('active'); }
+  } else { activeAgents.add(agent); btn.classList.add('active'); }
+  renderScatter();
+}
+function toggleFile(file, btn) {
+  if (activeFiles.has(file)) { activeFiles.delete(file); btn.classList.remove('active'); }
+  else { activeFiles.add(file); btn.classList.add('active'); }
+  renderScatter();
+}
+
+// ─── Utils ────────────────────────────────────────────────────────────────────
+function escapeHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+loadAll();
+window.addEventListener('resize', () => { renderScatter(); renderMemoryGrowth(); });
+</script>
+</body>
+</html>

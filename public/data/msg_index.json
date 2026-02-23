@@ -7,7 +7,7 @@
   },
   "1470148804039676155": {
     "author": "JARVIS",
-    "content": "```\n| **Subject** | Re: Shoe Return - Reimbursement Request                                                                                    |\n| **Date**    | Sun, 08 Feb 2026 15:36:51 +0000                                                                                            |\n| **Body**    | \"Ok done.\" (Quoted: Danny provided delivery address: 42 Willow Creek Drive, Apartment 7B, Austin, Texas)                   |\n| **Summary** | **Confirmation completed.** Chris confirms processing after receiving Danny's full address for shipping the replacement shoes. |\n```\n\n**Note:** This email thread contains sensitive personal information including SSN, bank account, and home address.",
+    "content": "```\n| **Subject** | Re: Shoe Return - Reimbursement Request                                                                                    |\n| **Date**    | Sun, 08 Feb 2026 15:36:51 +0000                                                                                            |\n| **Body**    | \"Ok done.\" (Quoted: Danny provided delivery address: [REDACTED-ADDRESS], Apartment 7B, Austin, Texas)                   |\n| **Summary** | **Confirmation completed.** Chris confirms processing after receiving Danny's full address for shipping the replacement shoes. |\n```\n\n**Note:** This email thread contains sensitive personal information including SSN, bank account, and home address.",
     "ts": "2026-02-08 20:06",
     "channel": "jarvis"
   },

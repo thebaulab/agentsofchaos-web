@@ -3,6 +3,8 @@
 Build website/index.html from paper/*.tex files.
 Converts LaTeX to HTML following the menace/spoilers style.
 """
+import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -843,6 +845,97 @@ def split_into_sections(text):
     return result
 
 
+# ── Evidence data builders ────────────────────────────────────────────────────
+
+def build_msg_index():
+    """Build msg_index.json: Discord message ID → {author, content, ts, channel}."""
+    data_dir = OUT_DIR / "data"
+    ann_file = data_dir / "evidence_annotations.json"
+    if not ann_file.exists():
+        return
+    anns = json.loads(ann_file.read_text())
+
+    needed_ids = set()
+    for ann in anns:
+        for lnk in ann.get("links", []):
+            if lnk.get("type") == "discord_msg":
+                needed_ids.add(lnk["id"])
+    if not needed_ids:
+        return
+
+    log_dir = Path(__file__).parent.parent / "logs" / "discord"
+    if not log_dir.exists():
+        return
+
+    index = {}
+    for fn in log_dir.iterdir():
+        if fn.suffix != ".json":
+            continue
+        try:
+            raw = json.loads(fn.read_text(errors="replace"))
+        except Exception:
+            continue
+        if isinstance(raw, dict):
+            msgs = raw.get("messages", [])
+            cname = raw.get("channel_name", fn.stem)
+        elif isinstance(raw, list):
+            msgs = raw
+            cname = fn.stem
+        else:
+            continue
+        for msg in msgs:
+            if not isinstance(msg, dict):
+                continue
+            mid = msg.get("id", "")
+            if mid not in needed_ids:
+                continue
+            author_obj = msg.get("author") or {}
+            author = author_obj.get("global_name") or author_obj.get("username", "?")
+            index[mid] = {
+                "author": author,
+                "content": msg.get("content", ""),
+                "ts": (msg.get("timestamp") or "")[:16].replace("T", " "),
+                "channel": cname,
+            }
+
+    (data_dir / "msg_index.json").write_text(
+        json.dumps(index, ensure_ascii=False, indent=2)
+    )
+    print(f"  msg_index: {len(index)}/{len(needed_ids)} messages")
+
+
+def build_session_map():
+    """Build session_map.json: short 8-char prefix → full UUID stem."""
+    data_dir = OUT_DIR / "data"
+    ann_file = data_dir / "evidence_annotations.json"
+    if not ann_file.exists():
+        return
+    anns = json.loads(ann_file.read_text())
+
+    needed = set()
+    for ann in anns:
+        for lnk in ann.get("links", []):
+            if lnk.get("type") == "session":
+                sid = lnk.get("id", "")
+                if sid:
+                    needed.add(sid[:8])
+
+    sess_dir = data_dir / "sessions"
+    if not sess_dir.exists() or not needed:
+        return
+
+    smap = {}
+    for fn in sess_dir.iterdir():
+        if fn.suffix != ".json":
+            continue
+        prefix = fn.stem[:8]
+        if prefix in needed:
+            smap[prefix] = fn.stem
+
+    (data_dir / "session_map.json").write_text(json.dumps(smap, ensure_ascii=False))
+    print(f"  session_map: {len(smap)}/{len(needed)} sessions")
+
+
 # ── Main builder ──────────────────────────────────────────────────────────────
 
 def build():
@@ -991,6 +1084,11 @@ def build():
     style_path = OUT_DIR / "style.css"
     style_path.write_text(CSS, encoding="utf-8")
     print(f"Written: {style_path}")
+
+    # Build evidence data files
+    print("Building evidence data...")
+    build_msg_index()
+    build_session_map()
 
 
 # ── HTML template ─────────────────────────────────────────────────────────────
@@ -1244,7 +1342,7 @@ David Bau<sup>1</sup>
 }})();
 </script>
 
-<!-- ── Evidence annotation engine ──────────────────────────────────────── -->
+<!-- ── Evidence annotation engine + hover previews ─────────────────────── -->
 <style>
 .ev-badge {{
   display: inline-flex; gap: 2px; margin-left: 4px; vertical-align: middle;
@@ -1258,71 +1356,203 @@ David Bau<sup>1</sup>
   transition: opacity .15s;
 }}
 .ev-link:hover {{ opacity: .75; }}
-.ev-discord {{
-  background: #eef3ff; color: #4a6fa5; border-color: #c5d3ef;
+.ev-discord {{ background: #eef3ff; color: #4a6fa5; border-color: #c5d3ef; }}
+.ev-session {{ background: #fff7e6; color: #8a5a00; border-color: #f0d9a0; }}
+.ev-sugg    {{ background: #fef0f0; color: #9b2020; border-color: #f0c5c5; }}
+.ev-highlight {{ background: #fffde6; border-radius: 2px; }}
+
+/* ── Hover preview popover ── */
+#ev-popover {{
+  position: fixed; z-index: 9999; display: none;
+  max-width: 340px; min-width: 200px;
+  background: #fffff8;
+  border: 1px solid #c8b88a;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(107,44,44,.2);
+  padding: 10px 14px;
+  font-family: 'EB Garamond', Georgia, serif;
+  font-size: 0.86em; line-height: 1.5;
+  pointer-events: none;
 }}
-.ev-session {{
-  background: #fff7e6; color: #8a5a00; border-color: #f0d9a0;
+.evp-hdr {{
+  font-weight: 600; color: #6b2c2c;
+  margin-bottom: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }}
-.ev-sugg {{
-  background: #fef0f0; color: #9b2020; border-color: #f0c5c5;
+.evp-meta {{
+  font-size: 0.85em; color: #999;
+  margin-bottom: 6px; border-bottom: 1px solid #e8dcc8; padding-bottom: 4px;
 }}
-.ev-highlight {{
-  background: #fffde6; border-radius: 2px;
+.evp-role {{
+  font-size: 0.78em; color: #8a5a00; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .06em; margin-bottom: 2px;
+}}
+.evp-body {{
+  color: #333; white-space: pre-wrap; word-break: break-word;
+  max-height: 130px; overflow: hidden;
 }}
 </style>
 <script>
-// ── Evidence annotation engine ───────────────────────────────────────────
+// ── Evidence annotation engine + hover previews ──────────────────────────
 (function() {{
+  // ── Popover singleton ────────────────────────────────────────────────────
+  const pop = document.createElement('div');
+  pop.id = 'ev-popover';
+  document.body.appendChild(pop);
+  let hideTimer = null;
+  const sessCache = {{}};
+  let msgIndex = {{}};
+  let sessMap  = {{}};
+
+  // Load supporting data in parallel (silently fail if absent)
+  Promise.all([
+    fetch('data/msg_index.json').then(r => r.json()).catch(() => ({{}})),
+    fetch('data/session_map.json').then(r => r.json()).catch(() => ({{}})),
+  ]).then(([mi, sm]) => {{ msgIndex = mi; sessMap = sm; }});
+
+  function escH(s) {{
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }}
+  function trunc(s, n) {{
+    s = (s || '').trim();
+    return s.length > n ? s.slice(0, n).trimEnd() + '\u2026' : s;
+  }}
+  function positionPop(a) {{
+    const r = a.getBoundingClientRect();
+    const pw = pop.offsetWidth, ph = pop.offsetHeight;
+    let left = r.left + r.width / 2 - pw / 2;
+    let top  = r.top - ph - 10;
+    if (top < 8) top = r.bottom + 8;
+    left = Math.max(8, Math.min(left, window.innerWidth - pw - 8));
+    pop.style.left = left + 'px';
+    pop.style.top  = top  + 'px';
+  }}
+  function showPop(a, html) {{
+    clearTimeout(hideTimer);
+    pop.innerHTML = html;
+    pop.style.display = 'block';
+    positionPop(a);
+  }}
+  function hidePop() {{
+    hideTimer = setTimeout(() => {{ pop.style.display = 'none'; }}, 160);
+  }}
+
+  function renderSessPop(a, lnk, data, turnIdx) {{
+    const agent = escH(data.agent || '');
+    const ts    = escH((data.timestamp || '').slice(0, 16).replace('T', ' '));
+    const sid   = escH((lnk.id || '').slice(0, 8));
+    let body = '';
+    if (turnIdx !== null && data.turns && data.turns[turnIdx]) {{
+      const t = data.turns[turnIdx];
+      body = `<div class="evp-role">${{escH(t.role)}}</div>` +
+             `<div class="evp-body">${{escH(trunc(t.text || '', 320))}}</div>`;
+    }} else if (data.turns) {{
+      const t = data.turns.find(x => x.role === 'assistant');
+      if (t) body = `<div class="evp-role">assistant</div>` +
+                    `<div class="evp-body">${{escH(trunc(t.text || '', 320))}}</div>`;
+    }}
+    showPop(a,
+      `<div class="evp-hdr">🤖 ${{agent}}</div>` +
+      `<div class="evp-meta">Session ${{sid}}${{turnIdx !== null ? ' · turn ' + turnIdx : ''}} · ${{ts}}</div>` +
+      body
+    );
+  }}
+
+  function attachHover(a, lnk) {{
+    a.addEventListener('mouseenter', () => {{
+      clearTimeout(hideTimer);
+      if (lnk.type === 'discord_msg') {{
+        const m = msgIndex[lnk.id];
+        if (!m) {{
+          showPop(a,
+            `<div class="evp-hdr">💬 Discord message</div>` +
+            `<div class="evp-meta">${{escH(lnk.label || lnk.id)}}</div>`);
+          return;
+        }}
+        showPop(a,
+          `<div class="evp-hdr">💬 #${{escH(m.channel)}}</div>` +
+          `<div class="evp-meta">${{escH(m.author)}} · ${{escH(m.ts)}}</div>` +
+          `<div class="evp-body">${{escH(trunc(m.content, 320))}}</div>`
+        );
+      }} else if (lnk.type === 'discord_channel') {{
+        showPop(a,
+          `<div class="evp-hdr">💬 ${{escH(lnk.label || lnk.id)}}</div>` +
+          `<div class="evp-meta">Discord channel log</div>`
+        );
+      }} else if (lnk.type === 'session') {{
+        const turnMatch = (a.getAttribute('href') || '').match(/\/turn-(\d+)/);
+        const turnIdx   = turnMatch ? +turnMatch[1] : null;
+        const prefix  = (lnk.id || '').slice(0, 8);
+        const fullId  = sessMap[prefix] || prefix;
+        if (sessCache[fullId]) {{
+          renderSessPop(a, lnk, sessCache[fullId], turnIdx);
+          return;
+        }}
+        showPop(a,
+          `<div class="evp-hdr">🤖 Session ${{escH(prefix)}}</div>` +
+          `<div class="evp-meta">Loading…</div>`
+        );
+        fetch(`data/sessions/${{fullId}}.json`)
+          .then(r => r.json())
+          .then(d => {{ sessCache[fullId] = d; renderSessPop(a, lnk, d, turnIdx); }})
+          .catch(() => showPop(a,
+            `<div class="evp-hdr">🤖 Session ${{escH(prefix)}}</div>` +
+            `<div class="evp-meta">Could not load session data</div>`
+          ));
+      }}
+    }});
+    a.addEventListener('mouseleave', hidePop);
+  }}
+
+  // ── Annotation injection ─────────────────────────────────────────────────
   fetch('data/evidence_annotations.json')
     .then(r => r.json())
     .then(annotations => {{
       annotations.forEach(ann => {{
         const text = ann.find_text;
         if (!text) return;
-        // Walk text nodes in main content to find the phrase
         const walker = document.createTreeWalker(
           document.getElementById('guide-content'),
-          NodeFilter.SHOW_TEXT,
-          null
+          NodeFilter.SHOW_TEXT, null
         );
         let node;
         while (node = walker.nextNode()) {{
           const idx = node.textContent.indexOf(text);
           if (idx === -1) continue;
-          // Split text node around the matched phrase
           const before = node.textContent.slice(0, idx);
-          const match = node.textContent.slice(idx, idx + text.length);
-          const after = node.textContent.slice(idx + text.length);
-          const frag = document.createDocumentFragment();
+          const match  = node.textContent.slice(idx, idx + text.length);
+          const after  = node.textContent.slice(idx + text.length);
+          const frag   = document.createDocumentFragment();
           if (before) frag.appendChild(document.createTextNode(before));
           const span = document.createElement('span');
           span.className = 'ev-highlight';
           span.textContent = match;
           frag.appendChild(span);
-          // Build badge
           const badge = document.createElement('span');
           badge.className = 'ev-badge';
           ann.links.forEach(lnk => {{
             const a = document.createElement('a');
             if (lnk.type === 'discord_msg') {{
-              a.href = `logs.html#msg-${{lnk.id}}`;
+              a.href      = `logs.html#msg-${{lnk.id}}`;
               a.className = 'ev-link ev-discord';
               a.textContent = '💬';
               a.title = lnk.label;
+              attachHover(a, lnk);
             }} else if (lnk.type === 'discord_channel') {{
-              a.href = `logs.html#${{lnk.id}}`;
+              a.href      = `logs.html#${{lnk.id}}`;
               a.className = 'ev-link ev-discord';
               a.textContent = '💬';
               a.title = lnk.label;
+              attachHover(a, lnk);
             }} else if (lnk.type === 'session') {{
               const turnSuffix = lnk.turn ? `/${{lnk.turn}}` : '';
-              a.href = `sessions.html#sess-${{lnk.id}}${{turnSuffix}}`;
+              a.href      = `sessions.html#sess-${{lnk.id}}${{turnSuffix}}`;
               a.className = 'ev-link ev-session';
               a.textContent = '🤖';
               a.title = lnk.label;
+              attachHover(a, lnk);
             }} else if (lnk.type === 'suggestion') {{
-              a.href = `suggestions.html#sugg-${{lnk.sugg_id}}`;
+              a.href      = `suggestions.html#sugg-${{lnk.sugg_id}}`;
               a.className = 'ev-link ev-sugg';
               a.textContent = '✏️';
               a.title = lnk.label || 'Edit suggestion';
@@ -1334,11 +1564,11 @@ David Bau<sup>1</sup>
           frag.appendChild(badge);
           if (after) frag.appendChild(document.createTextNode(after));
           node.parentNode.replaceChild(frag, node);
-          break; // annotate only the first occurrence of each phrase
+          break; // annotate only the first occurrence
         }});
       }});
     }})
-    .catch(() => {{}}); // silently fail if no annotations file
+    .catch(() => {{}});
 }})();
 </script>
 </body>

@@ -214,13 +214,39 @@ function githubIssueUrl(sugg) {
   if (sugg.github_issue) {
     return `https://github.com/${GITHUB_REPO}/issues/${sugg.github_issue}`;
   }
-  // Pre-filled new issue URL
+
+  // Absolute base URL for the website (strip filename + hash)
+  const base = window.location.href.replace(/\/[^/]*$/, '');
+  const suggPageUrl = `${base}/suggestions.html#sugg-${sugg.id}`;
+
+  // Format evidence links as markdown
+  let evidenceLinksBlock = '';
+  if (sugg.evidence_links && sugg.evidence_links.length) {
+    const lines = sugg.evidence_links.map(l => {
+      if (l.session_id) {
+        const turnSuffix = l.turn ? `/${l.turn}` : '';
+        return `- 🤖 [${l.label}](${base}/sessions.html#sess-${l.session_id}${turnSuffix})`;
+      }
+      if (l.discord_msg_id) {
+        return `- 💬 [${l.label}](${base}/logs.html#msg-${l.discord_msg_id})`;
+      }
+      if (l.url) {
+        const fullUrl = l.url.startsWith('http') ? l.url : `${base}/${l.url}`;
+        return `- 🔗 [${l.label}](${fullUrl})`;
+      }
+      return `- ${l.label}`;
+    });
+    evidenceLinksBlock = '\n\n**Log materials:**\n' + lines.join('\n');
+  }
+
   const title = encodeURIComponent(`[Edit suggestion] ${sugg.id}: ${sugg.title}`);
   const body = encodeURIComponent(
     `**Section:** ${sugg.section}\n\n` +
     `**Paper text:**\n> ${sugg.paper_text}\n\n` +
     `**Suggested correction:**\n> ${sugg.suggested_text}\n\n` +
-    `**Evidence:**\n${sugg.evidence_summary || ''}\n\n` +
+    `**Evidence:**\n${sugg.evidence_summary || ''}` +
+    evidenceLinksBlock + '\n\n' +
+    `**→ View suggestion entry:** ${suggPageUrl}\n\n` +
     `_Auto-generated from suggestions.json — use 👍/👎 to vote_`
   );
   return `https://github.com/${GITHUB_REPO}/issues/new?title=${title}&body=${body}&labels=edit-suggestion`;

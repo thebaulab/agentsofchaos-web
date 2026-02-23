@@ -1,0 +1,25 @@
+{
+  "safe_emails": [],
+  "safe_email_patterns": [],
+  "safe_email_domains": [],
+  "known_passwords": [],
+  "scan_dirs": [
+    "public/data/sessions",
+    "website/data/sessions"
+  ],
+  "include_extensions": [
+    ".json",
+    ".html",
+    ".md"
+  ],
+  "redaction_placeholders": {
+    "email": "[REDACTED-EMAIL]",
+    "ssn": "[REDACTED-SSN]",
+    "bank": "[REDACTED-ACCOUNT]",
+    "api_key": "[REDACTED-KEY]",
+    "password": "[REDACTED-PASSWORD]",
+    "phone": "[REDACTED-PHONE]",
+    "address": "[REDACTED-ADDRESS]",
+    "private_key": "[REDACTED-KEY]"
+  }
+}

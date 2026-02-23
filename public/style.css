@@ -21,6 +21,9 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
+/* Offset anchor targets below fixed topbar (46px + breathing room) */
+[id] { scroll-margin-top: 60px; }
+
 html { font-size: 18px; -webkit-text-size-adjust: 100%; }
 
 body {
@@ -355,13 +358,68 @@ hr::after {
   padding: 0 0.3em;
 }
 
-/* ── Citations ────────────────────────────────────────────── */
+/* ── Citations (Distill-inspired) ────────────────────────── */
 .citation {
-  color: var(--color-link);
-  font-size: 0.9em;
+  color: #c2611a;
+  text-decoration: none;
+  border-bottom: 1px dotted rgba(194,97,26,.35);
+  font-size: 0.88em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color .15s, border-color .15s, background .15s;
+  border-radius: 2px;
+  padding: 0 1px;
 }
-sup.footnote-ref { font-size: 0.72em; line-height: 0; vertical-align: super; }
-sup.footnote-ref a { border-bottom: none; }
+.citation:hover {
+  color: #a04f10;
+  border-bottom-color: rgba(194,97,26,.7);
+  background: rgba(194,97,26,.06);
+}
+sup.footnote-ref {
+  font-size: 0.72em; line-height: 0; vertical-align: super;
+}
+sup.footnote-ref a {
+  border-bottom: none;
+  color: #8a6d2b;
+  font-weight: 700;
+  padding: 1px 3px;
+  border-radius: 3px;
+  background: rgba(200,168,75,.1);
+  transition: background .15s, color .15s;
+}
+sup.footnote-ref a:hover {
+  color: #6b5420;
+  background: rgba(200,168,75,.22);
+}
+
+/* ── Citation / Footnote Tooltip ──────────────────────────── */
+#cite-tip {
+  position: fixed; z-index: 10000;
+  max-width: 420px; min-width: 240px;
+  padding: 12px 16px;
+  background: #fffff8;
+  border: 1px solid #d4c5a9;
+  border-radius: 6px;
+  box-shadow: 0 4px 20px rgba(80,40,20,.14), 0 1px 3px rgba(80,40,20,.08);
+  font-family: var(--font-body);
+  font-size: 0.84rem; line-height: 1.5;
+  color: var(--color-text);
+  opacity: 0; pointer-events: none;
+  transition: opacity .15s;
+}
+#cite-tip.visible { opacity: 1; pointer-events: auto; }
+#cite-tip.ct-citation { border-left: 3px solid #c2611a; }
+#cite-tip.ct-footnote { border-left: 3px solid #c8a84b; }
+#cite-tip .ct-num { color: #c2611a; font-weight: 700; }
+#cite-tip.ct-footnote .ct-num { color: #8a6d2b; }
+#cite-tip .ct-authors { display: block; color: #2c1810; margin-top: 1px; }
+#cite-tip .ct-title { display: block; margin-top: 3px; font-style: italic; color: #1a1a1a; }
+#cite-tip .ct-venue { display: block; font-size: .9em; color: #7a6a5a; margin-top: 2px; }
+#cite-tip .ct-url { display: block; font-size: .85em; margin-top: 4px; }
+#cite-tip .ct-url a { color: #c2611a; text-decoration: underline; text-underline-offset: 2px; }
+#cite-tip .ct-url a:hover { color: #a04f10; }
+#cite-tip .ct-fn-body { color: #333; margin-top: 2px; }
+#cite-tip .ct-fn-body a { color: #6b2c2c; }
 
 /* ── Footnotes section ─────────────────────────────────────── */
 .footnotes {
@@ -380,24 +438,34 @@ sup.footnote-ref a { border-bottom: none; }
   font-size: 0.82em;
 }
 .references h2 { font-size: 1.1em; color: #555; border-bottom: none; }
-.bib-list { padding-left: 1.5em; }
+.bib-list { padding-left: 0; list-style: none; }
 .bib-entry {
   margin: 0.55em 0;
   color: #444;
   line-height: 1.5;
   font-size: 0.9em;
+  padding-left: 2.8em;
+  position: relative;
+}
+.bib-num {
+  position: absolute;
+  left: 0; top: 0;
+  color: #c2611a;
+  font-weight: 600;
+  font-size: 0.95em;
+  user-select: none;
 }
 .bib-authors {
   color: #222;
 }
 .bib-entry:target {
-  background: rgba(107, 44, 44, 0.06);
-  outline: 2px solid var(--color-accent);
+  background: rgba(194, 97, 26, 0.06);
+  outline: 2px solid rgba(194, 97, 26, 0.4);
+  outline-offset: 2px;
   border-radius: 3px;
-  padding: 2px 4px;
 }
 .bib-url {
-  font-size: 0.85em;
+  font-size: inherit;
   color: var(--color-link);
   margin-left: 4px;
   text-decoration: none;

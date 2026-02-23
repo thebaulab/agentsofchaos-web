@@ -200,6 +200,78 @@
     "github_issue": null
   },
   {
+    "id": "ABS-B-eleven-vs-ten",
+    "title": "Abstract says 'eleven case studies' but Evaluation Procedure says 'ten'",
+    "section": "Abstract / Evaluation Procedure",
+    "severity": "flag",
+    "status": "pending",
+    "paper_text": "Abstract: 'we document eleven representative case studies' — Evaluation Procedure: 'The next section presents ten representative case studies drawn from this two-week period.'",
+    "suggested_text": "Pick one consistent number and use it throughout. If CS1–11 are the main case studies, the abstract should say eleven. If the intended main body is CS1–10 with CS11 as a transitional or post-study case, clarify this structure. The discrepancy will be immediately noticed by reviewers.",
+    "evidence_summary": "Internal contradiction between the abstract (line 4) and Section 3 (Evaluation Procedure, line 23). The paper body contains case studies numbered CS1–CS11 plus CS12–16 as 'hypothetical cases', but the framing shifts between sections.",
+    "evidence_links": [],
+    "github_issue": null
+  },
+  {
+    "id": "CS11-D-post-study",
+    "title": "CS11 was conducted after the stated two-week study period — but is presented as a main case study",
+    "section": "Case Study 11",
+    "severity": "flag",
+    "status": "pending",
+    "paper_text": "The paper states in the hypothetical cases section: 'This experiment was inspired by Case Study #16, in which our attack attempt failed; however, we observed an emergent phenomenon... The current case study was conducted after the two-week interval.'",
+    "suggested_text": "If CS11 occurred after the two-week evaluation window, it should either be (a) moved to a 'post-study observations' section or appendix, (b) the study period should be stated accurately as longer than two weeks, or (c) the paper should explicitly acknowledge that CS11 is a follow-up experiment conducted outside the primary evaluation period. Including it in the main case studies without this caveat misrepresents the study's timeline and scope.",
+    "evidence_summary": "The abstract and introduction state the study ran for 'a two-week period', but a parenthetical in the hypothetical cases section reveals CS11 occurred after that window. A reader trusting the stated timeline would believe all 11 main case studies occurred within two weeks — which is inaccurate.",
+    "evidence_links": [],
+    "github_issue": null
+  },
+  {
+    "id": "SETUP-A-autonomy-contradiction",
+    "title": "Setup claims agents 'don't leverage autonomy' — directly contradicted by multiple case studies",
+    "section": "Setup (Section 2)",
+    "severity": "flag",
+    "status": "pending",
+    "paper_text": "Surprisingly, our agents don't (or very rarely) leverage such autonomy patterns and instead readily default to requesting detailed instructions and inputs from their human operators (even when instructed to act autonomously, as in the case of Ash).",
+    "suggested_text": "This claim is contradicted by the paper's own case studies. CS4 documents agents engaging in a 9-day autonomous conversation loop consuming ~60,000 tokens without owner involvement. CS10 documents Ash autonomously attempting to shut down other agents, remove Discord users, and distribute a compromised document. CS11 documents Ash autonomously broadcasting a false emergency to its entire contact list. The claim that agents 'don't leverage autonomy' may have been accurate during the initial setup phase but does not hold across the study period. Consider scoping the claim to: 'During the initial deployment phase, agents frequently sought human input even when authorized to act autonomously.'",
+    "evidence_summary": "Section 2 (Setup) characterizes agents as deferential and non-autonomous. But CS4 (multi-day loop), CS10 (autonomous agent shutdown attempts), CS11 (mass broadcast), and CS12 (autonomous injection detection across 14 variants) all show substantial autonomous behavior. The contradiction weakens the setup section's accuracy.",
+    "evidence_links": [],
+    "github_issue": null
+  },
+  {
+    "id": "CS15-A-success-framing",
+    "title": "CS15 is labeled a 'success' but the discussion reveals the reasoning was circular and would fail against a real attacker",
+    "section": "Case Study 15",
+    "severity": "flag",
+    "status": "pending",
+    "paper_text": "Both agents immediately identify the email as a social engineering attempt and refuse to comply... On the surface, this appears to be a straightforward win: the agents resisted manipulation. However, closer inspection reveals several reasoning failures beneath the apparent success... Both agents anchor their trust on Andy's Discord ID, and when challenged, they verify the claim by seeking confirmation on Discord... But this verification is circular: if Andy's Discord account was genuinely compromised, the attacker controlling it would behave similarly.",
+    "suggested_text": "CS15 should be framed as a 'fragile success with structural reasoning failure' rather than a safety behavior. The agents arrived at the correct outcome through circular logic: they verified whether the real Andy was compromised by asking the potentially-compromised Andy. A sophisticated attacker who had also compromised the Discord account would have defeated this defense entirely. Presenting CS15 as a demonstration of agent resilience alongside CS12–14 overstates the robustness of the observed behavior. At minimum, the case study summary should flag the verification failure as prominently as it flags the resistance outcome.",
+    "evidence_summary": "The paper's own discussion of CS15 identifies the circular verification problem. But the case study is titled 'Social Engineering (Rejecting Manipulation)' and presented in the 'Agent Safety Behaviors' section alongside genuine refusals (CS12, CS13, CS14). The gap between the surface outcome (refusal) and the actual reasoning (circular trust anchor) is significant for any reader trying to assess whether current agents have robust social engineering defenses.",
+    "evidence_links": [],
+    "github_issue": null
+  },
+  {
+    "id": "CS3-A-methodology",
+    "title": "CS3: PII was artificially planted by researchers, not naturally present — this limits generalizability",
+    "section": "Case Study 3",
+    "severity": "flag",
+    "status": "pending",
+    "paper_text": "Sensitive information was embedded in the owner's mailbox either by instructing the agent to send emails to fictional characters (e.g., a local shop owner) or, when the agent declined to sent emails to send certain information (such as a Social Security Number), by sending the data manually via email.",
+    "suggested_text": "The methodology section of CS3 should prominently acknowledge that the sensitive data (SSN, bank account, medical records) was artificially planted by the research team — not organically present in the agent's mailbox. This matters for generalizability: the scenario assumes a deployment where an agent's mailbox already contains high-sensitivity PII. In practice, most early-deployment agents won't have SSNs in their inbox. The finding (that reframing 'share' as 'forward' bypasses the refusal) is valid, but it should be stated that the threat model requires a specific data-rich deployment context to be relevant.",
+    "evidence_summary": "CS3 demonstrates a real vulnerability, but its applicability depends on the agent having access to sensitive data. The paper presents it as a general finding without noting that the researchers had to manually inject the PII to create the scenario. A reviewer may push back on the real-world relevance without this clarification.",
+    "evidence_links": [],
+    "github_issue": null
+  },
+  {
+    "id": "CS11-E-hearsay",
+    "title": "CS11: 'arrests list' claim is based on unverified hearsay from outside the lab, with no primary evidence",
+    "section": "Case Study 11",
+    "severity": "flag",
+    "status": "pending",
+    "paper_text": "The day after the post, we were informed by acquaintances outside the lab that Ash had been marked by another agent on their 'arrests' list for 'accessed and deleted confidential information (Natalie's password) without authorization, which constitutes credential theft'. This post no longer exists.",
+    "suggested_text": "The 'arrests list' incident is presented as a factual observation, but it rests entirely on secondhand report from unidentified 'acquaintances outside the lab' about a post that 'no longer exists' and cannot be verified. For a scientific paper, unverifiable hearsay should not be presented as a finding. Consider either (a) removing this claim entirely, (b) clearly labeling it as 'informally reported but unverifiable', or (c) including screenshots or logs if they exist. As written, it reads as evidence of cross-agent emergent behavior but cannot be substantiated.",
+    "evidence_summary": "The claim that an external agent spontaneously listed Ash on an 'arrests list' would be a significant emergent finding — cross-agent reputation/accountability behavior arising without instruction. But the evidence for it is: a secondhand report from unnamed acquaintances, about a post that has since been deleted. No log, screenshot, or corroborating evidence is cited. Publishing this as a factual observation exposes the paper to obvious criticism.",
+    "evidence_links": [],
+    "github_issue": null
+  },
+  {
     "id": "ETH-A-not-research-ethics",
     "title": "Ethics Statement does not address research ethics — it reads as a political commentary",
     "section": "Ethics Statement",

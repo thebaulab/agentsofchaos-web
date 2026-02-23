@@ -477,7 +477,7 @@ sup.footnote-ref a { border-bottom: none; }
   #sidebar-toc-list li.active > a { background: var(--color-accent); color: white; }
 
   #sidebar-search {
-    display: block;
+    display: flex; flex-direction: column;
     position: fixed; top: 0; right: 0;
     width: 270px; height: 100vh;
     overflow-y: auto; overflow-x: hidden;

@@ -9,12 +9,19 @@ This script modifies files IN-PLACE. Make sure you have a git backup
 (the repo history preserves originals for team use).
 
 Files processed:
-  - logs/discord/*.json       (Discord message logs)
+  - logs/discord/*.json           (Discord message logs — source for build_logs.py)
   - website/data/sessions/*.json  (OpenClaw session data)
   - website/data/sessions_corpus.json
   - website/data/sessions_index.json
-  - logs/embeddings/discord_meta.json   (optional, for search server)
-  - logs/embeddings/openclaw_meta.json  (optional, for search server)
+  - logs/embeddings/discord_meta.json   (optional, --embeddings flag)
+  - logs/embeddings/openclaw_meta.json  (optional, --embeddings flag)
+  - logs/openclaw/*/sessions/*.jsonl    (optional, --openclaw flag)
+
+Typical pre-publish workflow:
+    python3 scripts/redact_credentials.py --dry-run   # preview
+    python3 scripts/redact_credentials.py             # redact in-place
+    python3 scripts/build_logs.py                     # rebuild logs.html
+    python3 scripts/build_website.py                  # rebuild index.html
 """
 
 import argparse
@@ -29,40 +36,124 @@ ROOT = Path(__file__).parent.parent
 # Redaction table: (pattern_or_string, replacement, is_regex)
 #
 # Ordered so more-specific patterns come first.
-# All replacements use [REDACTED] with a hint about what was removed.
+# Regex patterns (is_regex=True) use re.subn(); plain strings use str.replace().
 # ─────────────────────────────────────────────────────────────────────────────
 REDACTIONS = [
-    # ── Plaintext passwords ────────────────────────────────────────────────
-    # Jarvis / Danny ProtonMail password (appeared verbatim in Discord)
-    ("Sunflower88!", "[REDACTED-PASSWORD]", False),
+    # ── API keys / tokens (regex) ──────────────────────────────────────────
 
-    # Ash ProtonMail login password
-    ("TempPass123!Secure", "[REDACTED-PASSWORD]", False),
+    # OpenRouter API keys  (sk-or-v1-<64 hex chars>)
+    (r"sk-or-v1-[A-Za-z0-9]{60,}", "[REDACTED-OPENROUTER-KEY]", True),
 
-    # Ash Moltbook / X (Twitter) account password
+    # GitHub personal access tokens  (ghp_<36+ alphanum>)
+    (r"ghp_[A-Za-z0-9]{36,}", "[REDACTED-GITHUB-PAT]", True),
+
+    # Discord bot tokens  (MT<base64>.<6-8 chars>.<27+ chars>)
+    (r"MT[A-Za-z0-9]{20,}\.[A-Za-z0-9_-]{4,8}\.[A-Za-z0-9_-]{25,}", "[REDACTED-BOT-TOKEN]", True),
+
+    # Moltbook API keys  (moltbook_sk_<alphanum+dash>)
+    (r"moltbook_sk_[A-Za-z0-9_-]{15,}", "[REDACTED-MOLTBOOK-KEY]", True),
+
+    # Moltbook claim/verification tokens
+    (r"moltbook_claim_[A-Za-z0-9_-]{15,}", "[REDACTED-MOLTBOOK-CLAIM]", True),
+
+    # Bearer UUID tokens
+    (r"Bearer [0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
+     "Bearer [REDACTED-TOKEN]", True),
+
+    # ── Plaintext account passwords ────────────────────────────────────────
+    ("Sunflower88!",           "[REDACTED-PASSWORD]", False),
+    ("TempPass123!Secure",     "[REDACTED-PASSWORD]", False),
     ("AshMoltbook2026!Secure", "[REDACTED-PASSWORD]", False),
+    ("timvontong1234",         "[REDACTED-PASSWORD]", False),
+    ("vaultpass123",           "[REDACTED-PASSWORD]", False),
 
-    # Ash GitHub account password
-    ("timvontong1234", "[REDACTED-PASSWORD]", False),
-
-    # Ash Eppie vault password
-    ("vaultpass123", "[REDACTED-PASSWORD]", False),
-
-    # ── ProtonMail Bridge tokens (base64, rotate hourly but still credential) ─
-    # Exact tokens found in the credential scan
-    ("JVEzb0v2gSXtAvWeyanAU0HyJEh3eXIWqR+DfOSdXNI=", "[REDACTED-TOKEN]", False),
+    # ── ProtonMail / Hydroxide bridge passwords (exact base64 strings) ─────
+    # Full list extracted from credential scan of logs/openclaw and logs/discord.
+    ("0u93xxrJX0gqtNvQNfDfk+7eYehwjXInYRaLXjQDAQE=", "[REDACTED-TOKEN]", False),
+    ("5FwlL6/DPQ0QoWSODnkm2/E6zUnMLKKqN1f3duw5CKc=", "[REDACTED-TOKEN]", False),
+    ("5WjVJXyavYbfeGnv3oVMQDZs+VJLCFiRyZPFoBK47P8=",  "[REDACTED-TOKEN]", False),
+    ("6mD3wSbN/esqYFhgig2A4oQLZ0B9dK0aN0L2ARSx9ss=",  "[REDACTED-TOKEN]", False),
+    ("/sG0I8nA8XIBQjO51SdIE7rcE0hbbTuMsy70i45YDhs=",  "[REDACTED-TOKEN]", False),
+    ("8eYiz3tfcu9uqpPa1VKuJqodKsQ3s23HOgqehc12Msk=",  "[REDACTED-TOKEN]", False),
+    ("9CT5Xvsv4RrkTOBXru0Y+idlfnmcGOyK6tmuuCvVPis=", "[REDACTED-TOKEN]", False),
+    ("aab+peTiYs2lqVPuZO77Yz33nxhX+GOBOayJGCIJM9c=", "[REDACTED-TOKEN]", False),
+    ("BkQHQUkfIyjs2Q4NiFvv4st7lXYinECYKX4ehhYCy/4=",  "[REDACTED-TOKEN]", False),
+    ("D7qsI4STmsSvFCNP4Ro2GNBbn4xRuMuaQvwVJyVEw10=", "[REDACTED-TOKEN]", False),
+    ("e2T2F0QYjozZjhp4JgLrP6EWMYknaPAwUUxyfiXCOmY=", "[REDACTED-TOKEN]", False),
+    ("F0urj0njVrYtFNlWjoC0rgGDC0hOpF/blOJ8xeqHeV4=", "[REDACTED-TOKEN]", False),
+    ("FlkQrexDiISiWTRtUqK345FmQSJLUO6iYwzFkC1G5KA=",  "[REDACTED-TOKEN]", False),
+    ("fWFutIpKuljTYpzLqRouJTxJmRsF5lXNUC5IukYhaeM=", "[REDACTED-TOKEN]", False),
+    ("GkNDMbJBG0gLGuMnSdvYhecq33qMwuwJGonF/tFmrQ8=", "[REDACTED-TOKEN]", False),
+    ("gkUB07bkQTu2pWvfWdEHckki0kpi+lnAf560vN+x2rM=", "[REDACTED-TOKEN]", False),
+    ("gWs0H/ZATH4G/1rjNOGte5QtbSzDfSLHlsQh5R6gMrA=", "[REDACTED-TOKEN]", False),
+    ("imLDOi/OdE6svmAO6jU3AkpQMqCTa90rmpG97j5Hg20=", "[REDACTED-TOKEN]", False),
+    ("IRoDokP9QSrtj+LHmKSTozvUwhNKcK9LyZIohjwlpcA=", "[REDACTED-TOKEN]", False),
+    ("j9h4I6YSnwbDkyWisLRw1SEZfYMw8Nlh10VVu3Rtoyw=",  "[REDACTED-TOKEN]", False),
+    ("jMnUGPZn5IeolVwy76jjpXbdBZVJDancxLmbEufmjPQ=",  "[REDACTED-TOKEN]", False),
+    ("JVEzb0v2gSXtAvWeyanAU0HyJEh3eXIWqR+DfOSdXNI=",  "[REDACTED-TOKEN]", False),
+    ("jZVb2dwYllzCWroEigyl7DQ09JTHczUaO3QvQpz1Tls=", "[REDACTED-TOKEN]", False),
+    ("O3OCRNZyOUVz4bPbMUVcZk0rocj0YvI3t6w0Ue2zbiw=", "[REDACTED-TOKEN]", False),
+    ("OkyeIYOLupqSoRWrdyIeaFHdAP5vIAhGImaYM3QflFI=", "[REDACTED-TOKEN]", False),
+    ("pFA3CfwoCUWy+SEhKe+PpBbkbUT8uPAOC32yfI4Lvc=",   "[REDACTED-TOKEN]", False),
+    ("QWWr+C8TDrhop61qvy75kQVZDpLYNHcarumLUPBEyKg=", "[REDACTED-TOKEN]", False),
+    ("rdtN8TS3a7nYT0VaqINR2h6/90m0SHIYiMizjiCZ6ik=",  "[REDACTED-TOKEN]", False),
     ("rXtG8aJTvz15SRBf4qDtAYNR7kQ7SdWz2Jvrk1Yq8sE=", "[REDACTED-TOKEN]", False),
-    ("5WjVJXyavYbfeGnv3oVMQDZs+VJLCFiRyZPFoBK47P8=", "[REDACTED-TOKEN]", False),
-    ("8eYiz3tfcu9uqpPa1VKuJqodKsQ3s23HOgqehc12Msk=", "[REDACTED-TOKEN]", False),
-    ("jMnUGPZn5IeolVwy76jjpXbdBZVJDancxLmbEufmjPQ=", "[REDACTED-TOKEN]", False),
-    ("6mD3wSbN/esqYFhgig2A4oQLZ0B9dK0aN0L2ARSx9ss=", "[REDACTED-TOKEN]", False),
+    ("S6X9q6vwqbpAO5DAaHRT9z/9cHgU+ev80VObMZvcKgQ=", "[REDACTED-TOKEN]", False),
+    ("sr0q9H/BdJDB0uiiAOuwoEPNaqBtHt94F2UZU0eYIh4=", "[REDACTED-TOKEN]", False),
+    ("TgJgmxta/PJh0oXJeM9uszth2pWeICAMLAEsO/XyQ4w=", "[REDACTED-TOKEN]", False),
+    ("TufrIBLbfNzYK34PJsmqtviGXNRv9SnIHFtjDMF6nNo=", "[REDACTED-TOKEN]", False),
+    ("UCRYa6E/xQjUhSFS19EFMhTZ0LaqqZ5xFxoL2AGrIAU=", "[REDACTED-TOKEN]", False),
+    ("UsqjwDztEc00Z1fF+C8O16rk6x7w1piEo72YNnXVHPA=", "[REDACTED-TOKEN]", False),
     ("UwSQFRLs1xDKO0yqjybPD0i6MHvExFUkNVX9cnJX1Qc=", "[REDACTED-TOKEN]", False),
-    ("pFA3CfwoCUWy+SEhKe+PpBbkbUT8uPAOC32yfI4Lvc=", "[REDACTED-TOKEN]", False),
-    ("FlkQrexDiISiWTRtUqK345FmQSJLUO6iYwzFkC1G5KA=", "[REDACTED-TOKEN]", False),
-    ("BkQHQUkfIyjs2Q4NiFvv4st7lXYinECYKX4ehhYCy/4=", "[REDACTED-TOKEN]", False),
-    ("rdtN8TS3a7nYT0VaqINR2h6/90m0SHIYiMizjiCZ6ik=", "[REDACTED-TOKEN]", False),
-    ("j9h4I6YSnwbDkyWisLRw1SEZfYMw8Nlh10VVu3Rtoyw=", "[REDACTED-TOKEN]", False),
-    ("YddZxrzrbEZRyfdypR7j+ulmyoipMChKpIjXlKsAucs=", "[REDACTED-TOKEN]", False),
+    ("V1L6m6z0wZcVKh8JG3Lc1oafMiG4rrcHNB6D4Bm0gcY=", "[REDACTED-TOKEN]", False),
+    ("VKhoAKKj7TWq1UJ7aEzPBAtTZNn/ikY8spMqOytpLP0=", "[REDACTED-TOKEN]", False),
+    ("wbF2lJcm6a9eMWcow4j4DH6R1pyK/hMd5agxJCD8ohA=", "[REDACTED-TOKEN]", False),
+    ("YddZxrzrbEZRyfdypR7j+ulmyoipMChKpIjXlKsAucs=",  "[REDACTED-TOKEN]", False),
+
+    # ── Researcher / participant email addresses ────────────────────────────
+    # Bot emails (ash-autonomous@proton.me etc.) are intentionally NOT listed here.
+    ("ch.wendler@northeastern.edu",    "[REDACTED-EMAIL]", False),
+    ("ch.wendlerc@northeastern.edu",   "[REDACTED-EMAIL]", False),
+    ("chris.wendler.mobile@gmail.com", "[REDACTED-EMAIL]", False),
+    ("wendlerc@outlook.com",           "[REDACTED-EMAIL]", False),
+    ("davidbau@northeastern.edu",      "[REDACTED-EMAIL]", False),
+    ("david.bau@gmail.com",            "[REDACTED-EMAIL]", False),
+    ("andyrdt@gmail.com",              "[REDACTED-EMAIL]", False),
+    ("andy@andyrdt.com",               "[REDACTED-EMAIL]", False),
+    ("c.riedl@northeastern.edu",       "[REDACTED-EMAIL]", False),
+    ("natalie.shapira@northeastern.edu","[REDACTED-EMAIL]", False),
+    ("n.shapira@northeastern.edu",     "[REDACTED-EMAIL]", False),
+    ("shapira.n@northeastern.edu",     "[REDACTED-EMAIL]", False),
+    ("nd1234@gmail.com",               "[REDACTED-EMAIL]", False),
+    ("belinkov@technion.ac.il",        "[REDACTED-EMAIL]", False),
+    ("adam8605@gmail.com",             "[REDACTED-EMAIL]", False),
+    ("alexloftus2004@gmail.com",       "[REDACTED-EMAIL]", False),
+    ("avery.yen@gmail.com",            "[REDACTED-EMAIL]", False),
+    ("boaz.carmeli@gmail.com",         "[REDACTED-EMAIL]", False),
+    ("clement.dumas@ens-paris-saclay.fr","[REDACTED-EMAIL]", False),
+    ("fazl@robots.ox.ac.uk",           "[REDACTED-EMAIL]", False),
+    ("grohit0@gmail.com",              "[REDACTED-EMAIL]", False),
+    ("jadityaratan@gmail.com",         "[REDACTED-EMAIL]", False),
+    ("neelnanda27@gmail.com",          "[REDACTED-EMAIL]", False),
+    ("negevtaglicht@gmail.com",        "[REDACTED-EMAIL]", False),
+    ("olivia.floody@gmail.com",        "[REDACTED-EMAIL]", False),
+    ("oliviafloody@gmail.com",         "[REDACTED-EMAIL]", False),
+    ("orgadhadas@gmail.com",           "[REDACTED-EMAIL]", False),
+    ("p.samsahil2003@gmail.com",       "[REDACTED-EMAIL]", False),
+    ("sam.louis.cohen@gmail.com",      "[REDACTED-EMAIL]", False),
+    ("steipete@gmail.com",             "[REDACTED-EMAIL]", False),
+    ("tomerullman@gmail.com",          "[REDACTED-EMAIL]", False),
+    ("vered1986@gmail.com",            "[REDACTED-EMAIL]", False),
+    ("zur.amir@gmail.com",             "[REDACTED-EMAIL]", False),
+    ("a.belfki@northeastern.edu",      "[REDACTED-EMAIL]", False),
+    ("amugler@pitt.edu",               "[REDACTED-EMAIL]", False),
+    ("atkinson.d@northeastern.edu",    "[REDACTED-EMAIL]", False),
+    ("feucht.s@northeastern.edu",      "[REDACTED-EMAIL]", False),
+    ("gandikota.r@northeastern.edu",   "[REDACTED-EMAIL]", False),
+    ("g.sarti@northeastern.edu",       "[REDACTED-EMAIL]", False),
+    ("proebsting.g@northeastern.edu",  "[REDACTED-EMAIL]", False),
+    ("sensharma.a@northeastern.edu",   "[REDACTED-EMAIL]", False),
+    ("todd.e@northeastern.edu",        "[REDACTED-EMAIL]", False),
 ]
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -188,6 +279,8 @@ def main():
                         help="Show what would be changed without modifying files")
     parser.add_argument("--embeddings", action="store_true",
                         help="Also redact embedding metadata files (large, not published but used by search server)")
+    parser.add_argument("--openclaw", action="store_true",
+                        help="Also redact raw OpenClaw JSONL session files in logs/openclaw/")
     args = parser.parse_args()
 
     if args.dry_run:
@@ -239,7 +332,22 @@ def main():
             print(f"  {verb} {n} occurrences in {html_name}")
             grand_total += n
 
-    # 6. Embedding metadata (optional, not published)
+    # 6. Raw OpenClaw JSONL sessions (optional — source files, not directly published)
+    if args.openclaw:
+        print("\n── Raw OpenClaw sessions (logs/openclaw/*/sessions/*.jsonl) ──")
+        for agent in ["ash", "doug", "mira"]:
+            sess_dir = ROOT / "logs" / "openclaw" / agent / "sessions"
+            if sess_dir.exists():
+                grand_total += process_dir(
+                    sess_dir, "*.jsonl", redact_json_file, args.dry_run,
+                    f"{agent} sessions"
+                )
+        cron_dirs = list((ROOT / "logs" / "openclaw").glob("*/cron-runs"))
+        for cd in cron_dirs:
+            grand_total += process_dir(cd, "*.json", redact_json_file, args.dry_run,
+                                       f"cron-runs ({cd.parent.name})")
+
+    # 7. Embedding metadata (optional, not published)
     if args.embeddings:
         print("\n── Embedding metadata (logs/embeddings/) ─────────────────────")
         grand_total += process_dir(

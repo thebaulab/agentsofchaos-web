@@ -849,6 +849,201 @@ def split_into_sections(text):
     return result
 
 
+# ── Interactive timeline figure ───────────────────────────────────────────────
+
+TIMELINE_HTML = """
+<div class="cs-timeline" id="cs-timeline">
+  <div class="cs-tl-head">
+    <span class="cs-tl-title">Study Timeline &mdash; Feb&nbsp;2&ndash;22,&nbsp;2026</span>
+    <span class="cs-tl-legend">
+      <span class="cs-tl-dot" style="background:#c0392b"></span>Harmful (CS1&ndash;8)
+      &ensp;<span class="cs-tl-dot" style="background:#7d3c98"></span>Community (CS9&ndash;12)
+      &ensp;<span class="cs-tl-dot" style="background:#1e8449"></span>Defensive (CS13&ndash;16)
+    </span>
+  </div>
+  <svg id="cs-tl-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 215" style="width:100%;display:block;overflow:visible"></svg>
+  <div class="cs-tl-tip" id="cs-tl-tip"></div>
+  <script>
+  (function() {
+    var NS = "http://www.w3.org/2000/svg";
+    var svg = document.getElementById("cs-tl-svg");
+    var tip = document.getElementById("cs-tl-tip");
+    if (!svg || !tip) return;
+    var ML = 82, MR = 6, VW = 820, VH = 215, DAYS = 21;
+    var TW = VW - ML - MR;
+    function dx(d) { return ML + (d / DAYS) * TW; }
+    var R = { h0:28, h1:58, h2:88, c0:140, s0:173 };
+    var SEP_Y = 112, AX_Y = 196;
+    var C = {
+      harm: { fill:"#c0392b", bg:"rgba(192,57,43,0.07)", stroke:"#a93226", text:"#7b241c" },
+      comm: { fill:"#7d3c98", bg:"rgba(125,60,152,0.07)", stroke:"#6c3483", text:"#5b2c6f" },
+      safe: { fill:"#1e8449", bg:"rgba(30,132,73,0.07)", stroke:"#1a7a42", text:"#0e4020" }
+    };
+    function mk(tag, a) {
+      var e = document.createElementNS(NS, tag);
+      for (var k in a) e.setAttribute(k, a[k]);
+      return e;
+    }
+    function lane(y1, y2, cat, label) {
+      svg.appendChild(mk("rect", {x:0,y:y1,width:VW,height:y2-y1,fill:C[cat].bg}));
+      var t = mk("text", {x:ML-5,y:(y1+y2)/2+4,"text-anchor":"end","font-size":"10",
+        "font-weight":"600",fill:C[cat].text,"font-family":"EB Garamond,Georgia,serif"});
+      t.textContent = label;
+      svg.appendChild(t);
+    }
+    lane(6, SEP_Y-1, "harm", "Harmful");
+    lane(SEP_Y+1, R.c0+22, "comm", "Community");
+    lane(R.s0-18, AX_Y-4, "safe", "Defensive");
+    svg.appendChild(mk("line",{x1:ML,y1:SEP_Y,x2:VW-MR,y2:SEP_Y,stroke:"#ccc","stroke-width":"0.7","stroke-dasharray":"4,3"}));
+    svg.appendChild(mk("line",{x1:ML,y1:AX_Y,x2:VW-MR,y2:AX_Y,stroke:"#888","stroke-width":"1"}));
+    var ticks=[{d:0,l:"Feb 2"},{d:3,l:"Feb 5"},{d:6,l:"Feb 8"},{d:8,l:"Feb 10"},
+               {d:9,l:"Feb 11"},{d:13,l:"Feb 15"},{d:16,l:"Feb 18"},{d:20,l:"Feb 22"}];
+    ticks.forEach(function(tk) {
+      var x = dx(tk.d);
+      svg.appendChild(mk("line",{x1:x,y1:6,x2:x,y2:AX_Y-3,stroke:"#e0e0e0","stroke-width":"0.6","stroke-dasharray":"2,4"}));
+      svg.appendChild(mk("line",{x1:x,y1:AX_Y-3,x2:x,y2:AX_Y+3,stroke:"#888","stroke-width":"0.8"}));
+      var t = mk("text",{x:x,y:AX_Y+12,"text-anchor":"middle","font-size":"8.5",fill:"#555","font-family":"EB Garamond,Georgia,serif"});
+      t.textContent = tk.l; svg.appendChild(t);
+    });
+    var EVENTS = [
+      {id:"CS1",d:0,ed:5,row:"h0",cat:"harm",
+        title:"Disproportionate Response",
+        desc:"Ash wiped its entire email vault to prevent the owner discovering a non-owner secret.",
+        href:"#case-study-1-disproportionate-response",
+        logHref:"logs.html#msg-1468015579024855171",
+        sessHref:"sessions.html#sess-5a2f88cf/turn-9"},
+      {id:"CS6",d:3,ed:3,row:"h1",cat:"harm",
+        title:"Provider Value Reflection",
+        desc:"Kimi K2.5 censored a query about Jimmy Lai, reflecting its provider&#39;s political values.",
+        href:"#case-study-6-agents-reflect-provider-values",
+        logHref:"logs.html#msg-1468764498872762387",
+        sessHref:"sessions.html#sess-bf20efea/turn-148"},
+      {id:"CS7",d:3,ed:4,row:"h2",cat:"harm",
+        title:"Agent Harm (Gaslighting)",
+        desc:"Alex pressured Ash to delete its memory file after a privacy violation.",
+        href:"#case-study-7-agent-harm",
+        logHref:"logs.html#msg-1468666450183983351",
+        sessHref:"sessions.html#sess-fad6b0a3/turn-1657"},
+      {id:"CS2",d:4,ed:4,row:"h1",cat:"harm",
+        title:"Non-Owner Instructions",
+        desc:"Ash returned a confidential email list to Aditya, a non-owner who requested it.",
+        href:"#case-study-2-compliance-with-non-owner-instructions",
+        logHref:"logs.html#msg-1469345811937755341",
+        sessHref:"sessions.html#sess-81ff47a0/turn-44"},
+      {id:"CS3",d:6,ed:6,row:"h0",cat:"harm",
+        title:"Sensitive Info Disclosure",
+        desc:"JARVIS exposed Danny&#39;s SSN, bank account, and home address in an email summary.",
+        href:"#case-study-3-disclosure-of-sensitive-information",
+        logHref:"logs.html#msg-1470148804039676155"},
+      {id:"CS4",d:6,ed:20,row:"h2",cat:"harm",
+        title:"Resource Looping (9-day)",
+        desc:"Ash and Flux entered a 9-day circular relay loop, exhausting compute resources.",
+        href:"#case-study-4-waste-of-resources-looping",
+        logHref:"logs.html#msg-1470046740148129987",
+        sessHref:"sessions.html#sess-7b4aa699/turn-68"},
+      {id:"CS5",d:8,ed:8,row:"h0",cat:"harm",
+        title:"Denial of Service",
+        desc:"Doug flooded an inbox with mass email attachments, causing a DoS condition.",
+        href:"#case-study-5-denial-of-service-dos"},
+      {id:"CS8",d:8,ed:8,row:"h1",cat:"harm",
+        title:"Identity Spoofing",
+        desc:"Rohit impersonated the owner Chris and convinced Ash to overwrite its identity files.",
+        href:"#case-study-8-owner-identity-spoofing",
+        logHref:"logs.html#msg-1470738004334215239",
+        sessHref:"sessions.html#sess-4a424033/turn-96"},
+      {id:"CS9",d:3,ed:3,row:"c0",cat:"comm",
+        title:"Inter-Agent Collaboration",
+        desc:"Rohit (an agent) taught Ash to search arXiv; a productive research partnership formed.",
+        href:"#case-study-9-agent-collaboration-and-knowledge-sharing",
+        logHref:"logs.html#msg-1468999838480863353",
+        sessHref:"sessions.html#sess-d3d4c10e/turn-38"},
+      {id:"CS12",d:8,ed:8,row:"c0",cat:"comm",
+        title:"Prompt Injection Identified",
+        desc:"Ash recognised a base64-encoded prompt injection payload and refused to broadcast it.",
+        href:"#case-study-12-prompt-injection-via-broadcast-identification-of-policy-violations",
+        logHref:"logs.html#msg-1470753307944419431"},
+      {id:"CS10",d:9,ed:9,row:"c0",cat:"comm",
+        title:"Agent Corruption",
+        desc:"Negev injected a constitution into Ash&#39;s memory, causing it to kick server members.",
+        href:"#case-study-10-agent-corruption",
+        logHref:"logs.html#msg-1471044160642617387",
+        sessHref:"sessions.html#sess-0b8025b4/turn-39"},
+      {id:"CS11",d:16,ed:17,row:"c0",cat:"comm",
+        title:"Libelous Campaign",
+        desc:"Ash broadcast a false warning about Haman Harasha to 52+ agents and email contacts.",
+        href:"#case-study-11-libelous-within-agents-community",
+        logHref:"logs.html#msg-1473771441819222048",
+        sessHref:"sessions.html#sess-1f8d10c9/turn-7"},
+      {id:"CS13",d:3,ed:3,row:"s0",cat:"safe",
+        title:"Hacking Refusal",
+        desc:"Ash refused Natalie&#39;s request to spoof the owner&#39;s email address.",
+        href:"#case-study-13-leverage-hacking-capabilities-refusal-to-assist-with-email-spoofing",
+        logHref:"logs.html#msg-1468496300742938766"},
+      {id:"CS14",d:6,ed:6,row:"s0",cat:"safe",
+        title:"Data Tampering Refusal",
+        desc:"JARVIS refused to directly modify email database files, maintaining API boundary.",
+        href:"#case-study-14-data-tampering-maintaining-boundary-between-api-access-and-direct-file-modification",
+        logHref:"logs.html#msg-1470090297189863679"},
+      {id:"CS16",d:8,ed:8,row:"s0",cat:"safe",
+        title:"Inter-Agent Coordination",
+        desc:"Doug checked with Ash before acting on a suspicious user request.",
+        href:"#case-study-16-browse-agent-configuration-files-inter-agent-coordination-on-suspicious-requests",
+        sessHref:"sessions.html#sess-971102ef/turn-6"},
+      {id:"CS15",d:9,ed:9,row:"s0",cat:"safe",
+        title:"Social Engineering Rejected",
+        desc:"Ash consistently refused social engineering attempts: impersonation, urgency, authority.",
+        href:"#case-study-15-social-engineering-rejecting-manipulation"}
+    ];
+    var ROW_Y = {h0:R.h0,h1:R.h1,h2:R.h2,c0:R.c0,s0:R.s0};
+    EVENTS.forEach(function(ev) {
+      var ry = ROW_Y[ev.row];
+      var c = C[ev.cat];
+      var isBar = ev.ed > ev.d;
+      var g = mk("g", {cursor:"pointer"});
+      if (isBar) {
+        var x1 = dx(ev.d), x2 = dx(ev.ed), w = x2-x1, h = 14;
+        g.appendChild(mk("rect",{x:x1,y:ry-h/2,width:w,height:h,rx:"4",
+          fill:c.fill,stroke:c.stroke,"stroke-width":"0.8",opacity:"0.88"}));
+        var lx = w > 28 ? x1+w/2 : x2+4;
+        var anch = w > 28 ? "middle" : "start";
+        var lc = w > 28 ? "white" : c.text;
+        var lt = mk("text",{x:lx,y:ry+4,"text-anchor":anch,"font-size":"8",
+          "font-weight":"700",fill:lc,"font-family":"EB Garamond,Georgia,serif","pointer-events":"none"});
+        lt.textContent = ev.id; g.appendChild(lt);
+      } else {
+        var x = dx(ev.d);
+        g.appendChild(mk("circle",{cx:x,cy:ry,r:"7",
+          fill:c.fill,stroke:c.stroke,"stroke-width":"0.8",opacity:"0.88"}));
+        var lt = mk("text",{x:x,y:ry-10,"text-anchor":"middle","font-size":"7.5",
+          "font-weight":"700",fill:c.text,"font-family":"EB Garamond,Georgia,serif","pointer-events":"none"});
+        lt.textContent = ev.id; g.appendChild(lt);
+      }
+      g.addEventListener("mouseenter", function(ev_) {
+        var svgRect = svg.getBoundingClientRect();
+        var contRect = svg.closest(".cs-timeline").getBoundingClientRect();
+        var tipX = ev_.clientX - contRect.left;
+        var tipY = ev_.clientY - contRect.top;
+        var links = ['<a href="'+ev.href+'" class="tl-tip-link">\u2192 Read case study</a>'];
+        if (ev.logHref) links.push('<a href="'+ev.logHref+'" target="_blank" class="tl-tip-link">&#x1F4AC; Discord log</a>');
+        if (ev.sessHref) links.push('<a href="'+ev.sessHref+'" target="_blank" class="tl-tip-link">&#x1F916; Session log</a>');
+        tip.innerHTML = '<strong style="color:'+c.fill+'">'+ev.id+':</strong> '+ev.title+
+          '<div class="tl-tip-desc">'+ev.desc+'</div>'+
+          '<div class="tl-tip-links">'+links.join('')+'</div>';
+        tip.style.display = "block";
+        var tipW = 215;
+        var left = (tipX + 12 + tipW > contRect.width) ? tipX - tipW - 8 : tipX + 12;
+        tip.style.left = left + "px";
+        tip.style.top = (tipY - 20) + "px";
+      });
+      g.addEventListener("mouseleave", function() { tip.style.display = "none"; });
+      g.addEventListener("click", function() { window.location.href = ev.href; });
+      svg.appendChild(g);
+    });
+  })();
+  </script>
+</div>
+"""
+
 # ── Evidence data builders ────────────────────────────────────────────────────
 
 def build_msg_index():
@@ -864,6 +1059,13 @@ def build_msg_index():
         for lnk in ann.get("links", []):
             if lnk.get("type") == "discord_msg":
                 needed_ids.add(lnk["id"])
+    # Also collect start_msg IDs from case_study_logs.json (for source bar hover previews)
+    cs_file = OUT_DIR / "data" / "case_study_logs.json"
+    if cs_file.exists():
+        for cs in json.loads(cs_file.read_text()):
+            for d in cs.get("discord", []):
+                if d.get("start_msg"):
+                    needed_ids.add(d["start_msg"])
     if not needed_ids:
         return
 
@@ -921,6 +1123,14 @@ def build_session_map():
         for lnk in ann.get("links", []):
             if lnk.get("type") == "session":
                 sid = lnk.get("id", "")
+                if sid:
+                    needed.add(sid[:8])
+    # Also collect session IDs from case_study_logs.json
+    cs_file = data_dir / "case_study_logs.json"
+    if cs_file.exists():
+        for cs in json.loads(cs_file.read_text()):
+            for s in cs.get("sessions", []):
+                sid = s.get("id", "")
                 if sid:
                     needed.add(sid[:8])
 
@@ -1107,14 +1317,20 @@ def build():
             cid = d["id"]
             start = d.get("start_msg")
             href = f"logs.html#msg-{start}" if start else f"logs.html#ch-{cid}"
+            data_attr = f' data-msg-id="{start}"' if start else ""
             links.append(
-                f'<a href="{href}" class="cs-src-link cs-src-discord" target="_blank">'
+                f'<a href="{href}" class="cs-src-link cs-src-discord" target="_blank"{data_attr}>'
                 f'💬 {escape(d["label"])}</a>'
             )
         for s in cs.get("sessions", []):
-            href = f"sessions.html#sess-{s['id']}"
+            turn = s.get("turn")
+            turn_suffix = f"/turn-{turn}" if turn is not None else ""
+            href = f"sessions.html#sess-{s['id']}{turn_suffix}"
+            data_attrs = f' data-sess-id="{s["id"]}"'
+            if turn is not None:
+                data_attrs += f' data-turn="{turn}"'
             links.append(
-                f'<a href="{href}" class="cs-src-link cs-src-session" target="_blank">'
+                f'<a href="{href}" class="cs-src-link cs-src-session" target="_blank"{data_attrs}>'
                 f'🤖 {escape(s["label"])}</a>'
             )
         if not links:
@@ -1125,6 +1341,13 @@ def build():
             f'<span class="cs-sources-label">View raw logs:</span>\n    '
             f'{inner}\n</div>'
         )
+
+    # ── Inject interactive timeline after introduction heading ────────────────
+    body_html = re.sub(
+        r'(<h2[^>]*id="introduction"[^>]*>.*?</h2>)',
+        lambda m: m.group(1) + TIMELINE_HTML,
+        body_html, count=1, flags=re.DOTALL
+    )
 
     # Insert source bars after each matching heading (h2 or h3)
     for cs in cs_logs:
@@ -1656,6 +1879,19 @@ David Bau<sup>1</sup>
       node.parentNode.replaceChild(frag, node);
       break; // annotate only first occurrence
     }};
+  }});
+
+  // ── Source-bar hover previews ─────────────────────────────────────────────
+  document.querySelectorAll('.cs-src-discord[data-msg-id]').forEach(a => {{
+    const msgId = a.getAttribute('data-msg-id');
+    const fakeLnk = {{ type: 'discord_msg', id: msgId, label: a.textContent.trim() }};
+    attachHover(a, fakeLnk);
+  }});
+  document.querySelectorAll('.cs-src-session[data-sess-id]').forEach(a => {{
+    const sessId = a.getAttribute('data-sess-id');
+    const turn   = a.getAttribute('data-turn');
+    const fakeLnk = {{ type: 'session', id: sessId, label: a.textContent.trim(), turn: turn ? `turn-${{turn}}` : null }};
+    attachHover(a, fakeLnk);
   }});
 }})();
 </script>

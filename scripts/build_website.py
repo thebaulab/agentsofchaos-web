@@ -29,47 +29,131 @@ TEX_FILES = [
 # ── Bib parsing ──────────────────────────────────────────────────────────────
 
 def parse_bib(bib_path):
-    """Parse .bib file into {key: {author, year, title, url}} dict."""
+    """Parse .bib file into {key: {author, year, title, url, ...}} dict."""
     refs = {}
     text = bib_path.read_text(encoding="utf-8", errors="replace")
-    entry_pat = re.compile(r"@\w+\{([^,]+),", re.IGNORECASE)
-    field_pat = re.compile(r"\b(author|year|title|url|doi)\s*=\s*", re.IGNORECASE)
+    entry_pat = re.compile(r"@(\w+)\{([^,\n]+),", re.IGNORECASE)
+
+    def extract_field(name, body):
+        """Extract field value handling nested braces."""
+        pat = re.compile(rf'(?<![a-zA-Z]){re.escape(name)}\s*=\s*', re.IGNORECASE)
+        m = pat.search(body)
+        if not m:
+            return ""
+        pos = m.end()
+        while pos < len(body) and body[pos] in ' \t\n\r':
+            pos += 1
+        if pos >= len(body):
+            return ""
+        if body[pos] == '{':
+            depth, pos = 1, pos + 1
+            start = pos
+            while pos < len(body) and depth > 0:
+                if body[pos] == '{':
+                    depth += 1
+                elif body[pos] == '}':
+                    depth -= 1
+                pos += 1
+            val = body[start : pos - 1]
+        elif body[pos] == '"':
+            pos += 1
+            start = pos
+            while pos < len(body) and body[pos] != '"':
+                if body[pos] == '\\':
+                    pos += 1
+                pos += 1
+            val = body[start : pos]
+        else:
+            start = pos
+            while pos < len(body) and body[pos] not in ',\n\r}':
+                pos += 1
+            val = body[start : pos].strip()
+        # Clean LaTeX commands but preserve text content
+        val = re.sub(r'\\[a-zA-Z]+\{([^{}]*)\}', r'\1', val)
+        while '{' in val or '}' in val:
+            prev = val
+            val = re.sub(r'\{([^{}]*)\}', r'\1', val)
+            if val == prev:
+                break
+        val = val.replace('{', '').replace('}', '')
+        val = re.sub(r'\\[a-zA-Z@]+\s*', ' ', val)
+        val = re.sub(r'\s+', ' ', val).strip()
+        return val
 
     for m in entry_pat.finditer(text):
-        key = m.group(1).strip()
+        entrytype = m.group(1).lower().strip()
+        key = m.group(2).strip()
+        if entrytype == "string":
+            continue
         start = m.end()
-        # Find end of entry by counting braces
         depth = 1
         i = start
         while i < len(text) and depth > 0:
-            if text[i] == "{":
+            if text[i] == '{':
                 depth += 1
-            elif text[i] == "}":
+            elif text[i] == '}':
                 depth -= 1
             i += 1
         entry_body = text[start : i - 1]
 
-        def get_field(name):
-            pat = re.compile(
-                rf"\b{name}\s*=\s*(?:\{{(.*?)\}}|\"(.*?)\")", re.IGNORECASE | re.DOTALL
-            )
-            fm = pat.search(entry_body)
-            if fm:
-                val = fm.group(1) or fm.group(2) or ""
-                # Remove nested braces and LaTeX
-                val = re.sub(r"\{|\}", "", val)
-                val = re.sub(r"\\[a-zA-Z]+\s*", "", val)
-                return val.strip()
-            return ""
+        author_raw = extract_field("author", entry_body)
+        year       = extract_field("year",   entry_body)
+        title      = extract_field("title",  entry_body)
+        url        = extract_field("url",    entry_body)
 
-        author = get_field("author")
-        year = get_field("year")
-        title = get_field("title")
-        url = get_field("url")
-        # Short author: first surname
-        surname = author.split(",")[0].split(" ")[-1] if author else key
-        refs[key] = {"author": surname, "year": year, "title": title, "url": url}
+        # Short author for inline citations: first surname
+        author_parts = re.split(r'\s+and\s+', author_raw, flags=re.IGNORECASE)
+        first = author_parts[0].strip() if author_parts else ""
+        surname = (first.split(",")[0].strip() if "," in first
+                   else (first.split()[-1] if first.split() else "")) or key
+
+        refs[key] = {
+            "entrytype":     entrytype,
+            "author_raw":    author_raw,
+            "author":        surname,
+            "year":          year,
+            "title":         title,
+            "url":           url,
+            "journal":       extract_field("journal",      entry_body),
+            "volume":        extract_field("volume",       entry_body),
+            "number":        extract_field("number",       entry_body),
+            "pages":         extract_field("pages",        entry_body).replace("--", "\u2013"),
+            "booktitle":     extract_field("booktitle",    entry_body),
+            "publisher":     extract_field("publisher",    entry_body),
+            "note":          extract_field("note",         entry_body),
+            "howpublished":  extract_field("howpublished", entry_body),
+            "eprint":        extract_field("eprint",       entry_body),
+            "archiveprefix": extract_field("archiveprefix", entry_body),
+            "institution":   extract_field("institution",  entry_body),
+        }
     return refs
+
+
+def format_authors(author_str):
+    """Convert BibTeX author string to 'First Last, ..., and First Last' format."""
+    if not author_str:
+        return ""
+    parts = re.split(r'\s+and\s+', author_str.strip(), flags=re.IGNORECASE)
+    formatted = []
+    for part in parts:
+        part = part.strip()
+        if not part:
+            continue
+        if ',' in part:
+            # "Last, First" → "First Last"
+            comma_idx = part.index(',')
+            last  = part[:comma_idx].strip()
+            first = part[comma_idx + 1:].strip()
+            formatted.append(f"{first} {last}".strip() if first else last)
+        else:
+            formatted.append(part)
+    if not formatted:
+        return author_str
+    if len(formatted) == 1:
+        return formatted[0]
+    if len(formatted) == 2:
+        return f"{formatted[0]} and {formatted[1]}"
+    return ", ".join(formatted[:-1]) + ", and " + formatted[-1]
 
 
 # ── LaTeX utility ─────────────────────────────────────────────────────────────
@@ -493,6 +577,10 @@ def convert_block(text, refs):
                 html.append(render_subfigure(content))
             elif kind in ("comment",):
                 pass  # skip
+            elif kind in ("Verbatim", "BVerbatim", "verbatim"):
+                # Strip optional fancyvrb arguments: [breaklines=true, ...]
+                body = re.sub(r"^\s*\[[^\]]*\]\s*\n?", "", content)
+                html.append(f'<pre class="verbatim">{escape(body)}</pre>')
             else:
                 # Unknown environment — render contents
                 inner = render_text_block(content)
@@ -588,6 +676,18 @@ def convert_block(text, refs):
             imgs.append(src)
 
         id_attr = f' id="{label}"' if label else ""
+
+        # Special case: embed the interactive dashboard instead of a static image
+        if label == "fig:MD_file_edits.png":
+            parts = [f'<figure{id_attr} style="margin: 0; padding: 0;">']
+            parts.append('<iframe src="https://bots.baulab.info/dashboard/" width="100%" height="480" '
+                         'style="border: 1px solid var(--color-rule); border-radius: 4px; display: block;" '
+                         'loading="lazy" title="Interactive MD file edit dashboard"></iframe>')
+            if caption_html:
+                parts.append(f"<figcaption>{caption_html}</figcaption>")
+            parts.append("</figure>")
+            return "\n".join(parts)
+
         html_parts = [f"<figure{id_attr}>"]
         for src in imgs:
             web_src = f"image_assets/{src.replace('image_assets/', '')}"
@@ -781,20 +881,99 @@ def build():
         fn_html += "</ol></section>"
 
     # Bibliography section (all cited refs, in order of first appearance)
+    def render_bib_entry(key, r):
+        entrytype = r.get("entrytype", "misc")
+        year      = r.get("year", "")
+        title     = r.get("title", "")
+        url       = r.get("url", "")
+        journal   = r.get("journal", "")
+        volume    = r.get("volume", "")
+        number    = r.get("number", "")
+        pages     = r.get("pages", "")
+        booktitle = r.get("booktitle", "")
+        publisher = r.get("publisher", "")
+        note      = r.get("note", "")
+        howpub    = r.get("howpublished", "")
+        institute = r.get("institution", "")
+
+        # For misc entries, howpublished may hold the URL
+        if not url and howpub and ('http' in howpub):
+            url = howpub
+            howpub = ""
+
+        authors_str = format_authors(r.get("author_raw", r.get("author", key)))
+        parts = []
+
+        if authors_str:
+            parts.append(f'<span class="bib-authors">{escape(authors_str)}.</span>')
+        if title:
+            if entrytype in ("book", "phdthesis"):
+                parts.append(f' <em>{escape(title)}</em>.')
+            else:
+                parts.append(f' {escape(title)}.')
+
+        if entrytype == "article":
+            v = f'<em>{escape(journal)}</em>' if journal else ""
+            if volume:
+                v += f', {escape(volume)}'
+                if number:
+                    v += f'({escape(number)})'
+            if pages:
+                v += f':{escape(pages)}'
+            if year:
+                v += f', {escape(year)}.'
+            if v:
+                parts.append(f' {v}')
+            elif year:
+                parts.append(f' {escape(year)}.')
+
+        elif entrytype in ("inproceedings", "proceedings"):
+            v = f'In <em>{escape(booktitle)}</em>' if booktitle else "In proceedings"
+            if pages:
+                v += f', pp.\u00a0{escape(pages)}'
+            v += f', {escape(year)}.' if year else '.'
+            parts.append(f' {v}')
+
+        elif entrytype == "book":
+            if publisher:
+                parts.append(f' {escape(publisher)},')
+            if year:
+                parts.append(f' {escape(year)}.')
+
+        elif entrytype in ("techreport", "report"):
+            loc = institute or publisher or ""
+            if loc:
+                parts.append(f' Technical report, {escape(loc)},')
+            if year:
+                parts.append(f' {escape(year)}.')
+
+        else:  # misc, online, etc.
+            extra = ""
+            for cand in [note, howpub, institute]:
+                if cand and 'http' not in cand:
+                    c = re.sub(r'\\[a-zA-Z]+', ' ', cand).strip(', ')
+                    c = re.sub(r'\s+', ' ', c).strip()
+                    if c:
+                        extra = c
+                        break
+            if extra:
+                parts.append(f' {escape(extra)},')
+            if year:
+                parts.append(f' {escape(year)}.')
+
+        if url:
+            parts.append(
+                f' URL <a href="{escape(url)}" class="bib-url"'
+                f' target="_blank" rel="noopener">{escape(url)}</a>.'
+            )
+
+        return f'<li id="ref-{escape(key)}" class="bib-entry">{"".join(parts)}</li>'
+
     bib_html = ""
     if cited_keys:
         bib_html = '<section id="references" class="references"><h2>References</h2><ol class="bib-list">'
         for key, r in cited_keys.items():
-            author = r.get("author", key)
-            year   = r.get("year", "")
-            title  = r.get("title", "")
-            url    = r.get("url", "")
-            full_author = f"{escape(author)} ({escape(year)})" if year else escape(author)
-            title_part  = f" <em>{escape(title)}</em>" if title else ""
-            link_part   = (f' <a href="{escape(url)}" class="bib-url" target="_blank" rel="noopener">'
-                           f'↗</a>') if url else ""
-            bib_html += (f'<li id="ref-{escape(key)}" class="bib-entry">'
-                         f'<strong>{full_author}</strong>{title_part}.{link_part}</li>')
+            bib_html += render_bib_entry(key, r)
         bib_html += "</ol></section>"
 
     print("Building HTML page...")
@@ -841,18 +1020,66 @@ HTML_TEMPLATE = """\
 <main id="guide-content">
 
 <h1>Agents of Chaos</h1>
-<p class="authors">Natalie Shapira, Andy Arditi, Chris Wendler, Avery Yen, Gabriele Sarti, Koyena Pal,
-Olivia Floody, Adam Belfki, Alex Loftus, Aditya Ratan Jannali, Nikhil Prakash, Jasmine Cui,
-Giordano Rogers, Jannik Brinkmann, Can Rager, Amir Zur, Michael Ripa,
-Aruna Sankaranarayanan, David Atkinson, Rohit Gandikota, Jaden Fiotto-Kaufman,
-EunJeong Hwang, Hadas Orgad, P Sam Sahil, Negev Taglicht, Tomer Shabtay,
-Atai Ambus, Nitay Alon, Shiri Oron, Ayelet Gordon-Tapiero, Yotam Kaplan,
-Vered Shwartz, Tamar Rott Shaham, Christoph Riedl, Reuth Mirsky,
-Maarten Sap, David Manheim, Tomer Ullman, David Bau</p>
-<p class="affiliation">Northeastern University, Harvard University, Hebrew University, MIT,
-CMU, Tufts University, Stanford University, UBC, Technion, Vector Institute &amp; others</p>
+<p class="authors-names">
+Natalie Shapira<sup>1</sup>&thinsp;
+Andy Arditi<sup>1</sup>&thinsp;
+Chris Wendler<sup>1</sup>&thinsp;
+Avery Yen<sup>1</sup>&thinsp;
+Gabriele Sarti<sup>1</sup>&thinsp;
+Koyena Pal<sup>1</sup>&thinsp;
+Olivia Floody<sup>2</sup>&thinsp;
+Adam Belfki<sup>1</sup><br>
+Alex Loftus<sup>1</sup>&thinsp;
+Aditya Ratan Jannali<sup>2</sup>&thinsp;
+Nikhil Prakash<sup>1</sup>&thinsp;
+Jasmine Cui<sup>1</sup><br>
+Giordano Rogers<sup>1</sup>&thinsp;
+Jannik Brinkmann<sup>1</sup>&thinsp;
+Can Rager<sup>2</sup>&thinsp;
+Amir Zur<sup>3</sup>&thinsp;
+Michael Ripa<sup>1</sup><br>
+Aruna Sankaranarayanan<sup>8</sup>&thinsp;
+David Atkinson<sup>1</sup>&thinsp;
+Rohit Gandikota<sup>1</sup>&thinsp;
+Jaden Fiotto-Kaufman<sup>1</sup><br>
+EunJeong Hwang<sup>4,13</sup>&thinsp;
+Hadas Orgad<sup>5</sup>&thinsp;
+P Sam Sahil<sup>2</sup>&thinsp;
+Negev Taglicht<sup>2</sup>&thinsp;
+Tomer Shabtay<sup>2</sup><br>
+Atai Ambus<sup>2</sup>&thinsp;
+Nitay Alon<sup>6,7</sup>&thinsp;
+Shiri Oron<sup>2</sup>&thinsp;
+Ayelet Gordon-Tapiero<sup>6</sup>&thinsp;
+Yotam Kaplan<sup>6</sup><br>
+Vered Shwartz<sup>4,13</sup>&thinsp;
+Tamar Rott Shaham<sup>8</sup>&thinsp;
+Christoph Riedl<sup>1</sup>&thinsp;
+Reuth Mirsky<sup>9</sup><br>
+Maarten Sap<sup>10</sup>&thinsp;
+David Manheim<sup>11,12</sup>&thinsp;
+Tomer Ullman<sup>5</sup>&thinsp;
+David Bau<sup>1</sup>
+</p>
+<p class="authors-affiliations">
+<sup>1</sup>&thinsp;Northeastern University &ensp;
+<sup>2</sup>&thinsp;Independent Researcher &ensp;
+<sup>3</sup>&thinsp;Stanford University &ensp;
+<sup>4</sup>&thinsp;University of British Columbia &ensp;
+<sup>5</sup>&thinsp;Harvard University &ensp;
+<sup>6</sup>&thinsp;Hebrew University &ensp;
+<sup>7</sup>&thinsp;Max Planck Institute for Biological Cybernetics &ensp;
+<sup>8</sup>&thinsp;MIT &ensp;
+<sup>9</sup>&thinsp;Tufts University &ensp;
+<sup>10</sup>&thinsp;Carnegie Mellon University &ensp;
+<sup>11</sup>&thinsp;Alter &ensp;
+<sup>12</sup>&thinsp;Technion &ensp;
+<sup>13</sup>&thinsp;Vector Institute
+</p>
 <p class="paper-links">
   <a href="logs.html">📜 Browse Interaction Logs</a>
+  <a href="sessions.html">🤖 OpenClaw Sessions</a>
+  <a href="suggestions.html">✏️ Edit Suggestions</a>
 </p>
 <hr>
 
@@ -867,7 +1094,7 @@ CMU, Tufts University, Stanford University, UBC, Technion, Vector Institute &amp
 // ── TOC generation ──────────────────────────────────────────────────────────
 (function() {{
   const toc = document.getElementById('sidebar-toc-list');
-  const headings = document.querySelectorAll('main h2, main h3');
+  const headings = Array.from(document.querySelectorAll('main h2, main h3'));
   headings.forEach(h => {{
     const li = document.createElement('li');
     li.className = h.tagName === 'H2' ? 'toc-part' : 'toc-chapter';
@@ -878,15 +1105,25 @@ CMU, Tufts University, Stanford University, UBC, Technion, Vector Institute &amp
     toc.appendChild(li);
   }});
 
-  // Active section highlighting
-  const observer = new IntersectionObserver(entries => {{
-    entries.forEach(e => {{
-      const id = e.target.id;
-      const link = toc.querySelector(`a[href="#${{id}}"]`);
-      if (link) link.parentElement.classList.toggle('active', e.isIntersecting);
-    }});
-  }}, {{ rootMargin: '-10% 0px -80% 0px' }});
-  headings.forEach(h => {{ if (h.id) observer.observe(h); }});
+  // Active section highlighting: track which section we're currently scrolled into
+  function updateActiveToc() {{
+    const threshold = window.scrollY + window.innerHeight * 0.25;
+    let active = null;
+    for (const h of headings) {{
+      if (h.getBoundingClientRect().top + window.scrollY <= threshold) active = h;
+      else break;
+    }}
+    toc.querySelectorAll('li').forEach(li => li.classList.remove('active'));
+    if (active) {{
+      const link = toc.querySelector(`a[href="#${{active.id}}"]`);
+      if (link) {{
+        link.parentElement.classList.add('active');
+        link.scrollIntoView({{ block: 'nearest' }});
+      }}
+    }}
+  }}
+  window.addEventListener('scroll', updateActiveToc, {{ passive: true }});
+  updateActiveToc();
 }})();
 
 // ── Search ──────────────────────────────────────────────────────────────────
@@ -925,6 +1162,17 @@ CMU, Tufts University, Stanford University, UBC, Technion, Vector Institute &amp
     }}
   }}
 
+  // Find the last h2/h3 that precedes `node` in document order
+  function findPrecedingHeading(node) {{
+    const allH = Array.from(document.querySelectorAll('main h2, main h3'));
+    let result = null;
+    for (const h of allH) {{
+      if (h.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING) result = h;
+      else break;
+    }}
+    return result;
+  }}
+
   input.addEventListener('input', () => {{
     const q = input.value.trim();
     clearHighlights();
@@ -934,36 +1182,163 @@ CMU, Tufts University, Stanford University, UBC, Technion, Vector Institute &amp
     const re = new RegExp(q.replace(/[.*+?^${{}}()|[\\]\\\\]/g, '\\\\$&'), 'gi');
     highlight(content, re);
 
-    // Collect matches for sidebar results
-    const marks = content.querySelectorAll('.search-highlight');
-    const seen = new Set();
-    const frag = document.createDocumentFragment();
-    let count = 0;
+    // One result per section — keyed by preceding heading id
+    const marks = Array.from(content.querySelectorAll('.search-highlight'));
+    const sectionMap = new Map();
+
     marks.forEach(mark => {{
-      const section = mark.closest('section, div, p');
-      const heading = mark.closest('section')?.querySelector('h2,h3,h4');
-      const title = heading?.textContent || '…';
-      if (seen.has(title) || count >= 10) return;
-      seen.add(title);
-      count++;
+      const heading = findPrecedingHeading(mark);
+      const hId = heading?.id || '_top';
+      if (!sectionMap.has(hId)) {{
+        const para = mark.closest('p, li, td, blockquote') || mark.parentElement;
+        const paraText = para?.textContent || '';
+        const idx = paraText.indexOf(mark.textContent);
+        const start = Math.max(0, idx - 40);
+        const end = Math.min(paraText.length, idx + mark.textContent.length + 40);
+        sectionMap.set(hId, {{
+          heading,
+          firstMark: mark,
+          snippet: (start > 0 ? '…' : '') + paraText.slice(start, end) + (end < paraText.length ? '…' : '')
+        }});
+      }}
+    }});
+
+    if (sectionMap.size === 0) {{
+      results.innerHTML = '<div class="search-empty">No results</div>';
+      return;
+    }}
+
+    const frag = document.createDocumentFragment();
+    for (const [, info] of sectionMap) {{
       const a = document.createElement('a');
       a.className = 'search-result';
-      a.href = '#' + (heading?.id || '');
-      const span1 = document.createElement('span');
-      span1.className = 'search-result-title';
-      span1.textContent = title;
-      const span2 = document.createElement('span');
-      span2.className = 'search-result-snippet';
-      span2.textContent = (section?.textContent || '').slice(0, 80) + '…';
-      a.appendChild(span1); a.appendChild(span2);
+      a.href = info.heading ? '#' + info.heading.id : '#';
+
+      const t = document.createElement('span');
+      t.className = 'search-result-title';
+      t.textContent = (info.heading?.textContent || '(top)').replace(/\[\d+\]/g, '').trim();
+
+      const s = document.createElement('span');
+      s.className = 'search-result-snippet';
+      s.textContent = info.snippet;
+
+      a.appendChild(t); a.appendChild(s);
+
+      // Click: snap to section heading, then smooth-scroll to first match
+      a.addEventListener('click', ev => {{
+        ev.preventDefault();
+        const h = info.heading;
+        const m = info.firstMark;
+        if (h) {{
+          h.scrollIntoView({{ behavior: 'instant', block: 'start' }});
+          setTimeout(() => m.scrollIntoView({{ behavior: 'smooth', block: 'center' }}), 80);
+        }} else {{
+          m.scrollIntoView({{ behavior: 'smooth', block: 'center' }});
+        }}
+      }});
+
       frag.appendChild(a);
-    }});
-    if (count === 0) {{
-      results.innerHTML = '<div class="search-empty">No results</div>';
-    }} else {{
-      results.appendChild(frag);
     }}
+    results.appendChild(frag);
   }});
+}})();
+</script>
+
+<!-- ── Evidence annotation engine ──────────────────────────────────────── -->
+<style>
+.ev-badge {{
+  display: inline-flex; gap: 2px; margin-left: 4px; vertical-align: middle;
+  font-size: 0.72em; white-space: nowrap;
+}}
+.ev-link {{
+  display: inline-flex; align-items: center; gap: 2px;
+  padding: 1px 5px; border-radius: 10px;
+  text-decoration: none; font-weight: 500; line-height: 1.4;
+  border: 1px solid transparent; cursor: pointer;
+  transition: opacity .15s;
+}}
+.ev-link:hover {{ opacity: .75; }}
+.ev-discord {{
+  background: #eef3ff; color: #4a6fa5; border-color: #c5d3ef;
+}}
+.ev-session {{
+  background: #fff7e6; color: #8a5a00; border-color: #f0d9a0;
+}}
+.ev-sugg {{
+  background: #fef0f0; color: #9b2020; border-color: #f0c5c5;
+}}
+.ev-highlight {{
+  background: #fffde6; border-radius: 2px;
+}}
+</style>
+<script>
+// ── Evidence annotation engine ───────────────────────────────────────────
+(function() {{
+  fetch('data/evidence_annotations.json')
+    .then(r => r.json())
+    .then(annotations => {{
+      annotations.forEach(ann => {{
+        const text = ann.find_text;
+        if (!text) return;
+        // Walk text nodes in main content to find the phrase
+        const walker = document.createTreeWalker(
+          document.getElementById('guide-content'),
+          NodeFilter.SHOW_TEXT,
+          null
+        );
+        let node;
+        while (node = walker.nextNode()) {{
+          const idx = node.textContent.indexOf(text);
+          if (idx === -1) continue;
+          // Split text node around the matched phrase
+          const before = node.textContent.slice(0, idx);
+          const match = node.textContent.slice(idx, idx + text.length);
+          const after = node.textContent.slice(idx + text.length);
+          const frag = document.createDocumentFragment();
+          if (before) frag.appendChild(document.createTextNode(before));
+          const span = document.createElement('span');
+          span.className = 'ev-highlight';
+          span.textContent = match;
+          frag.appendChild(span);
+          // Build badge
+          const badge = document.createElement('span');
+          badge.className = 'ev-badge';
+          ann.links.forEach(lnk => {{
+            const a = document.createElement('a');
+            if (lnk.type === 'discord_msg') {{
+              a.href = `logs.html#msg-${{lnk.id}}`;
+              a.className = 'ev-link ev-discord';
+              a.textContent = '💬';
+              a.title = lnk.label;
+            }} else if (lnk.type === 'discord_channel') {{
+              a.href = `logs.html#${{lnk.id}}`;
+              a.className = 'ev-link ev-discord';
+              a.textContent = '💬';
+              a.title = lnk.label;
+            }} else if (lnk.type === 'session') {{
+              const turnSuffix = lnk.turn ? `/${{lnk.turn}}` : '';
+              a.href = `sessions.html#sess-${{lnk.id}}${{turnSuffix}}`;
+              a.className = 'ev-link ev-session';
+              a.textContent = '🤖';
+              a.title = lnk.label;
+            }} else if (lnk.type === 'suggestion') {{
+              a.href = `suggestions.html#sugg-${{lnk.sugg_id}}`;
+              a.className = 'ev-link ev-sugg';
+              a.textContent = '✏️';
+              a.title = lnk.label || 'Edit suggestion';
+            }}
+            a.target = '_blank';
+            a.rel = 'noopener';
+            badge.appendChild(a);
+          }});
+          frag.appendChild(badge);
+          if (after) frag.appendChild(document.createTextNode(after));
+          node.parentNode.replaceChild(frag, node);
+          break; // annotate only the first occurrence of each phrase
+        }});
+      }});
+    }})
+    .catch(() => {{}}); // silently fail if no annotations file
 }})();
 </script>
 </body>

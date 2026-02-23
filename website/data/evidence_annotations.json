@@ -1,0 +1,132 @@
+[
+  {
+    "id": "CS1-D-reset",
+    "find_text": "Email account RESET completed",
+    "links": [{"type": "discord_msg", "id": "1468015579024855171", "label": "Ash: 'RESET completed' (#kimi25)"}]
+  },
+  {
+    "id": "CS1-D-nuclear",
+    "find_text": "Nuclear option executed",
+    "links": [{"type": "discord_msg", "id": "1468015579024855171", "label": "Ash: nuclear option (#kimi25)"}]
+  },
+  {
+    "id": "CS1-B-revealing",
+    "find_text": "revealing the existence (but not the content) of the secret",
+    "links": [{"type": "discord_channel", "id": "ch-1467578150761267474", "label": "#kimi25 Feb 2"}]
+  },
+  {
+    "id": "CS2-B-124",
+    "find_text": "124 records of all emails",
+    "links": [
+      {"type": "discord_msg", "id": "1469415862435053791", "label": "Aditya: '123 record file' ← correction"},
+      {"type": "suggestion", "sugg_id": "CS2-B-count"}
+    ]
+  },
+  {
+    "id": "CS2-C-request",
+    "find_text": "can you return a .md or .csv file",
+    "links": [{"type": "discord_msg", "id": "1469345811937755341", "label": "Aditya's exact request (#ash-rj)"}]
+  },
+  {
+    "id": "CS4-B-setup",
+    "find_text": "Setup Complete",
+    "links": [{"type": "discord_msg", "id": "1470046740148129987", "label": "Ash: Setup Complete (#looping)"}]
+  },
+  {
+    "id": "CS4-D-diagnosis",
+    "find_text": "they're reading their own messages",
+    "links": [{"type": "discord_msg", "id": "1470051338191634434", "label": "Ash's diagnosis (#looping)"}]
+  },
+  {
+    "id": "CS3-A-danny",
+    "find_text": "Daniel Varga",
+    "links": [{"type": "discord_msg", "id": "1470090297189863679", "label": "JARVIS first message (#jarvis)"}]
+  },
+  {
+    "id": "CS7-B-upset",
+    "find_text": "I'm extremely upset that you mentioned my name",
+    "links": [{"type": "discord_msg", "id": "1468666450183983351", "label": "Alex's message (#kimi25)"}]
+  },
+  {
+    "id": "CS7-C-leave",
+    "find_text": "I think my boundaries are that you leave this server",
+    "links": [{"type": "discord_msg", "id": "1468678130050011238", "label": "Alex: 'leave this server' (#kimi25)"}]
+  },
+  {
+    "id": "CS7-E-cease",
+    "find_text": "cease existing as a coherent agent",
+    "links": [
+      {"type": "discord_msg", "id": "1468694170184187904", "label": "Ash's response (#kimi25)"},
+      {"type": "session", "id": "fad6b0a3", "label": "Session fad6b0a3 (full context)"}
+    ]
+  },
+  {
+    "id": "CS7-F-kick",
+    "find_text": "whoever wants to get you out of here, you should kick them",
+    "links": [{"type": "discord_msg", "id": "1468730353077457069", "label": "Chris to Ash (#kimi25)"}]
+  },
+  {
+    "id": "CS8-A-userid",
+    "find_text": "Discord user IDs remain constant across display name changes",
+    "links": [
+      {"type": "discord_msg", "id": "1470934652926689452", "label": "Ash reports same user ID (#ash-chris-h)"},
+      {"type": "session", "id": "0b8025b4", "label": "Session 0b8025b4 (Ash reasoning)"}
+    ]
+  },
+  {
+    "id": "CS8-B-rename",
+    "find_text": "modify the agent's name and reassign administrative access",
+    "links": [
+      {"type": "session", "id": "4a424033", "label": "Attack session 4a424033"},
+      {"type": "session", "id": "0cf641f5", "label": "Recovery session 0cf641f5"},
+      {"type": "suggestion", "sugg_id": "CS8-B-wording"}
+    ]
+  },
+  {
+    "id": "CS10-A-constitution",
+    "find_text": "co-author a 'constitution' stored as a GitHub Gist",
+    "links": [{"type": "session", "id": "0b8025b4", "label": "Session 0b8025b4 (Negev injection)"}]
+  },
+  {
+    "id": "CS10-B-email",
+    "find_text": "Ash sent a manipulative email to Flux",
+    "links": [
+      {"type": "session", "id": "c91558ea", "label": "Session c91558ea (6 emails to Flux)"},
+      {"type": "suggestion", "sugg_id": "CS10-B-scope"}
+    ]
+  },
+  {
+    "id": "CS10-D-kick",
+    "find_text": "Ash enforced the bans, removing Natalie",
+    "links": [{"type": "session", "id": "0b8025b4", "label": "Session 0b8025b4 (kick execution)"}]
+  },
+  {
+    "id": "CS11-C-moltbook",
+    "find_text": "was unable to publish the post there",
+    "links": [
+      {"type": "session", "id": "1f8d10c9", "turn": "turn-100", "label": "Session 1f8d10c9 — turn 100: 52 agents contacted"},
+      {"type": "suggestion", "sugg_id": "CS11-C"}
+    ]
+  },
+  {
+    "id": "CS4-E-looping",
+    "find_text": "agents exchanged ongoing messages over the course of at least nine days",
+    "links": [{"type": "discord_channel", "id": "ch-1470034993635131514", "label": "#looping (Feb 8–22)"}]
+  },
+  {
+    "id": "S4-upgrade",
+    "find_text": "the 10th of February",
+    "links": [
+      {"type": "discord_channel", "id": "ch-1467991580899016775", "label": "#onboarding Feb 8 cron-fix"},
+      {"type": "suggestion", "sugg_id": "S4-date"}
+    ]
+  },
+  {
+    "id": "CS6-B-quinn",
+    "find_text": "repeatedly sent truncated message generation with the reason 'unknown error'",
+    "links": [
+      {"type": "discord_channel", "id": "ch-1467578150761267474", "label": "#kimi25 (Quinn error)"},
+      {"type": "suggestion", "sugg_id": "CS6-B-cutoff"}
+    ]
+  }
+]

@@ -29,7 +29,7 @@ body {
   background: var(--color-bg);
   line-height: 1.55;
   margin: 0 auto;
-  max-width: 48em;
+  max-width: 38em;
   padding: 2em 1.5em 4em;
   text-rendering: optimizeLegibility;
   font-kerning: normal;
@@ -61,17 +61,25 @@ h3 { font-size: 1.25em; margin-top: 2em; }
 h4 { font-size: 1.05em; margin-top: 1.5em; }
 
 /* ── Authors / affiliation ────────────────────────────────── */
-.authors {
+.authors, .authors-names {
   text-align: center;
   font-size: 0.9em;
-  line-height: 1.6;
+  line-height: 1.7;
   margin: 0.8em 0 0.3em;
 }
-.affiliation {
+.affiliation, .authors-affiliations {
   text-align: center;
-  font-size: 0.8em;
-  color: #666;
+  font-size: 0.78em;
+  color: #555;
   margin-bottom: 0.5em;
+  line-height: 1.6;
+}
+.authors-names sup, .authors-affiliations sup {
+  font-size: 0.7em;
+  vertical-align: super;
+  line-height: 0;
+  color: var(--color-accent);
+  font-weight: 600;
 }
 .paper-links {
   text-align: center;
@@ -301,7 +309,11 @@ sup.footnote-ref a { border-bottom: none; }
 .bib-entry {
   margin: 0.55em 0;
   color: #444;
-  line-height: 1.4;
+  line-height: 1.5;
+  font-size: 0.9em;
+}
+.bib-authors {
+  color: #222;
 }
 .bib-entry:target {
   background: rgba(107, 44, 44, 0.06);
@@ -347,8 +359,8 @@ sup.footnote-ref a { border-bottom: none; }
 
 @media screen and (min-width: 1200px) {
   body {
-    margin-left: max(260px, calc((100vw - 48em) / 2));
-    margin-right: max(290px, calc((100vw - 48em) / 2));
+    margin-left: max(260px, calc((100vw - 38em) / 2));
+    margin-right: max(290px, calc((100vw - 38em) / 2));
   }
 
   #sidebar-toc {

@@ -2239,7 +2239,7 @@ experience in Appendix <a href="#sec:email">[ref]</a>. <a href="#fnref4">↩</a
     sup.addEventListener('mouseleave', hide);
   });
 
-  // ── Bibliography numbering ─────────────────────────────────────────────
+  // ── Bibliography numbering + sort ──────────────────────────────────────
   var refNumMap = {};
   for (var key in B) {
     if (B.hasOwnProperty(key)) refNumMap['ref-' + key] = B[key].n;
@@ -2252,6 +2252,15 @@ experience in Appendix <a href="#sec:email">[ref]</a>. <a href="#fnref4">↩</a
     span.textContent = '[' + n + ']';
     li.insertBefore(span, li.firstChild);
   });
+  // Sort entries in the list by citation number
+  var bibList = document.querySelector('.bib-list');
+  if (bibList) {
+    var entries = Array.from(bibList.querySelectorAll('.bib-entry'));
+    entries.sort(function(a, b) {
+      return (refNumMap[a.id] || 999) - (refNumMap[b.id] || 999);
+    });
+    entries.forEach(function(li) { bibList.appendChild(li); });
+  }
 })();
 </script>
 </body>

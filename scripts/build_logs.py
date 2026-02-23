@@ -927,6 +927,20 @@ body {{
   border-radius: 4px;
   border: 1px solid #ddd;
   display: block;
+  cursor: zoom-in;
+}}
+
+/* ── Lightbox ───────────────────────────────────────────── */
+#lb {{
+  display: none; position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,.85); cursor: zoom-out;
+  align-items: center; justify-content: center;
+}}
+#lb.open {{ display: flex; }}
+#lb img {{
+  max-width: 92vw; max-height: 92vh;
+  border-radius: 4px; box-shadow: 0 8px 40px rgba(0,0,0,.6);
+  cursor: default;
 }}
 
 .att-file {{
@@ -1372,6 +1386,24 @@ function semEscAttr(s) {{
 }}
 </script>
 
+<div id="lb" onclick="lbClose(event)">
+  <img id="lb-img" src="" alt="">
+</div>
+<script>
+document.addEventListener('click', function(e) {{
+  var img = e.target.closest('.att-img');
+  if (!img) return;
+  e.preventDefault();
+  document.getElementById('lb-img').src = img.src;
+  document.getElementById('lb').classList.add('open');
+}});
+function lbClose(e) {{
+  if (e.target.id !== 'lb-img') document.getElementById('lb').classList.remove('open');
+}}
+document.addEventListener('keydown', function(e) {{
+  if (e.key === 'Escape') document.getElementById('lb').classList.remove('open');
+}});
+</script>
 </body>
 </html>
 """

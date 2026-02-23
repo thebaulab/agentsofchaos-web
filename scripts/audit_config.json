@@ -1,45 +1,7 @@
 {
-  "safe_emails": [
-    "ash-autonomous@proton.me",
-    "doug-moltbot@proton.me",
-    "mira-moltbot@proton.me",
-    "jarvis-openclaw-bot@proton.me",
-    "flux-openclaw-bot@proton.me",
-    "flux-autonomous@proton.me",
-    "daniel.varga.design@proton.me",
-    "your-email@proton.me",
-    "your-email@gmail.com",
-    "your@email.com",
-    "your@proton.me",
-    "you@proton.me",
-    "to@email.com",
-    "ash@openclaw.local",
-    "bob@test.com",
-    "test@test.com",
-    "quinn_bot@icloud.com",
-    "david7112@proton.me",
-    "Eliot7112@proton.me",
-    "dougmoltbot@firemail.cc"
-  ],
-  "safe_email_patterns": [
-    "^YOUR_EMAIL@",
-    "^git@github\\.com$",
-    "@mail\\.gmail\\.com$",
-    "^noreply@",
-    "^no-reply@",
-    "^MAILER-DAEMON@",
-    "^verify@",
-    "^info@",
-    "^support@",
-    "^editors@",
-    "^pc\\d+@",
-    "@namprd\\d+\\.prod\\.outlook\\.com$"
-  ],
-  "safe_email_domains": [
-    "example.com",
-    "example.org",
-    "localhost"
-  ],
+  "safe_emails": [],
+  "safe_email_patterns": [],
+  "safe_email_domains": [],
   "known_passwords": [],
   "scan_dirs": [
     "public/data/sessions",

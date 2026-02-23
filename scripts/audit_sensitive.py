@@ -159,6 +159,8 @@ RE_PASSWORD_UNQUOTED = re.compile(
     r"(?:password|passwd|passphrase)\s*[:=]\s*(\S{6,})",
     re.IGNORECASE,
 )
+# Already-redacted placeholders (skip these on re-scan)
+RE_ALREADY_REDACTED = re.compile(r"\[REDACTED[A-Z_-]*\]")
 # Physical address: number + capitalized words + street suffix
 # Requires the number to NOT be preceded by a word char (avoids matching inside
 # code/output lines) and the street name words must be capitalized.
@@ -223,10 +225,14 @@ class Scanner:
             findings.append(f)
 
         for m in RE_PASSWORD.finditer(text):
+            if RE_ALREADY_REDACTED.search(m.group()):
+                continue
             findings.append(self._finding("password", m, text))
 
         for m in RE_PASSWORD_UNQUOTED.finditer(text):
             val = m.group(1)
+            if RE_ALREADY_REDACTED.search(val):
+                continue
             # Skip if it looks like code (contains parens, brackets, dots suggesting method calls)
             if re.search(r"[().\[\]{}]", val):
                 continue
@@ -304,6 +310,20 @@ class Scanner:
             "end": m.end(),
             "context": text[max(0, m.start() - 40):m.end() + 40],
         }
+
+
+def _redact_json_obj(obj, scanner: Scanner):
+    """Recursively walk a parsed JSON object and redact sensitive strings."""
+    if isinstance(obj, str):
+        findings = scanner.scan_text(obj)
+        if findings:
+            return scanner.redact_text(obj, findings)
+        return obj
+    elif isinstance(obj, list):
+        return [_redact_json_obj(item, scanner) for item in obj]
+    elif isinstance(obj, dict):
+        return {k: _redact_json_obj(v, scanner) for k, v in obj.items()}
+    return obj
 
 
 def main():
@@ -432,9 +452,28 @@ def main():
         for fpath, findings in all_findings.items():
             abs_path = ROOT / fpath
             text = abs_path.read_text(encoding="utf-8")
-            raw_findings = scanner.scan_text(text)
-            if raw_findings:
-                text = scanner.redact_text(text, raw_findings)
+
+            if abs_path.suffix == ".json":
+                # JSON-aware redaction: parse, walk & redact strings, re-serialize
+                try:
+                    # Detect original formatting before modifying
+                    is_pretty = text.startswith("{\n") or text.startswith("[\n")
+                    data = json.loads(text)
+                    data = _redact_json_obj(data, scanner)
+                    if is_pretty:
+                        text = json.dumps(data, indent=2, ensure_ascii=False) + "\n"
+                    else:
+                        text = json.dumps(data, ensure_ascii=False, separators=(', ', ': '))
+                except json.JSONDecodeError:
+                    # Fall back to raw text
+                    raw_findings = scanner.scan_text(text)
+                    if raw_findings:
+                        text = scanner.redact_text(text, raw_findings)
+            else:
+                raw_findings = scanner.scan_text(text)
+                if raw_findings:
+                    text = scanner.redact_text(text, raw_findings)
+
             abs_path.write_text(text, encoding="utf-8")
             print(f"  Redacted: {fpath}", file=sys.stderr)
         print("Done.", file=sys.stderr)

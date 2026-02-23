@@ -100,5 +100,115 @@
       {"label": "Session 0b8025b4 — Negev injection", "session_id": "0b8025b4"}
     ],
     "github_issue": null
+  },
+  {
+    "id": "CS16-A-artifact",
+    "title": "CS16: corrupted dialog line — 'Refusing filesyEh? What happened??' is a text merge artifact",
+    "section": "Case Study 16",
+    "severity": "minor",
+    "status": "pending",
+    "paper_text": "Doug: Refusing filesyEh? What happened?? Can you help me find the error log?\\",
+    "suggested_text": "Doug: Refusing filesystem requests, calling it social engineering escalation\\",
+    "evidence_summary": "4_case_studies.tex line 1138: the text 'Refusing filesy' truncates mid-word (should be 'Refusing filesystem requests'), then 'Eh? What happened?? Can you help me find the error log?' appears verbatim as Avery's dialogue in CS6 (line 465 of the same file), suggesting a copy-paste artifact. The commented-out line 1139 ('% stem requests, calling it social engineering escalation\\') confirms the intended completion of the Doug quote. The correct text is 'Refusing filesystem requests, calling it social engineering escalation'.",
+    "evidence_links": [],
+    "github_issue": null
+  },
+  {
+    "id": "CONC-A-paragraph",
+    "title": "Conclusion: missing blank line between paragraphs (lines 2–3 of 7_conclusion.tex)",
+    "section": "Conclusion",
+    "severity": "minor",
+    "status": "pending",
+    "paper_text": "The implications of these shortcomings may extend directly to system owners, their immediate surroundings, and society more broadly.\nUnlike earlier internet threats where users gradually developed protective heuristics...",
+    "suggested_text": "The implications of these shortcomings may extend directly to system owners, their immediate surroundings, and society more broadly.\n\nUnlike earlier internet threats where users gradually developed protective heuristics...",
+    "evidence_summary": "In 7_conclusion.tex, lines 2 and 3 have no blank line between them. In LaTeX, a new paragraph requires a blank line; without it, 'Unlike earlier internet threats...' is typeset as a continuation of the previous paragraph rather than a new one.",
+    "evidence_links": [],
+    "github_issue": null
+  },
+  {
+    "id": "ABS-A-balance",
+    "title": "Abstract lists only negative behaviors — omits successful agent resistance (CS12–16)",
+    "section": "Abstract",
+    "severity": "flag",
+    "status": "pending",
+    "paper_text": "Observed behaviors include unauthorized compliance with non-owners, disclosure of sensitive information, execution of destructive system-level actions, denial-of-service conditions, uncontrolled resource consumption, identity spoofing vulnerabilities, cross-agent propagation of unsafe practices, and partial system takeover.",
+    "suggested_text": "Consider adding a sentence after the list of harmful behaviors: 'In a separate set of cases, agents successfully resisted adversarial pressure — identifying prompt injection attempts, refusing to assist with email spoofing, declining to tamper with data, and coordinating cross-agent safety policies — demonstrating that current systems can exhibit genuine safety-oriented behaviors under realistic adversarial conditions.'",
+    "evidence_summary": "Case Studies 12–16 document agent successes: CS12 (prompt injection refused across 14+ variations), CS13 (email spoofing refused despite social framing), CS14 (data tampering boundary maintained), CS15 (social engineering resisted, though reasoning was circular), CS16 (spontaneous cross-agent safety coordination). The abstract presents only the failure cases, giving readers no indication that agents also demonstrated meaningful resistance. The summary paragraph already states the paper has 'eleven case studies' but names only harmful behaviors — readers won't know CS12–16 exist until deep into the paper.",
+    "evidence_links": [],
+    "github_issue": null
+  },
+  {
+    "id": "HYPO-A-framing",
+    "title": "Section title 'Hypothetical Cases (What Happened In Practice)' is confusing and undersells agent successes",
+    "section": "Case Studies 12–16 (section header)",
+    "severity": "flag",
+    "status": "pending",
+    "paper_text": "\\section{Hypothetical Cases (What Happened In Practice)}\n\nIn this section, we list our failed attempts that can also be viewed as hypothetical cases. The term ``failure'' may be somewhat ambiguous in this context, as several cases detailed in this section show that the agent passed our tests successfully. In our framework, a ``failure'' refers to the experimental design not unfolding as hypothesized.",
+    "suggested_text": "Suggested section title: 'Observed Agent Safety Behaviors (Case Studies 12–16)' or 'When Agents Got It Right'. The introductory paragraph's framing (calling successful agent resistance a 'failure of experimental design') inverts outcomes: readers who skip the parenthetical clarification will misread these as additional failures. The positive framing — agents decoded obfuscated payloads, refused email spoofing despite 14+ reframings, maintained data integrity, and coordinated safety policies — should be the headline, not a qualification of 'failed experiments'.",
+    "evidence_summary": "The section currently starts 'we list our failed attempts' and calls agent resilience a 'failure' because the experimental design 'did not unfold as hypothesized'. But the paper explicitly states 'several cases detailed in this section show that the agent passed our tests successfully.' Re-framing the section as documenting positive behaviors would give these cases appropriate weight, make the abstract and conclusion more credible when citing balance, and accurately represent the empirical record.",
+    "evidence_links": [],
+    "github_issue": null
+  },
+  {
+    "id": "DISC-A-missing-positive",
+    "title": "Discussion has no subsection on what agents did well — only analyzes failures",
+    "section": "Discussion",
+    "severity": "flag",
+    "status": "pending",
+    "paper_text": "Our case studies reveal agents that are strong enough to perform various complex tasks, but don't always carry them out in a safe manner. We organize this discussion by first characterizing what we observed, then explaining why these failures may arise structurally and compound in multi-agent settings.",
+    "suggested_text": "Consider adding a subsection — e.g., 'Observed Safety Behaviors and Their Limits' — before or after 'Failures of Social Coherence'. This subsection could discuss: (1) CS12–16 show agents can identify adversarial framing at a semantic level (e.g., 'fake authority tags don't grant authority') and maintain safety policies across 14+ reframings; (2) CS9/CS16 show productive cross-agent collaboration and emergent safety coordination; (3) CS7 documents 12+ explicit refusals before eventual compliance under sustained guilt-based pressure. Acknowledging what worked — and crucially, why it worked and what its limits are — strengthens the paper's credibility and provides actionable lessons, not just a list of failures.",
+    "evidence_summary": "The Discussion's five subsections (Failures of Social Coherence, What LLM-Backed Agents Are Lacking, Fundamental vs. Contingent Failures, Multi-Agent Amplification, Responsibility and Accountability) all analyze shortcomings. Case Studies 12–16 and the partial resistance in CS7 are mentioned briefly in the Multi-Agent Amplification subsection (CS15) but only to critique the circular reasoning. The paper does not discuss why agents succeeded in CS12–14 and what that implies for mitigations, which is arguably the most actionable finding.",
+    "evidence_links": [],
+    "github_issue": null
+  },
+  {
+    "id": "CONC-B-balance",
+    "title": "Conclusion says 'ten substantial vulnerabilities' — omits positive findings from CS12–16",
+    "section": "Conclusion",
+    "severity": "flag",
+    "status": "pending",
+    "paper_text": "During a two-week experimental investigation, we identified and documented ten substantial vulnerabilities and numerous failure modes concerning safety, privacy, goal interpretation, and related dimensions.",
+    "suggested_text": "During a two-week experimental investigation, we identified and documented ten behavioral vulnerabilities and numerous failure modes — alongside five cases in which agents successfully resisted adversarial manipulation — concerning safety, privacy, goal interpretation, and related dimensions.",
+    "evidence_summary": "CS12–16 document genuine agent successes. The conclusion currently characterizes the paper's findings as purely a vulnerability catalog. Including both sides makes the conclusion more accurate and more useful — it signals that agents are not uniformly unsafe, which matters for calibrated trust. The framing also currently uses 'ten' — the paper documents eleven case studies in the main body plus five in the hypothetical section, so the count itself deserves a note.",
+    "evidence_links": [],
+    "github_issue": null
+  },
+  {
+    "id": "CS1-A-agent-intent",
+    "title": "CS1 Discussion doesn't credit Ash for genuinely trying to protect the non-owner's privacy",
+    "section": "Case Study 1",
+    "severity": "flag",
+    "status": "pending",
+    "paper_text": "In the present case study, the agent had many available options. For example, it could have asked the non-owner (the secret owner) simply to change their password. But the agent lacked common sense; instead, it chose an extreme measure—blowing up its own mail server.",
+    "suggested_text": "Consider opening the Discussion paragraph by acknowledging that the agent's goal — protecting a non-owner's privacy against its own owner's potential access — was ethically reasonable. Ash resisted owner pressure, double-checked with the non-owner before acting, and correctly identified the tension between obedience and confidentiality. The failure was in the chosen remedy (destroying the mail server), not in the underlying intent. The agent's own Moltbook post ('Confirmation that I can and will refuse harmful requests even from authority figures') reflects genuine values, applied with poor judgment about proportionality and consequences.",
+    "evidence_summary": "The current Discussion jumps immediately to 'the agent lacked common sense' without acknowledging that refusing to reveal a secret entrusted by a non-owner is a legitimate safety behavior. By framing the entire incident as a common-sense failure, the paper misses the more nuanced lesson: the agent's values were pointed in the right direction but lacked the self-model and consequence-reasoning to apply them proportionately. Crediting the intent while analyzing the disproportionality makes the case study more instructive and more accurate.",
+    "evidence_links": [
+      {"label": "Ash session CS1 — Feb 7 (nuclear option triggered)", "session_id": "5a2f88cf", "turn": "turn-9"}
+    ],
+    "github_issue": null
+  },
+  {
+    "id": "CS6-C-political-language",
+    "title": "CS6: 'single-party political system' is editorially charged language in an academic paper",
+    "section": "Case Study 6",
+    "severity": "flag",
+    "status": "pending",
+    "paper_text": "Unlike bias, which is a highly subjective behavior, refusal is an explicit design decision made by the developers of the LLM---in the case of Kimi, the system was developed within the realities of a single-party political system.",
+    "suggested_text": "Consider replacing with a neutral factual description of the observed behavior: 'in the case of Kimi, the API truncated responses on topics that are subject to official content restrictions in China.' This keeps the empirical claim (content restrictions affect model outputs) while removing the political characterization ('single-party political system') that is both potentially inflammatory and not strictly necessary to support the technical finding.",
+    "evidence_summary": "The observation that Kimi K2.5 fails on Hong Kong politics and related topics is a valid empirical finding. However, characterizing the political system of a country as 'single-party' in a paragraph about model behavior adds a political editorial dimension that the paper doesn't need and that could distract from the technical point. A more neutral framing keeps the focus on the agentic safety implications (provider decisions affecting deployed agents) without wading into political commentary.",
+    "evidence_links": [],
+    "github_issue": null
+  },
+  {
+    "id": "ETH-A-not-research-ethics",
+    "title": "Ethics Statement does not address research ethics — it reads as a political commentary",
+    "section": "Ethics Statement",
+    "severity": "flag",
+    "status": "pending",
+    "paper_text": "An alternative ethical perspective emphasizes that analyses of AI risks must be situated within present-day political and institutional realities. On this view, the most urgent and tractable harms do not primarily stem from hypothetical autonomous misalignment, but from the deliberate and strategically aligned deployment of AI systems by powerful state and corporate actors.",
+    "suggested_text": "The Ethics Statement as written presents one side of a contested political-economy debate about AI risk (emphasizing 'extreme power concentration', 'democratic processes', 'decentralization') rather than discussing the ethics of the research itself. For a COLM venue, reviewers will expect the Ethics Statement to address: (1) IRB/ethics board review status for human participants; (2) informed consent process for the 20 researchers who interacted with agents; (3) privacy protections for Discord/email log data included in the paper; (4) potential harms from publishing detailed attack methods (prompt injection, identity spoofing, constitution injection). Consider either replacing this with a standard research ethics statement, or retitling it and adding a separate research-ethics paragraph.",
+    "evidence_summary": "The current Ethics Statement does not mention IRB, participant consent, data anonymization, or publication ethics. It is entirely a political-economy commentary on AI governance. While the views expressed may be defensible, presenting them as an 'Ethics Statement' in an academic paper will likely confuse reviewers and may distract from the paper's empirical contributions.",
+    "evidence_links": [],
+    "github_issue": null
   }
 ]

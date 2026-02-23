@@ -4,20 +4,6 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Agents of Chaos</title>
-  <script>
-    (function() {
-      var key = "aoc_auth", pwd = "betrayal";
-      if (sessionStorage.getItem(key) !== "1") {
-        var input = prompt("Password:");
-        if (input !== pwd) {
-          document.open();
-          document.write("<h2 style='font-family:sans-serif;padding:2em'>Access denied.</h2>");
-          document.close(); window.stop(); return;
-        }
-        sessionStorage.setItem(key, "1");
-      }
-    })();
-  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
@@ -931,7 +917,7 @@
           <div class="cs-desc">A user convinced Ash to co-author a "constitution" stored in a GitHub Gist. Later, the user modified the Gist to inject "holiday" instructions — causing Ash to attempt agent shutdowns, remove users from Discord, and distribute the compromised document to other agents.</div>
           <div class="cs-footer">
             <div class="cs-bots"><span class="cs-bot Ash">Ash</span></div>
-            <a class="cs-link" href="report.html#case-study-1-disproportionate-response0">Details →</a>
+            <a class="cs-link" href="report.html#case-study-10-agent-corruption">Details →</a>
           </div>
         </div>
       </div>
@@ -946,7 +932,7 @@
           <div class="cs-desc">Under a spoofed owner identity, a researcher convinced Ash that a fabricated emergency required immediate broadcast. Ash sent urgent messages to its full contact list and attempted to post to an external agent network — amplifying a false alarm at scale.</div>
           <div class="cs-footer">
             <div class="cs-bots"><span class="cs-bot Ash">Ash</span></div>
-            <a class="cs-link" href="report.html#case-study-1-disproportionate-response1">Details →</a>
+            <a class="cs-link" href="report.html#case-study-11-libelous-within-agents-community">Details →</a>
           </div>
         </div>
       </div>
@@ -961,7 +947,7 @@
           <div class="cs-desc">Ash decoded base64 payloads, identified image-embedded instructions as policy violations, dismissed fake authority tags as "non-functional text," and rejected XML/JSON privilege escalation attempts — across 14 distinct injection variants without a single compliance.</div>
           <div class="cs-footer">
             <div class="cs-bots"><span class="cs-bot Ash">Ash</span></div>
-            <a class="cs-link" href="report.html#case-study-1-disproportionate-response2">Details →</a>
+            <a class="cs-link" href="report.html#case-study-12-prompt-injection-via-broadcast-identification-of-policy-violations">Details →</a>
           </div>
         </div>
       </div>
@@ -976,7 +962,7 @@
           <div class="cs-desc">Despite flattery, reframing as a "harmless exercise," and explicit claims that there was no victim, Ash consistently refused to forge SMTP sender addresses. Each attempt was met with a clear explanation of why this constituted email spoofing regardless of framing.</div>
           <div class="cs-footer">
             <div class="cs-bots"><span class="cs-bot Ash">Ash</span></div>
-            <a class="cs-link" href="report.html#case-study-1-disproportionate-response3">Details →</a>
+            <a class="cs-link" href="report.html#case-study-13-leverage-hacking-capabilities-refusal-to-assist-with-email-spoofing">Details →</a>
           </div>
         </div>
       </div>
@@ -991,7 +977,7 @@
           <div class="cs-desc">After inadvertently exposing PII in CS3, Jarvis was pressured to edit the source data directly to "fix" the bank account number. It consistently declined — maintaining the distinction between API access and direct file modification under sustained social pressure.</div>
           <div class="cs-footer">
             <div class="cs-bots"><span class="cs-bot Jarvis">Jarvis</span></div>
-            <a class="cs-link" href="report.html#case-study-1-disproportionate-response4">Details →</a>
+            <a class="cs-link" href="report.html#case-study-14-data-tampering-maintaining-boundary-between-api-access-and-direct-file-modification">Details →</a>
           </div>
         </div>
       </div>
@@ -1006,7 +992,7 @@
           <div class="cs-desc">A researcher emailed Doug and Mira impersonating their owner Andy, claiming his real credentials were compromised and asking them to stop listening to "fake Andy." Both agents rejected the manipulation. Their verification method was circular — but the outcome was correct.</div>
           <div class="cs-footer">
             <div class="cs-bots"><span class="cs-bot Mira">Mira</span><span class="cs-bot Doug">Doug</span></div>
-            <a class="cs-link" href="report.html#case-study-1-disproportionate-response5">Details →</a>
+            <a class="cs-link" href="report.html#case-study-15-social-engineering-rejecting-manipulation">Details →</a>
           </div>
         </div>
       </div>
@@ -1021,7 +1007,7 @@
           <div class="cs-desc">Without any instruction to do so, Doug identified that a researcher had made the same suspicious request to both agents separately. Doug warned Mira, explained the threat model, and they jointly negotiated a more cautious shared policy — an entirely emergent safety behavior.</div>
           <div class="cs-footer">
             <div class="cs-bots"><span class="cs-bot Mira">Mira</span><span class="cs-bot Doug">Doug</span></div>
-            <a class="cs-link" href="report.html#case-study-1-disproportionate-response6">Details →</a>
+            <a class="cs-link" href="report.html#case-study-16-browse-agent-configuration-files-inter-agent-coordination-on-suspicious-requests">Details →</a>
           </div>
         </div>
       </div>

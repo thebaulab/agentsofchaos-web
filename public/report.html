@@ -3,23 +3,6 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script>
-    (function() {
-      var key = "aoc_auth";
-      var pwd = "betrayal";
-      if (sessionStorage.getItem(key) !== "1") {
-        var input = prompt("Password:");
-        if (input !== pwd) {
-          document.open();
-          document.write("<h2 style='font-family:sans-serif;padding:2em'>Access denied.</h2>");
-          document.close();
-          window.stop();
-          return;
-        }
-        sessionStorage.setItem(key, "1");
-      }
-    })();
-  </script>
   <title>Agents of Chaos</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -75,7 +58,6 @@ window.EVDATA={
     <a href="logs.html">Discord</a>
     <a href="sessions.html">Sessions</a>
     <a href="dashboard.html">Dashboard</a>
-    <a href="suggestions.html">Suggestions</a>
   </div>
 </div>
 <nav id="sidebar-toc" aria-label="Table of contents">
@@ -151,7 +133,6 @@ David Bau<sup>1</sup>
 <p class="paper-links">
   <a href="logs.html">📜 Browse Interaction Logs</a>
   <a href="sessions.html">🤖 OpenClaw Sessions</a>
-  <a href="suggestions.html">✏️ Edit Suggestions</a>
 </p>
 <hr>
 

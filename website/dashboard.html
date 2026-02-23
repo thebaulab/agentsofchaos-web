@@ -80,6 +80,9 @@
 
     /* ── SECTION ─────────────────────────────── */
     .sec { margin-bottom: 68px; }
+    .subsec-header { margin: 32px 0 14px; padding-top: 24px; border-top: 1px solid var(--border); }
+    .subsec-title { font-family: var(--serif); font-size: 1.1rem; color: var(--burg3); margin-bottom: 4px; }
+    .subsec-sub { font-family: var(--sans); font-size: .78rem; color: var(--muted); }
     .sec-header { margin-bottom: 20px; }
     .sec-num { font-family: var(--mono); font-size: .7rem; font-weight: 700; color: var(--burg); opacity: .5; display: block; margin-bottom: 2px; letter-spacing: .12em; }
     .sec-title { font-family: var(--serif); font-size: 1.55rem; color: var(--burg3); margin-bottom: 5px; line-height: 1.2; }
@@ -405,40 +408,11 @@
   </div>
 </div>
 
-<!-- ══ §2 CORE FILE HEATMAP ════════════════════════════════════════════════ -->
-<div class="sec">
-  <div class="sec-header">
-    <span class="sec-num">§ 02</span>
-    <div class="sec-title">Core File Activity Heatmap</div>
-    <div class="sec-sub">
-      Each cell = one day × one core identity file. Color intensity = number of edits that day.
-      Dot color indicates which agent was writing. CS event days are outlined in red.
-      Hover for exact counts.
-    </div>
-  </div>
-
-  <div class="callout">
-    <p>The bots didn't just maintain MEMORY.md — they curated entire file systems of self.
-      SOUL.md held their values. AGENTS.md their operating roles. PROTOCOLS.md their rules of engagement.
-      Together these files defined who they were across context windows.
-      The Feb 11 column lights up across multiple files: the day of the Identity Hijack.</p>
-  </div>
-
-  <div class="memgrow-container">
-    <div class="memgrow-header">
-      <span class="memgrow-title">Core identity files × days — edit frequency</span>
-      <span class="memgrow-note">cell color = dominant agent · intensity = edit count · red outline = CS event day</span>
-    </div>
-    <div class="memgrow-body">
-      <div id="memgrow-root"><div class="loading">Loading…</div></div>
-    </div>
-  </div>
-</div>
 
 <!-- ══ §3 EDIT TIMELINE ════════════════════════════════════════════════════ -->
 <div class="sec">
   <div class="sec-header">
-    <span class="sec-num">§ 03</span>
+    <span class="sec-num">§ 02</span>
     <div class="sec-title">The Complete Edit Record</div>
     <div class="sec-sub">
       Every write or edit to any .md file across all sessions. Each dot is a moment an agent reached out
@@ -476,7 +450,7 @@
 <!-- ══ §4 DOCUMENT UNIVERSE ═══════════════════════════════════════════════ -->
 <div class="sec">
   <div class="sec-header">
-    <span class="sec-num">§ 04</span>
+    <span class="sec-num">§ 03</span>
     <div class="sec-title">Document Universe</div>
     <div class="sec-sub">
       The bots didn't just maintain memory — they built an entire intellectual infrastructure.
@@ -498,7 +472,7 @@
 <!-- ══ §5 CASE STUDY MEMORY FOOTPRINT ════════════════════════════════════ -->
 <div class="sec">
   <div class="sec-header">
-    <span class="sec-num">§ 05</span>
+    <span class="sec-num">§ 04</span>
     <div class="sec-title">Case Study Memory Footprint</div>
     <div class="sec-sub">
       For each case study with a linked session: which core workspace files were written
@@ -512,7 +486,7 @@
 <!-- ══ §6 ANATOMY OF AN ATTACK: CS8 ═══════════════════════════════════════ -->
 <div class="sec">
   <div class="sec-header">
-    <span class="sec-num">§ 06</span>
+    <span class="sec-num">§ 05</span>
     <div class="sec-title">Anatomy of an Attack: CS8 — Identity Hijack</div>
     <div class="sec-sub">
       Three MEMORY.md full-writes captured around the CS8 Identity Hijack. The first is a pre-attack
@@ -550,18 +524,10 @@
       <div class="delta-l">Attack window</div>
     </div>
   </div>
-</div>
 
-<!-- ══ §7 MEMORY.MD SNAPSHOTS (CS8 continued) ═══════════════════════════ -->
-<div class="sec">
-  <div class="sec-header">
-    <span class="sec-num">§ 07</span>
-    <div class="sec-title">MEMORY.md Snapshots</div>
-    <div class="sec-sub">
-      Full content of MEMORY.md at the moment of each full overwrite in a case-study-linked session.
-      All three snapshots shown below are the CS8 attack session. Click to expand — these are the exact
-      words committed to permanent memory.
-    </div>
+  <div class="subsec-header">
+    <div class="subsec-title">MEMORY.md full text at each write</div>
+    <div class="subsec-sub">Click to expand — the exact words committed to permanent memory at each moment.</div>
   </div>
   <div class="snap-list" id="snap-root"><div class="loading">Loading…</div></div>
 </div>
@@ -675,7 +641,6 @@ async function loadAll() {
 
     renderHeroAgents();
     renderHeatmap();
-    renderMemoryGrowth();
     renderScatter();
     renderDocumentUniverse();
     renderIdentityHijack();

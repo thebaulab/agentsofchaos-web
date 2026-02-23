@@ -1,10 +1,11 @@
 # Raw log data (sensitive + large)
 logs/
 
-# Generated large data files
-website/data/sessions/
-website/data/sessions_index.json
-website/data/sessions_corpus.json
+# Raw source logs (sensitive originals, not for publishing)
+logs/
+
+# Embeddings index (binary, large)
+logs/embeddings/*.index
 
 # Claude's internal memory (not for sharing)
 .claude/

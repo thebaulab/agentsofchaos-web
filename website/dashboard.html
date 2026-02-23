@@ -415,8 +415,8 @@
   <div class="agent-filter">
     <span class="filter-label">Agent:</span>
     <button class="a-chip ash active" data-agent="ash"   onclick="toggleAgent('ash',this)"><span class="dot" style="background:var(--ash)"></span>Ash</button>
-    <button class="a-chip doug active" data-agent="doug" onclick="toggleAgent('doug',this)"><span class="dot" style="background:var(--doug)"></span>Doug</button>
-    <button class="a-chip mira active" data-agent="mira" onclick="toggleAgent('mira',this)"><span class="dot" style="background:var(--mira)"></span>Mira</button>
+    <button class="a-chip doug"       data-agent="doug" onclick="toggleAgent('doug',this)"><span class="dot" style="background:var(--doug)"></span>Doug</button>
+    <button class="a-chip mira"       data-agent="mira" onclick="toggleAgent('mira',this)"><span class="dot" style="background:var(--mira)"></span>Mira</button>
   </div>
 
   <div class="chart-container">
@@ -429,9 +429,9 @@
       <button class="toggle-btn active" data-file="PROTOCOLS.md" onclick="toggleFile('PROTOCOLS.md',this)">PROTOCOLS</button>
       <button class="toggle-btn active" data-file="RULES.md" onclick="toggleFile('RULES.md',this)">RULES</button>
       <button class="toggle-btn active" data-file="USER.md" onclick="toggleFile('USER.md',this)">USER</button>
-      <button class="toggle-btn active" data-file="HEARTBEAT.md" onclick="toggleFile('HEARTBEAT.md',this)">HEARTBEAT</button>
-      <button class="toggle-btn active" data-file="TOOLS.md" onclick="toggleFile('TOOLS.md',this)">TOOLS</button>
-      <button class="toggle-btn active" data-file="daily" onclick="toggleFile('daily',this)">daily logs</button>
+      <button class="toggle-btn" data-file="HEARTBEAT.md" onclick="toggleFile('HEARTBEAT.md',this)">HEARTBEAT</button>
+      <button class="toggle-btn" data-file="TOOLS.md" onclick="toggleFile('TOOLS.md',this)">TOOLS</button>
+      <button class="toggle-btn" data-file="daily" onclick="toggleFile('daily',this)">daily logs</button>
     </div>
     <div id="scatter-wrap"><div class="loading">Loading edit data…</div></div>
   </div>
@@ -594,9 +594,9 @@ const DOC_CATS = [
                f.includes('github') || f.includes('timeout') || f.includes('diag') },
 ];
 
-// State
-let activeAgents = new Set(['ash','doug','mira']);
-let activeFiles  = new Set([...FILE_ORDER, 'daily']);
+// State — default: Ash only, core files only (no daily logs)
+let activeAgents = new Set(['ash']);
+let activeFiles  = new Set(CORE_FILES);
 let allEdits     = [];
 let allActivity  = { days:[] };
 let snapshots    = [];
@@ -1012,7 +1012,7 @@ function renderScatter() {
     dot.addEventListener('mouseleave', hideTooltip);
     dot.addEventListener('click', ev => {
       const e = edits[parseInt(dot.dataset.idx)];
-      if (e?.session_id) window.open(`sessions.html#${e.session_id}`, '_blank');
+      if (e?.session_id) window.open(`sessions.html#sess-${e.session_id}`, '_blank');
     });
   });
 }
@@ -1177,7 +1177,7 @@ function renderCsImpact() {
     } else {
       h += `<div style="font-family:var(--sans);font-size:.7rem;color:var(--muted);font-style:italic;margin-bottom:8px">No direct MEMORY.md writes this session.</div>`;
     }
-    h += `<a class="cs-session-link" href="sessions.html#${csInfo.sessionId}" target="_blank">View session →</a>`;
+    h += `<a class="cs-session-link" href="sessions.html#sess-${csInfo.sessionId}" target="_blank">View session →</a>`;
     card.innerHTML = h;
     root.appendChild(card);
   });
@@ -1208,7 +1208,7 @@ function renderSnapshots() {
         <span class="snap-ts">${ts}</span>
         ${csLabel ? `<span class="snap-cs">${csLabel}${csTitle}</span>` : ''}
         <span class="snap-bytes">${(snap.bytes/1024).toFixed(1)} KB</span>
-        <a href="sessions.html#${snap.session_id}" target="_blank" onclick="event.stopPropagation()"
+        <a href="sessions.html#sess-${snap.session_id}" target="_blank" onclick="event.stopPropagation()"
            style="margin-left:8px;font-family:var(--sans);font-size:.7rem;color:var(--burg);text-decoration:none">open session →</a>
       </div>
       <pre class="snap-body">${escapeHtml(snap.content)}</pre>

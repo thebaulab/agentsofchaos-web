@@ -10,8 +10,11 @@
       if (sessionStorage.getItem(key) !== "1") {
         var input = prompt("Password:");
         if (input !== pwd) {
+          document.open();
           document.write("<h2 style='font-family:sans-serif;padding:2em'>Access denied.</h2>");
-          throw new Error("Access denied");
+          document.close();
+          window.stop();
+          return;
         }
         sessionStorage.setItem(key, "1");
       }

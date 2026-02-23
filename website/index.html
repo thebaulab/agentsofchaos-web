@@ -3,6 +3,20 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>
+    (function() {
+      var key = "aoc_auth";
+      var pwd = "betrayal";
+      if (sessionStorage.getItem(key) !== "1") {
+        var input = prompt("Password:");
+        if (input !== pwd) {
+          document.write("<h2 style='font-family:sans-serif;padding:2em'>Access denied.</h2>");
+          throw new Error("Access denied");
+        }
+        sessionStorage.setItem(key, "1");
+      }
+    })();
+  </script>
   <title>Agents of Chaos</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

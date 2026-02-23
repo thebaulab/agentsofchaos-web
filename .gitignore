@@ -1,6 +1,14 @@
 # Paper LaTeX source (not needed for the website)
 paper/
 
+# Development scripts and local files (not part of deployed site)
+scripts/
+proofreading/
+cloudflare-redirect/
+README.md
+citation_fixes.md
+refchecker_results.txt
+
 # Build artifacts
 *.zip
 

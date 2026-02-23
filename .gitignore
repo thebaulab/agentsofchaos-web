@@ -1,6 +1,9 @@
 # Paper LaTeX source (not needed for the website)
 paper/
 
+# Build artifacts
+*.zip
+
 # Raw log data (sensitive + large)
 logs/
 

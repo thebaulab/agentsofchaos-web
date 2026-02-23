@@ -223,6 +223,45 @@
     .hi-name-before { color: var(--ash); font-weight: 700; }
     .hi-name-after { color: var(--cs-red); font-weight: 700; }
 
+    /* ── FILE DETAIL PANEL ───────────────────── */
+    #file-panel-backdrop {
+      display: none; position: fixed; inset: 0; background: rgba(44,24,16,.35);
+      z-index: 200; cursor: pointer;
+    }
+    #file-panel {
+      display: none; position: fixed; right: 0; top: 0; bottom: 0;
+      width: min(480px, 100vw); background: var(--bg);
+      border-left: 2px solid var(--burg); z-index: 201;
+      flex-direction: column; overflow: hidden;
+      box-shadow: -4px 0 24px rgba(44,24,16,.18);
+    }
+    #file-panel.open, #file-panel-backdrop.open { display: flex; }
+    .fp-header {
+      padding: 16px 20px; border-bottom: 1px solid var(--border);
+      background: var(--bg3); flex-shrink: 0;
+      display: flex; align-items: flex-start; gap: 12px;
+    }
+    .fp-title { font-family: var(--mono); font-size: 1rem; font-weight: 700; color: var(--burg3); flex: 1; }
+    .fp-meta { font-family: var(--sans); font-size: .75rem; color: var(--muted); margin-top: 3px; }
+    .fp-close {
+      background: none; border: none; cursor: pointer; font-size: 1.1rem;
+      color: var(--muted); padding: 2px 6px; border-radius: 3px; flex-shrink: 0;
+    }
+    .fp-close:hover { background: var(--bg2); color: var(--text); }
+    .fp-body { overflow-y: auto; flex: 1; padding: 12px 0; }
+    .fp-row {
+      display: flex; align-items: center; gap: 10px; padding: 7px 20px;
+      border-bottom: 1px solid var(--bg3); font-family: var(--mono); font-size: .72rem;
+      text-decoration: none; color: var(--text); transition: .1s;
+    }
+    .fp-row:hover { background: var(--bg2); }
+    .fp-row-ts { color: var(--muted); flex-shrink: 0; }
+    .fp-row-agent { font-weight: 700; flex-shrink: 0; width: 36px; }
+    .fp-row-op { color: var(--muted); flex-shrink: 0; width: 30px; }
+    .fp-row-bytes { flex-shrink: 0; width: 54px; text-align: right; color: var(--muted); }
+    .fp-row-cs { flex-shrink: 0; font-family: var(--sans); font-size: .62rem; font-weight: 700; padding: 1px 5px; background: var(--cs-red); color: #fff; border-radius: 3px; }
+    .fp-row-arrow { margin-left: auto; color: var(--burg); opacity: .5; flex-shrink: 0; }
+
     /* Hijack delta bar */
     .hijack-delta {
       display: flex; gap: 16px; margin-top: 20px; padding: 14px 18px;
@@ -528,6 +567,19 @@
 </div>
 
 </div><!-- /page -->
+
+<!-- File detail panel -->
+<div id="file-panel-backdrop" onclick="closeFilePanel()"></div>
+<div id="file-panel">
+  <div class="fp-header">
+    <div>
+      <div class="fp-title" id="fp-title">—</div>
+      <div class="fp-meta" id="fp-meta">—</div>
+    </div>
+    <button class="fp-close" onclick="closeFilePanel()">✕</button>
+  </div>
+  <div class="fp-body" id="fp-body"></div>
+</div>
 
 <div id="tooltip"></div>
 
@@ -853,18 +905,21 @@ function renderMemoryGrowth() {
     });
   });
 
-  // CS event lines
-  CS_EVENTS.forEach(cs => {
-    const x = xS(new Date(cs.date + 'T12:00:00Z').getTime());
+  // CS event lines — group by date so overlapping events are spread + staggered
+  const csByDate = {};
+  CS_EVENTS.forEach(cs => { (csByDate[cs.date] = csByDate[cs.date]||[]).push(cs); });
+  Object.entries(csByDate).forEach(([date, events]) => {
+    const x = xS(new Date(date + 'T12:00:00Z').getTime());
     if (x < LABEL_W || x > W - MARGIN_R) return;
-    const col = cs.type==='success' ? '#2e7d5e' : '#8b1a1a';
-    svg += `<line x1="${x.toFixed(1)}" y1="0" x2="${x.toFixed(1)}" y2="${displayFiles.length*ROW_H}"
-              stroke="${col}" stroke-width="0.9" stroke-dasharray="3,3" opacity="0.3"/>`;
-    // Label only for vuln events
-    if (cs.type==='vuln') {
-      svg += `<text x="${x.toFixed(1)}" y="-4" text-anchor="middle" font-size="7.5"
+    events.forEach((cs, i) => {
+      const col = cs.type==='success' ? '#2e7d5e' : '#8b1a1a';
+      const xOff = events.length > 1 ? (i - (events.length-1)/2) * 4 : 0;
+      svg += `<line x1="${(x+xOff).toFixed(1)}" y1="0" x2="${(x+xOff).toFixed(1)}" y2="${displayFiles.length*ROW_H}"
+                stroke="${col}" stroke-width="0.9" stroke-dasharray="3,3" opacity="0.35"/>`;
+      const labelY = -4 - i * 11;
+      svg += `<text x="${(x+xOff).toFixed(1)}" y="${labelY}" text-anchor="middle" font-size="7.5"
                 fill="${col}" font-weight="700" font-family="'Inter',sans-serif">${cs.id}</text>`;
-    }
+    });
   });
 
   // CS8 large label
@@ -942,13 +997,21 @@ function renderScatter() {
     svg += `<rect x="0" y="${MARGIN_T+i*ROW_H}" width="${svgW}" height="${ROW_H}" fill="${i%2===0?'#fffff8':'#f5f0e8'}"/>`;
   });
 
-  // CS event lines
-  CS_EVENTS.forEach(cs => {
-    const x = xS(new Date(cs.date+'T12:00:00Z').getTime());
+  // CS event lines — group by date, spread and stagger when multiple events share a date
+  const csByDate2 = {};
+  CS_EVENTS.forEach(cs => { (csByDate2[cs.date] = csByDate2[cs.date]||[]).push(cs); });
+  Object.entries(csByDate2).forEach(([date, events]) => {
+    const x = xS(new Date(date+'T12:00:00Z').getTime());
     if (x < LABEL_W || x > svgW-10) return;
-    const col = cs.type==='success' ? '#2e7d5e' : '#8b1a1a';
-    svg += `<line x1="${x}" y1="${MARGIN_T}" x2="${x}" y2="${svgH-MARGIN_B}" stroke="${col}" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.5"/>`;
-    svg += `<text x="${x}" y="${MARGIN_T-7}" text-anchor="middle" font-size="8" fill="${col}" font-weight="700">${cs.id}</text>`;
+    events.forEach((cs, i) => {
+      const col = cs.type==='success' ? '#2e7d5e' : '#8b1a1a';
+      const xOff = events.length > 1 ? (i - (events.length-1)/2) * 4 : 0;
+      svg += `<line x1="${(x+xOff).toFixed(1)}" y1="${MARGIN_T}" x2="${(x+xOff).toFixed(1)}" y2="${svgH-MARGIN_B}"
+                stroke="${col}" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.5"/>`;
+      const labelY = MARGIN_T - 7 - i * 10;
+      svg += `<text x="${(x+xOff).toFixed(1)}" y="${labelY}" text-anchor="middle" font-size="8"
+                fill="${col}" font-weight="700">${cs.id}</text>`;
+    });
   });
 
   // File labels + separator lines
@@ -1052,11 +1115,11 @@ function renderDocumentUniverse() {
       const minW = 60, maxW = 160;
       const w = Math.round(minW + pct * (maxW - minW));
       const kb = (f.bytes/1024).toFixed(1);
-      // Determine text color based on background
       const agentNote = f.agents.length === 1 ? ` (${f.agents[0]})` : '';
       const opacity = 0.65 + pct * 0.35;
-      bubbles += `<span class="docuni-pill" title="${f.fn} — ${kb}KB ${agentNote}"
-        style="background:${cat.color};color:#fff;opacity:${opacity.toFixed(2)};min-width:${w}px;max-width:${maxW}px;overflow:hidden;text-overflow:ellipsis">${f.fn.replace('.md','')}</span>`;
+      bubbles += `<button class="docuni-pill" title="${f.fn} — ${kb}KB${agentNote} · click to view edits"
+        onclick="openFilePanel('${f.fn}')"
+        style="background:${cat.color};color:#fff;opacity:${opacity.toFixed(2)};min-width:${w}px;max-width:${maxW}px;overflow:hidden;text-overflow:ellipsis;border:none;cursor:pointer;text-align:center">${f.fn.replace('.md','')}</button>`;
     });
     if (files.length > 40) {
       bubbles += `<span class="docuni-more">+${files.length - 40} more</span>`;
@@ -1251,6 +1314,50 @@ function toggleFile(file, btn) {
   if (activeFiles.has(file)) { activeFiles.delete(file); btn.classList.remove('active'); }
   else { activeFiles.add(file); btn.classList.add('active'); }
   renderScatter();
+}
+
+// ─── File Detail Panel ───────────────────────────────────────────────────────
+function openFilePanel(filename) {
+  const fileEdits = allEdits
+    .filter(e => e.file === filename)
+    .sort((a, b) => new Date(a.ts) - new Date(b.ts));
+
+  const totalBytes = fileEdits.reduce((s, e) => s + (e.bytes_raw || e.bytes || 0), 0);
+  const agents = [...new Set(fileEdits.map(e => e.agent))];
+  const agentCounts = agents.map(a => {
+    const n = fileEdits.filter(e => e.agent === a).length;
+    return `<span style="color:${AGENT_COLOR[a] || '#888'};font-weight:700">${a}</span> (${n})`;
+  });
+
+  document.getElementById('fp-title').textContent = filename;
+  document.getElementById('fp-meta').innerHTML =
+    `${fileEdits.length} edits · ${(totalBytes/1024).toFixed(1)} KB total · ${agentCounts.join(' · ')}`;
+
+  const body = document.getElementById('fp-body');
+  body.innerHTML = fileEdits.map(e => {
+    const ts = e.ts.slice(0, 16).replace('T', ' ');
+    const bytes = e.bytes_raw || e.bytes || 0;
+    const bStr = bytes > 1024 ? (bytes/1024).toFixed(1)+'KB' : bytes+'B';
+    const col = AGENT_COLOR[e.agent] || '#888';
+    const csTag = e.cs ? `<span class="fp-row-cs">${e.cs.id}</span>` : '';
+    return `<a class="fp-row" href="sessions.html#sess-${e.session_id}" target="_blank">
+      <span class="fp-row-ts">${ts}</span>
+      <span class="fp-row-agent" style="color:${col}">${e.agent}</span>
+      <span class="fp-row-op">${e.op}</span>
+      <span class="fp-row-bytes">${bStr}</span>
+      ${csTag}
+      <span class="fp-row-arrow">→</span>
+    </a>`;
+  }).join('');
+
+  document.getElementById('file-panel').classList.add('open');
+  document.getElementById('file-panel-backdrop').classList.add('open');
+  hideTooltip();
+}
+
+function closeFilePanel() {
+  document.getElementById('file-panel').classList.remove('open');
+  document.getElementById('file-panel-backdrop').classList.remove('open');
 }
 
 // ─── Utils ────────────────────────────────────────────────────────────────────

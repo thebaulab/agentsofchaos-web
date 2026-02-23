@@ -33,8 +33,51 @@ window.EVDATA={
 };
 </script>
   <link rel="stylesheet" href="style.css">
+  <style>
+    /* Topbar + sidebar adjustment for index.html */
+    #topbar-nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      background: #4a1e1e; color: #fff;
+      padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 46px; z-index: 200;
+      border-bottom: 2px solid #3a1414;
+    }
+    #topbar-nav .tb-title {
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: .95rem; font-weight: 600;
+      letter-spacing: .03em; white-space: nowrap;
+      color: #fff;
+    }
+    #topbar-nav .tb-links { display: flex; gap: 4px; }
+    #topbar-nav .tb-links a {
+      color: rgba(255,255,255,.6);
+      text-decoration: none; border-bottom: none;
+      font-size: .75rem; font-weight: 500;
+      padding: 4px 10px; border-radius: 4px;
+      transition: color .15s, background .15s;
+    }
+    #topbar-nav .tb-links a:hover { color: #fff; background: rgba(255,255,255,.12); border-bottom: none; }
+    #topbar-nav .tb-links a.current { color: #fff; background: rgba(255,255,255,.18); border-bottom: none; }
+    @media screen and (min-width: 1200px) {
+      #sidebar-toc  { top: 46px !important; height: calc(100vh - 46px) !important; }
+      #sidebar-search { top: 46px !important; height: calc(100vh - 46px) !important; }
+    }
+    body { padding-top: 46px !important; }
+  </style>
 </head>
 <body>
+<div id="topbar-nav">
+  <div class="tb-title">Agents of Chaos</div>
+  <div class="tb-links">
+    <a href="index.html" class="current">Paper</a>
+    <a href="website.html">Website</a>
+    <a href="logs.html">Discord</a>
+    <a href="sessions.html">Sessions</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="suggestions.html">Suggestions</a>
+  </div>
+</div>
 <nav id="sidebar-toc" aria-label="Table of contents">
   <div class="sidebar-title">Contents</div>
   <ul id="sidebar-toc-list"></ul>
@@ -49,7 +92,6 @@ window.EVDATA={
 <h1>Agents of Chaos</h1>
 <p class="authors-names">
 Natalie Shapira<sup>1</sup>&thinsp;
-Andy Arditi<sup>1</sup>&thinsp;
 Chris Wendler<sup>1</sup>&thinsp;
 Avery Yen<sup>1</sup><br>
 Gabriele Sarti<sup>1</sup>&thinsp;
@@ -1090,7 +1132,7 @@ Unlike earlier internet threats where users gradually developed protective heuri
 An alternative ethical perspective emphasizes that analyses of AI risks must be situated within present-day political and institutional realities. On this view, the most urgent and tractable harms do not primarily stem from hypothetical autonomous misalignment, but from the deliberate and strategically aligned deployment of AI systems by powerful state and corporate actors. Advanced AI technologies are already being integrated into infrastructures of surveillance, information control, labor automation, and military capability. When concentrated within a small number of institutions operating under competitive, profit-driven, or geopolitical incentives, these systems may amplify asymmetries of power, erode democratic processes, and reduce individual and collective agency.
 <p>From this standpoint, ethical prioritization should account not only for worst-case magnitude but also for present likelihood, structural incentives, and institutional path dependence. A narrow focus on scenarios risks underweighting ongoing harms associated with extreme power concentration and governance failures. Moreover, it may obscure the possibility that effective mitigation of risks is contingent upon addressing current imbalances in control over AI infrastructure, capital, and information ecosystems. Accordingly, an ethically comprehensive approach to AI risk should incorporate robust attention to political economy, decentralization, accountability mechanisms, and safeguards against the consolidation of technological power, treating these not as secondary concerns but as foundational conditions for sustainable long-term safety.</p>
 <h2 id="acknowledgments">Acknowledgments</h2>
-We want to thank Yonatan Belinkov, Ram Rachum, Grace Proebsting, Eric Todd, Arnab Sen Sharma, Angela Grosse, Ziv Katzir, Jeremy Wertheimer, James W. Pennebaker, 
+We want to thank Andy Arditi, Yonatan Belinkov, Ram Rachum, Grace Proebsting, Eric Todd, Arnab Sen Sharma, Angela Grosse, Ziv Katzir, Jeremy Wertheimer, James W. Pennebaker, 
 Clément Dumas, Alice Rigg and Ori Shapira for their time to listen to research, conversations or helpful advice.
 <h2 id="appendices">Appendices</h2>
 <h3 id="openclaw-configuration-details">OpenClaw Configuration Details</h3>

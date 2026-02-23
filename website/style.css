@@ -524,3 +524,29 @@ sup.footnote-ref a { border-bottom: none; }
   .cs-row { flex-direction: column; gap: 0.2em; }
   .spk-name { min-width: auto; }
 }
+
+/* ── Shared navigation topbar ─────────────────────────────── */
+.topbar {
+  background: #4a1e1e; color: #fff;
+  padding: 0 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 46px; z-index: 100;
+  border-bottom: 2px solid #3a1414;
+  flex-shrink: 0;
+}
+.topbar-title {
+  font-family: var(--font-body);
+  font-size: .95rem; font-weight: 600;
+  letter-spacing: .03em; white-space: nowrap;
+  color: #fff;
+}
+.topbar-links { display: flex; gap: 4px; }
+.topbar-links a {
+  color: rgba(255,255,255,.6);
+  text-decoration: none; border-bottom: none;
+  font-size: .75rem; font-weight: 500;
+  padding: 4px 10px; border-radius: 4px;
+  transition: color .15s, background .15s;
+}
+.topbar-links a:hover { color: #fff; background: rgba(255,255,255,.12); border-bottom: none; }
+.topbar-links a.current { color: #fff; background: rgba(255,255,255,.18); border-bottom: none; }

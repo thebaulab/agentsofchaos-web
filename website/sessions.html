@@ -13,12 +13,17 @@ body {
   padding: 0;
   max-width: none;
   font-family: var(--font-body);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .sess-page {
   display: flex;
-  height: 100vh;
+  height: calc(100vh - 46px);
   overflow: hidden;
+  flex: 1;
 }
 
 /* ── Left sidebar: session list ────────────────────────── */
@@ -424,6 +429,18 @@ body.view-full    .turn-body { display: block !important; }
 </head>
 <body>
 
+<div class="topbar">
+  <div class="topbar-title">Agents of Chaos — Sessions</div>
+  <div class="topbar-links">
+    <a href="index.html">Paper</a>
+    <a href="website.html">Website</a>
+    <a href="logs.html">Discord</a>
+    <a href="sessions.html" class="current">Sessions</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="suggestions.html">Suggestions</a>
+  </div>
+</div>
+
 <div class="sess-page">
 
   <!-- ── Sidebar ────────────────────────────────────────── -->
@@ -453,11 +470,6 @@ body.view-full    .turn-body { display: block !important; }
   <div class="sess-main">
     <div class="sess-topbar">
       <span class="sess-topbar-title">Session Viewer</span>
-      <a href="index.html">← Website</a>
-      <a href="logs.html">Discord Logs</a>
-      <a href="suggestions.html">Edit Suggestions</a>
-      <a href="https://bots.baulab.info" target="_blank" rel="noopener">Moltbook Bots</a>
-      <a href="https://bots.baulab.info/dashboard/" target="_blank" rel="noopener">Memory Viz</a>
       <div class="sess-view-toggle">
         <button class="toggle-btn active" id="btn-normal">Normal</button>
         <button class="toggle-btn" id="btn-compact">Compact</button>

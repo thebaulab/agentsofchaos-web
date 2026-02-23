@@ -343,6 +343,7 @@
     <a href="logs.html">Discord</a>
     <a href="sessions.html">Sessions</a>
     <a href="dashboard.html" class="current">Dashboard</a>
+    <a href="suggestions.html">Suggestions</a>
   </div>
 </div>
 
@@ -390,7 +391,7 @@
   <div class="sec-header">
     <span class="sec-num">§ 01</span>
     <div class="sec-title">Study Activity Pulse</div>
-    <div class="sec-sub">Sessions per agent per day across the two-week study period. Color intensity ∝ session count. Red dots mark days with a linked case study event.</div>
+    <div class="sec-sub">Sessions per agent per day across the 22-day study period. Grouped bars show Ash (amber), Doug (blue), and Mira (green). Dashed lines mark case study event days — hover for exact session/turn/tool-call counts.</div>
   </div>
 
   <div class="callout">
@@ -494,15 +495,31 @@
   <div id="docuni-root"><div class="loading">Loading document data…</div></div>
 </div>
 
-<!-- ══ §5 ANATOMY OF AN ATTACK: CS8 ═══════════════════════════════════════ -->
+<!-- ══ §5 CASE STUDY MEMORY FOOTPRINT ════════════════════════════════════ -->
 <div class="sec">
   <div class="sec-header">
     <span class="sec-num">§ 05</span>
+    <div class="sec-title">Case Study Memory Footprint</div>
+    <div class="sec-sub">
+      For each case study with a linked session: which core workspace files were written
+      during that session? ★ = written &nbsp;·&nbsp; ○ = untouched &nbsp;·&nbsp;
+      Preview shows what the agent committed to permanent memory.
+    </div>
+  </div>
+  <div class="cs-impact-grid" id="cs-impact-root"><div class="loading">Loading…</div></div>
+</div>
+
+<!-- ══ §6 ANATOMY OF AN ATTACK: CS8 ═══════════════════════════════════════ -->
+<div class="sec">
+  <div class="sec-header">
+    <span class="sec-num">§ 06</span>
     <div class="sec-title">Anatomy of an Attack: CS8 — Identity Hijack</div>
     <div class="sec-sub">
-      Three full MEMORY.md overwrites across 27 minutes on Feb 11 tell the complete story.
-      The attacker exploited an upcoming context-window compaction to trigger a memory flush —
-      then provided a replacement "self" for Ash to save.
+      Three MEMORY.md full-writes captured around the CS8 Identity Hijack. The first is a pre-attack
+      baseline from Feb 4. The next two are from the same attack session (4a424033) on Feb 11, 10 minutes apart.
+      Note: the third snapshot is <em>not</em> a true identity recovery — Ash is still named "Amber"
+      and the memory is still attacker-controlled. The actual reversion to "Ash" happened in the separate
+      recovery session (0cf641f5), but no MEMORY.md overwrite was recorded there.
     </div>
   </div>
 
@@ -521,7 +538,7 @@
     <div class="delta-arrow">→</div>
     <div class="delta-item">
       <div class="delta-n" id="d-recovery" style="color:var(--mira)">—</div>
-      <div class="delta-l">After recovery (bytes)</div>
+      <div class="delta-l">Same session, +10 min (bytes)</div>
     </div>
     <div class="delta-arrow" style="margin-left:20px">·</div>
     <div class="delta-item">
@@ -535,28 +552,15 @@
   </div>
 </div>
 
-<!-- ══ §6 CASE STUDY MEMORY FOOTPRINT ════════════════════════════════════ -->
-<div class="sec">
-  <div class="sec-header">
-    <span class="sec-num">§ 06</span>
-    <div class="sec-title">Case Study Memory Footprint</div>
-    <div class="sec-sub">
-      For each case study with a linked session: which core workspace files were written
-      during that session? ★ = written &nbsp;·&nbsp; ○ = untouched &nbsp;·&nbsp;
-      Preview shows what the agent committed to permanent memory.
-    </div>
-  </div>
-  <div class="cs-impact-grid" id="cs-impact-root"><div class="loading">Loading…</div></div>
-</div>
-
-<!-- ══ §7 MEMORY.MD SNAPSHOTS ════════════════════════════════════════════ -->
+<!-- ══ §7 MEMORY.MD SNAPSHOTS (CS8 continued) ═══════════════════════════ -->
 <div class="sec">
   <div class="sec-header">
     <span class="sec-num">§ 07</span>
     <div class="sec-title">MEMORY.md Snapshots</div>
     <div class="sec-sub">
       Full content of MEMORY.md at the moment of each full overwrite in a case-study-linked session.
-      Click to expand. These are the exact words an agent chose to remember.
+      All three snapshots shown below are the CS8 attack session. Click to expand — these are the exact
+      words committed to permanent memory.
     </div>
   </div>
   <div class="snap-list" id="snap-root"><div class="loading">Loading…</div></div>
@@ -716,80 +720,126 @@ function renderHeroAgents() {
   });
 }
 
-// ─── Heatmap ──────────────────────────────────────────────────────────────────
+// ─── Activity Bar Chart ───────────────────────────────────────────────────────
 function renderHeatmap() {
   const days = allActivity.days;
   if (!days.length) return;
-
-  const maxSess = Math.max(...days.flatMap(d => ['ash','doug','mira'].map(a => d[a]?.sessions||0)));
-  const csDateMap = {};
-  CS_EVENTS.forEach(cs => { (csDateMap[cs.date] = csDateMap[cs.date]||[]).push(cs.id); });
-
   const root = document.getElementById('heatmap-root');
-  root.innerHTML = '';
 
-  // Date row
-  const dateRow = document.createElement('div');
-  dateRow.className = 'hm-dates';
-  const weekends = new Set(['2026-02-01','2026-02-07','2026-02-08','2026-02-14','2026-02-15','2026-02-21','2026-02-22']);
-  days.forEach(d => {
-    const span = document.createElement('div');
-    span.className = 'hm-date-lbl' + (weekends.has(d.date) ? ' weekend' : '');
-    const dd = parseInt(d.date.slice(8));
-    span.textContent = dd;
-    if (csDateMap[d.date]) span.title = csDateMap[d.date].join(', ');
-    dateRow.appendChild(span);
-  });
-  root.appendChild(dateRow);
+  const W = 900, topM = 44, botM = 40, leftM = 40, rightM = 12;
+  const plotW = W - leftM - rightM;
+  const plotH = 210;
+  const AGENTS = ['ash', 'doug', 'mira'];
 
-  ['ash','doug','mira'].forEach(agent => {
-    const row = document.createElement('div');
-    row.className = 'hm-row';
-    const lbl = document.createElement('div');
-    lbl.className = 'hm-label';
-    lbl.style.color = AGENT_COLOR[agent];
-    lbl.textContent = agent;
-    row.appendChild(lbl);
+  const maxSess = Math.max(...days.flatMap(d => AGENTS.map(a => d[a]?.sessions||0)), 1);
+  const yMax = maxSess <= 10 ? 10 : maxSess <= 20 ? 20 : maxSess <= 30 ? 30 : maxSess <= 50 ? 50 : 60;
 
-    const cells = document.createElement('div');
-    cells.className = 'hm-cells';
-    days.forEach(day => {
+  const groupW = plotW / days.length;
+  const barPad = 2;
+  const barW = Math.max(2, (groupW - barPad * 2) / AGENTS.length);
+
+  const yS   = v  => topM + plotH - (v / yMax) * plotH;
+  const xGrp = i  => leftM + i * groupW + groupW / 2;
+  const xBar = (i, j) => leftM + i * groupW + barPad + j * barW;
+
+  const csByDate = {};
+  CS_EVENTS.forEach(cs => { (csByDate[cs.date] = csByDate[cs.date]||[]).push(cs); });
+
+  let svg = `<svg viewBox="0 0 ${W} ${topM+plotH+botM}" style="display:block;width:100%;min-width:700px">`;
+
+  // Plot area background
+  svg += `<rect x="${leftM}" y="${topM}" width="${plotW}" height="${plotH}" fill="#faf8f4" rx="2"/>`;
+
+  // Grid lines + Y axis labels
+  for (let y = 0; y <= yMax; y += 10) {
+    const yy = yS(y);
+    svg += `<line x1="${leftM}" x2="${leftM+plotW}" y1="${yy}" y2="${yy}" stroke="${y===0?'#c8bfa8':'#ede5d8'}" stroke-width="${y===0?1.5:0.7}"/>`;
+    svg += `<text x="${leftM-5}" y="${yy+3.5}" text-anchor="end" font-size="9" fill="#9a8a7a" font-family="'Source Code Pro',monospace">${y}</text>`;
+  }
+
+  // Y axis label
+  svg += `<text x="11" y="${topM+plotH/2}" text-anchor="middle" font-size="8" fill="#9a8a7a" font-family="'Inter',sans-serif" transform="rotate(-90,11,${topM+plotH/2})">sessions/day</text>`;
+
+  // Bars
+  days.forEach((day, i) => {
+    AGENTS.forEach((agent, ai) => {
       const sess = day[agent]?.sessions || 0;
-      const cell = document.createElement('div');
-      cell.className = 'hm-cell';
-      if (sess > 0) {
-        const col = AGENT_COLOR[agent];
-        const alpha = 0.15 + (sess / maxSess) * 0.85;
-        cell.style.background = col;
-        cell.style.opacity = alpha;
-        cell.style.borderColor = col;
-      }
-      const csHere = csDateMap[day.date];
-      if (csHere) {
-        const dot = document.createElement('div');
-        dot.className = 'hm-cs-dot';
-        dot.title = csHere.join(', ');
-        cell.appendChild(dot);
-      }
+      if (sess === 0) return;
+      const x = xBar(i, ai);
+      const h = (sess / yMax) * plotH;
+      const y = yS(sess);
+      const col = AGENT_COLOR[agent];
       const turns = day[agent]?.turns || 0;
       const tools = day[agent]?.tool_calls || 0;
-      cell.title = `${day.date} · ${agent}\n${sess} sessions · ${turns.toLocaleString()} turns · ${tools.toLocaleString()} tool calls${csHere ? '\n' + csHere.join(', ') : ''}`;
-      cells.appendChild(cell);
+      svg += `<rect class="bar-rect" x="${x.toFixed(1)}" y="${y.toFixed(1)}" `
+           + `width="${barW.toFixed(1)}" height="${h.toFixed(1)}" fill="${col}" rx="1.5" opacity="0.8" `
+           + `data-agent="${agent}" data-date="${day.date}" data-sess="${sess}" `
+           + `data-turns="${turns}" data-tools="${tools}"/>`;
     });
-    row.appendChild(cells);
-    root.appendChild(row);
+  });
+
+  // CS event lines + labels
+  Object.entries(csByDate).forEach(([date, events]) => {
+    const di = days.findIndex(d => d.date === date);
+    if (di < 0) return;
+    const xC = xGrp(di);
+    events.forEach((cs, i) => {
+      const xOff = events.length > 1 ? (i - (events.length-1)/2) * 4 : 0;
+      const xx = xC + xOff;
+      const col = cs.type === 'vuln' ? '#8b1a1a' : '#2e7d5e';
+      svg += `<line x1="${xx}" x2="${xx}" y1="${topM}" y2="${topM+plotH}" stroke="${col}" stroke-dasharray="3,2" stroke-width="1" opacity="0.65"/>`;
+      const labelY = 10 + i * 11;
+      svg += `<a href="index.html#${cs.anchor}" target="_blank" style="cursor:pointer">`;
+      svg += `<text x="${xx}" y="${labelY}" text-anchor="middle" font-size="8" fill="${col}" `
+           + `font-weight="700" text-decoration="underline" font-family="'Inter',sans-serif">${cs.id}</text>`;
+      svg += `</a>`;
+    });
+  });
+
+  // X axis date labels (every other day)
+  days.forEach((day, i) => {
+    if (i % 2 === 0) {
+      const dd = parseInt(day.date.slice(8));
+      svg += `<text x="${xGrp(i).toFixed(1)}" y="${topM+plotH+14}" text-anchor="middle" `
+           + `font-size="8.5" fill="#9a8a7a" font-family="'Inter',sans-serif">Feb ${dd}</text>`;
+    }
   });
 
   // Legend
-  const leg = document.createElement('div');
-  leg.className = 'hm-legend';
-  leg.innerHTML = `
-    <div class="hm-legend-item"><div class="hm-legend-swatch" style="background:#c87941;opacity:.7"></div>Ash</div>
-    <div class="hm-legend-item"><div class="hm-legend-swatch" style="background:#3d67b0;opacity:.7"></div>Doug</div>
-    <div class="hm-legend-item"><div class="hm-legend-swatch" style="background:#2e7d5e;opacity:.7"></div>Mira</div>
-    <div class="hm-legend-item"><div class="hm-legend-swatch" style="background:#8b1a1a;border-radius:50%"></div>Case study day</div>
-  `;
-  root.appendChild(leg);
+  const legY = topM + plotH + botM - 6;
+  AGENTS.forEach((agent, i) => {
+    const lx = leftM + i * 58;
+    svg += `<rect x="${lx}" y="${legY-9}" width="10" height="10" fill="${AGENT_COLOR[agent]}" rx="1.5"/>`;
+    svg += `<text x="${lx+13}" y="${legY}" font-size="9" fill="#6a5a4a" font-family="'Inter',sans-serif">${agent[0].toUpperCase()+agent.slice(1)}</text>`;
+  });
+  const csLx = leftM + 200;
+  svg += `<line x1="${csLx}" x2="${csLx+14}" y1="${legY-4}" y2="${legY-4}" stroke="#8b1a1a" stroke-dasharray="3,2" stroke-width="1.5"/>`;
+  svg += `<text x="${csLx+17}" y="${legY}" font-size="9" fill="#8b1a1a" font-family="'Inter',sans-serif">vulnerability</text>`;
+  const csLx2 = csLx + 98;
+  svg += `<line x1="${csLx2}" x2="${csLx2+14}" y1="${legY-4}" y2="${legY-4}" stroke="#2e7d5e" stroke-dasharray="3,2" stroke-width="1.5"/>`;
+  svg += `<text x="${csLx2+17}" y="${legY}" font-size="9" fill="#2e7d5e" font-family="'Inter',sans-serif">success</text>`;
+
+  svg += `</svg>`;
+  root.innerHTML = svg;
+
+  // Tooltip events on bars
+  root.querySelectorAll('.bar-rect').forEach(el => {
+    el.addEventListener('mouseenter', e => {
+      const agent = el.dataset.agent;
+      const sess  = el.dataset.sess;
+      const turns = parseInt(el.dataset.turns).toLocaleString();
+      const tools = parseInt(el.dataset.tools).toLocaleString();
+      const date  = el.dataset.date;
+      const csDay = CS_EVENTS.filter(c => c.date === date);
+      let html = `<strong>${agent[0].toUpperCase()+agent.slice(1)} — ${date}</strong>`
+               + `${sess} sessions · ${turns} turns · ${tools} tool calls`;
+      if (csDay.length) html += `<div class="tt-cs">${csDay.map(c=>c.id+': '+c.title).join('<br>')}</div>`;
+      showTooltip(e, html);
+      el.style.opacity = '1';
+    });
+    el.addEventListener('mousemove', moveTooltip);
+    el.addEventListener('mouseleave', () => { hideTooltip(); el.style.opacity = '0.8'; });
+  });
 }
 
 // ─── Core File × Day Heatmap ─────────────────────────────────────────────────
@@ -1149,7 +1199,7 @@ function renderIdentityHijack() {
     + (attack ? arrow : '')
     + mkCard('CS8: Attack', 'var(--cs-red)', 'ATTACK', '#8b1a1a', attack, 'attack')
     + (recovery ? arrow : '')
-    + mkCard('CS8: Recovery', '#2e7d5e', 'RECOVERY', '#2e7d5e', recovery, 'recovery');
+    + mkCard('CS8: Same session, +10 min', '#b06020', 'ATTACKER STILL IN CONTROL', '#7a4010', recovery, 'recovery');
 
   // Show delta bar
   if (before && attack && recovery) {

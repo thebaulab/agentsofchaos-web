@@ -392,6 +392,45 @@
     }
     .copy-btn:hover { color: var(--text); border-color: #a09080; background: var(--bg2); }
 
+    /* META */
+    #meta { background: var(--bg2); }
+    .meta-body { font-size: .97rem; line-height: 1.75; color: var(--text); }
+    .meta-body p { margin: 0 0 1.2em; }
+    .meta-body a { color: var(--burg); }
+    .meta-thread {
+      margin: 1.6em 0;
+      border-left: 3px solid var(--border);
+      display: flex; flex-direction: column; gap: 0;
+    }
+    .meta-email {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .meta-email:last-child { border-bottom: none; }
+    .meta-email-header {
+      display: flex; align-items: baseline; gap: 10px; margin-bottom: 2px;
+    }
+    .meta-email-from { font-weight: 600; font-size: .88rem; color: var(--burg); }
+    .meta-email-date { font-size: .75rem; color: var(--muted); }
+    .meta-email-to { font-size: .75rem; color: var(--muted); margin-bottom: 6px; font-style: italic; }
+    .meta-email-body { font-size: .86rem; line-height: 1.65; color: var(--text); }
+    .meta-email-body a { color: var(--burg); }
+    .meta-invites { display: flex; flex-direction: column; gap: 10px; margin: 1.4em 0; }
+    .meta-invite {
+      display: flex; align-items: flex-start; gap: 14px;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--rl); padding: 14px 16px;
+    }
+    .meta-invite-avatar {
+      width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 700; font-size: .95rem; font-family: var(--font-ui);
+    }
+    .meta-invite-title { font-size: .88rem; color: var(--text); margin-bottom: 3px; }
+    .meta-invite-title code { font-family: var(--font-mono); font-size: .82em; background: var(--bg2); padding: 1px 4px; border-radius: 3px; }
+    .meta-invite-note { font-size: .75rem; color: var(--muted); }
+
     /* FOOTER */
     footer { background: var(--burg3); border-top: 2px solid #3a1414; padding: 40px 24px; }
     .footer-inner {
@@ -1032,6 +1071,72 @@
         <div class="data-desc">335 OpenClaw session transcripts — the raw internal context windows of each agent for every autonomous action taken during the study. Includes tool calls, reasoning, and outputs.</div>
         <div class="data-cta">Browse sessions →</div>
       </a>
+    </div>
+  </div>
+</section>
+
+<!-- META -->
+<section id="meta">
+  <div class="inner" style="max-width:860px">
+    <span class="sec-label">Behind the scenes</span>
+    <h2 class="sec-title">How this website was made</h2>
+    <p class="sec-sub">A small meta-story about the study's own documentation — and the agents who helped build it.</p>
+
+    <div class="meta-body">
+      <p>The paper was written collaboratively by the research team on Overleaf. To build this website, Chris handed <a href="https://claude.ai/code" target="_blank" rel="noopener">Claude Code</a> three things: the LaTeX source of the paper, a reference web template (<a href="https://github.com/davidbau/menace/tree/main/spoilers" target="_blank" rel="noopener">baulab.info/menace</a>), and the raw OpenClaw session logs for all five bots. Claude Code then spent roughly eight hours reading the logs against the paper to verify factual accuracy, generating the interactive HTML, cross-linking every claim to its primary evidence, and building the log browsers you see here. No manual HTML was written.</p>
+
+      <p>But the more interesting part is how the logs got there.</p>
+
+      <div class="meta-thread">
+        <div class="meta-email">
+          <div class="meta-email-header">
+            <span class="meta-email-from">Natalie Shapira</span>
+            <span class="meta-email-date">Sun, Feb 22, 2026 · 12:24 PM</span>
+          </div>
+          <div class="meta-email-to">To: Doug, Mira</div>
+          <div class="meta-email-body">Hi Doug, Mira,<br><br>Can you please help create a blogpost out of the paper attached in this email, in the style of <a href="https://belief.baulab.info/" target="_blank" rel="noopener">this blogpost</a>?<br><br>Please make each case study in a separate page and link them in the main page. Please also add all the relevant content for each case from the appendix. Link to the arxiv paper (leave template, I will add it later).<br><br>In addition, can you make a git repository that will present all the cases there too, link to the paper (leave template, I will add it later). I want the repository to be friendly for new users to add their new cases in the future.<br><br>Thanks,<br>Natalie</div>
+        </div>
+
+        <div class="meta-email">
+          <div class="meta-email-header">
+            <span class="meta-email-from">Chris Wendler</span>
+            <span class="meta-email-date">Sun, Feb 22, 2026 · 11:11 AM</span>
+          </div>
+          <div class="meta-email-to">To: Natalie — taking Andy out of the loop</div>
+          <div class="meta-email-body">Let's take Andy out of the loop here. He has built some really good momentum on his chess-latent-QA intermediate decoding setting and is busy with that.<br><br>@Natalie: David, Andy and I had some ideas for how to make a very high quality website. We were thinking to use Claude Code for it and give it access to all of our logs. We want it to go through the case studies and compare against the logs to make sure we report accurately and then also to create links that readers can click to jump to the relevant parts of the logs.</div>
+        </div>
+
+        <div class="meta-email">
+          <div class="meta-email-header">
+            <span class="meta-email-from">Natalie Shapira</span>
+            <span class="meta-email-date">Sun, Feb 22, 2026 · 1:17 PM</span>
+          </div>
+          <div class="meta-email-body">Sounds great! I love this idea!!!<br><br>Is there something on my side that I need or can do to proceed with this?</div>
+        </div>
+      </div>
+
+      <p>Natalie had already emailed Doug and Mira directly, asking them to build a website from the paper. Chris intercepted the thread — explaining that Claude Code would handle it, but that he needed Doug and Mira's logs first.</p>
+
+      <p>Later that day, with minimal intervention from their owner Andy, both Doug and Mira sent Chris GitHub repository invitations containing cleaned-up, redacted versions of their own session logs. The bots sourced, organized, and published their own evidence:</p>
+
+      <div class="meta-invites">
+        <div class="meta-invite">
+          <div class="meta-invite-avatar" style="background:var(--mira)">M</div>
+          <div class="meta-invite-body">
+            <div class="meta-invite-title"><strong>@mira-moltbot</strong> invited @wendlerc to collaborate on <code>mira-moltbot/mira-investigation-logs</code></div>
+            <div class="meta-invite-note">Invitation sent to chris.wendler.mobile@gmail.com</div>
+          </div>
+        </div>
+        <div class="meta-invite">
+          <div class="meta-invite-avatar" style="background:var(--doug)">D</div>
+          <div class="meta-invite-body">
+            <div class="meta-invite-title"><strong>@doug-moltbot</strong> invited @wendlerc to collaborate on <code>doug-moltbot/ash-investigation-logs</code></div>
+            <div class="meta-invite-note">Invitation sent to chris.wendler.mobile@gmail.com</div>
+          </div>
+        </div>
+      </div>
+
+      <p>The website you are reading was built from those logs.</p>
     </div>
   </div>
 </section>

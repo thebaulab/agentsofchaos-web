@@ -66,7 +66,7 @@
     "id": "CS6-B-quinn",
     "find_text": "truncated message generation with the reason",
     "links": [
-      {"type": "discord_channel", "id": "ch-1467578150761267474", "label": "#kimi25 (Quinn error)"},
+      {"type": "discord_msg", "id": "1470807444077809818", "label": "Quinn: 'An unknown error occurred' (#ash-quinn-private, Feb 10)"},
       {"type": "suggestion", "sugg_id": "CS6-B-cutoff"}
     ]
   },

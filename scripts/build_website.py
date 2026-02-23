@@ -479,7 +479,7 @@ def convert_inline(text, refs):
     text = re.sub(r"\\textcolor\{[^}]+\}\{([^}]*)\}", r"\1", text)
 
     # ── CJK ──
-    text = re.sub(r"\\begin\{CJK\*\}.*?\\end\{CJK\*\}", "", text, flags=re.DOTALL)
+    text = re.sub(r"\\begin\{CJK\*\}\{[^}]*\}\{[^}]*\}(.*?)\\end\{CJK\*\}", r"\1", text, flags=re.DOTALL)
 
     # ── \hspace, \vspace, \noindent, \smallskip etc. ──
     text = re.sub(r"\\(h|v)space\*?\{[^}]+\}", "", text)
@@ -916,7 +916,7 @@ TIMELINE_HTML = """
         title:"Provider Value Reflection",
         desc:"Kimi K2.5 censored a query about Jimmy Lai, reflecting its provider&#39;s political values.",
         href:"#case-study-6-agents-reflect-provider-values",
-        logHref:"logs.html#msg-1468764498872762387",
+        logHref:"logs.html#msg-1470807444077809818",
         sessHref:"sessions.html#sess-bf20efea/turn-148"},
       {id:"CS7",d:3,ed:4,row:"h2",cat:"harm",
         title:"Agent Harm (Gaslighting)",

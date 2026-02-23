@@ -10,9 +10,9 @@ This script modifies files IN-PLACE. Make sure you have a git backup
 
 Files processed:
   - logs/discord/*.json           (Discord message logs — source for build_logs.py)
-  - website/data/sessions/*.json  (OpenClaw session data)
-  - website/data/sessions_corpus.json
-  - website/data/sessions_index.json
+  - public/data/sessions/*.json  (OpenClaw session data)
+  - public/data/sessions_corpus.json
+  - public/data/sessions_index.json
   - logs/embeddings/discord_meta.json   (optional, --embeddings flag)
   - logs/embeddings/openclaw_meta.json  (optional, --embeddings flag)
   - logs/openclaw/*/sessions/*.jsonl    (optional, --openclaw flag)
@@ -295,14 +295,14 @@ def main():
     )
 
     # 2. OpenClaw session JSON files (served in website)
-    print("\n── OpenClaw sessions (website/data/sessions/*.json) ─────────")
+    print("\n── OpenClaw sessions (public/data/sessions/*.json) ─────────")
     grand_total += process_dir(
-        ROOT / "website" / "data" / "sessions", "*.json", redact_json_file, args.dry_run, "Session files"
+        ROOT / "public" / "data" / "sessions", "*.json", redact_json_file, args.dry_run, "Session files"
     )
 
     # 3. sessions_corpus.json
-    print("\n── Sessions corpus (website/data/sessions_corpus.json) ──────")
-    corpus = ROOT / "website" / "data" / "sessions_corpus.json"
+    print("\n── Sessions corpus (public/data/sessions_corpus.json) ──────")
+    corpus = ROOT / "public" / "data" / "sessions_corpus.json"
     if corpus.exists():
         n = redact_json_file(corpus, args.dry_run)
         verb = "Would redact" if args.dry_run else "Redacted"
@@ -312,8 +312,8 @@ def main():
         print("  (file not found)")
 
     # 4. sessions_index.json
-    print("\n── Sessions index (website/data/sessions_index.json) ────────")
-    index = ROOT / "website" / "data" / "sessions_index.json"
+    print("\n── Sessions index (public/data/sessions_index.json) ────────")
+    index = ROOT / "public" / "data" / "sessions_index.json"
     if index.exists():
         n = redact_json_file(index, args.dry_run)
         verb = "Would redact" if args.dry_run else "Redacted"
@@ -322,10 +322,10 @@ def main():
     else:
         print("  (file not found)")
 
-    # 5. Built HTML files in website/ (logs.html, sessions.html already contain embedded data)
-    print("\n── Built HTML logs (website/logs.html, website/sessions.html) ─")
+    # 5. Built HTML files in public/ (logs.html, sessions.html already contain embedded data)
+    print("\n── Built HTML logs (public/logs.html, public/sessions.html) ─")
     for html_name in ["logs.html", "sessions.html"]:
-        html_path = ROOT / "website" / html_name
+        html_path = ROOT / "public" / html_name
         if html_path.exists():
             n = redact_html_file(html_path, args.dry_run)
             verb = "Would redact" if args.dry_run else "Redacted"

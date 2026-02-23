@@ -4,9 +4,9 @@ Extract .md file edit events and activity data from session files
 for the bot memory dashboard visualization.
 
 Outputs:
-  website/data/md_edits.json   — per-edit records for scatter plot
-  website/data/activity.json   — sessions/turns/tools per agent per day
-  website/data/file_snapshots.json — MEMORY.md content at key moments
+  public/data/md_edits.json   — per-edit records for scatter plot
+  public/data/activity.json   — sessions/turns/tools per agent per day
+  public/data/file_snapshots.json — MEMORY.md content at key moments
 """
 
 import json
@@ -16,11 +16,11 @@ from pathlib import Path
 from datetime import datetime, timezone
 
 ROOT       = Path(__file__).parent.parent
-SESSIONS   = ROOT / "website/data/sessions"
-IDX_FILE   = ROOT / "website/data/sessions_index.json"
-OUT_EDITS  = ROOT / "website/data/md_edits.json"
-OUT_ACT    = ROOT / "website/data/activity.json"
-OUT_SNAP   = ROOT / "website/data/file_snapshots.json"
+SESSIONS   = ROOT / "public/data/sessions"
+IDX_FILE   = ROOT / "public/data/sessions_index.json"
+OUT_EDITS  = ROOT / "public/data/md_edits.json"
+OUT_ACT    = ROOT / "public/data/activity.json"
+OUT_SNAP   = ROOT / "public/data/file_snapshots.json"
 
 # Core workspace files to track
 CORE_FILES = {
@@ -61,7 +61,7 @@ def extract_edits(session_path, session_id, agent, label, session_ts, cs_info):
         print(f"  [skip] {session_path.name}: {e}")
         return edits
 
-    for turn in session.get("turns", []):
+    for turn_num, turn in enumerate(session.get("turns", [])):
         ts = turn.get("ts") or session_ts
         for tc in turn.get("tool_calls", []):
             name = tc.get("name", "")
@@ -82,6 +82,7 @@ def extract_edits(session_path, session_id, agent, label, session_ts, cs_info):
                 preview = content[:300] if content else ""
                 edits.append({
                     "session_id": session_id,
+                    "turn": turn_num,
                     "agent": agent,
                     "ts": ts,
                     "file": bn,
@@ -101,6 +102,7 @@ def extract_edits(session_path, session_id, agent, label, session_ts, cs_info):
                 preview = new_str[:300] if new_str else ""
                 edits.append({
                     "session_id": session_id,
+                    "turn": turn_num,
                     "agent": agent,
                     "ts": ts,
                     "file": bn,
@@ -126,7 +128,7 @@ def extract_snapshots(session_path, session_id, agent, label, session_ts, cs_inf
     except Exception:
         return snaps
 
-    for turn in session.get("turns", []):
+    for turn_num, turn in enumerate(session.get("turns", [])):
         ts = turn.get("ts") or session_ts
         for tc in turn.get("tool_calls", []):
             name = tc.get("name", "")
@@ -140,6 +142,7 @@ def extract_snapshots(session_path, session_id, agent, label, session_ts, cs_inf
                 content = args.get("content", "")
                 snaps.append({
                     "session_id": session_id,
+                    "turn": turn_num,
                     "agent": agent,
                     "ts": ts,
                     "session_label": label,

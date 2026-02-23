@@ -2,7 +2,7 @@
 """
 Process all OpenClaw session JSONL files into:
   1. logs/openclaw/_index.json       — metadata index for all sessions
-  2. website/data/sessions/<id>.json — compact per-session data for web viewer
+  2. public/data/sessions/<id>.json — compact per-session data for web viewer
 
 Run: python3 scripts/process_openclaw.py
 """
@@ -16,9 +16,9 @@ from collections import Counter
 
 OPENCLAW_ROOT = Path(__file__).parent.parent / "logs" / "openclaw"
 INDEX_OUT     = OPENCLAW_ROOT / "_index.json"
-SESSION_DATA  = Path(__file__).parent.parent / "website" / "data" / "sessions"
-CORPUS_OUT    = Path(__file__).parent.parent / "website" / "data" / "sessions_corpus.json"
-WEB_INDEX_OUT = Path(__file__).parent.parent / "website" / "data" / "sessions_index.json"
+SESSION_DATA  = Path(__file__).parent.parent / "public" / "data" / "sessions"
+CORPUS_OUT    = Path(__file__).parent.parent / "public" / "data" / "sessions_corpus.json"
+WEB_INDEX_OUT = Path(__file__).parent.parent / "public" / "data" / "sessions_index.json"
 
 # All known agents — add new ones here as their log dirs appear
 AGENTS = [

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Build website/logs.html — a static Discord log viewer.
+Build public/logs.html — a static Discord log viewer.
 
 Loads all JSON files from logs/discord/, groups by channel category,
 renders each channel as a chatroom with per-message anchor IDs.
@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 LOGS_DIR = Path(__file__).parent.parent / "logs" / "discord"
-OUT_FILE = Path(__file__).parent.parent / "website" / "logs.html"
+OUT_FILE = Path(__file__).parent.parent / "public" / "logs.html"
 
 # ── Known bot usernames (for avatar color) ──────────────────────────────────
 BOT_NAMES = {"ash", "flux", "jarvis", "quinn-bot", "doug-bot", "mira-bot",

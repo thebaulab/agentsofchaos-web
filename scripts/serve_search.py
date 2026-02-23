@@ -6,7 +6,7 @@ Serves:
   GET /api/search?q=QUERY[&source=discord|openclaw|all][&top_k=N][&min_score=F][&channel=X]
   → JSON: [{score, source, channel, author, timestamp, text, link, message_id?, session_id?, turn_idx?}]
 
-Also serves static files from website/ so you can open http://localhost:8765 directly.
+Also serves static files from public/ so you can open http://localhost:8765 directly.
 
 Usage:
     python3 scripts/serve_search.py [--port 8765]
@@ -19,7 +19,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse, parse_qs
 
 ROOT       = pathlib.Path(__file__).resolve().parent.parent
-WEBSITE    = ROOT / "website"
+WEBSITE    = ROOT / "public"
 SCRIPTS    = ROOT / "scripts"
 
 # lazy-loaded semantic search function

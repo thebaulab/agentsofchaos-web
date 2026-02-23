@@ -1,7 +1,7 @@
-# Raw log data (sensitive + large)
-logs/
+# Paper LaTeX source (not needed for the website)
+paper/
 
-# Raw source logs (sensitive originals, not for publishing)
+# Raw log data (sensitive + large)
 logs/
 
 # Embeddings index (binary, large)

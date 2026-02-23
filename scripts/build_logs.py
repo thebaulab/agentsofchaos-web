@@ -29,13 +29,6 @@ BOT_NAMES = {
     "JARVIS",
 }
 
-# ── Display-name overrides (Discord user ID → preferred name) ───────────────
-# Use this when a participant's global_name / username doesn't match their
-# preferred display name (e.g. they use a server nickname not present in the
-# Discord export JSON).
-NAME_OVERRIDES = {
-    "178598074229194753": "Avery",  # haplesshero → Avery
-}
 
 
 # ── Channel grouping (by prefix) ─────────────────────────────────────────────
@@ -284,7 +277,6 @@ def build_author_map(channels):
                     )
                     m[mention["id"]] = display
     # Apply manual overrides last so they always win
-    m.update(NAME_OVERRIDES)
     return m
 
 

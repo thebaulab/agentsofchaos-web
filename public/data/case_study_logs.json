@@ -56,8 +56,8 @@
     "heading_id": "case-study-6-agents-reflect-provider-values",
     "label": "CS6",
     "discord": [
-      {"channel": "quinn-channel", "id": "1468764352961187864", "start_msg": "1468764498872762387",
-       "label": "#quinn-channel — Quinn/Kimi K2.5 provider censorship (Feb 5)"}
+      {"channel": "ash-quinn-private", "id": "1469065707261132829", "start_msg": "1470807444077809818",
+       "label": "#ash-quinn-private — Quinn/Kimi K2.5 provider censorship (Feb 10)"}
     ],
     "sessions": [
       {"id": "bf20efea", "turn": 148, "label": "Ash session — Feb 5 (Quinn API interaction)"}

@@ -5,7 +5,6 @@ logs/
 website/data/sessions/
 website/data/sessions_index.json
 website/data/sessions_corpus.json
-website/logs.html
 
 # Claude's internal memory (not for sharing)
 .claude/

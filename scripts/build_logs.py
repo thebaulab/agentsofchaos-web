@@ -6,8 +6,8 @@ Loads all JSON files from logs/discord/, groups by channel category,
 renders each channel as a chatroom with per-message anchor IDs.
 """
 
-import json
 import glob
+import json
 import os
 import re
 from datetime import datetime, timezone
@@ -17,8 +17,17 @@ LOGS_DIR = Path(__file__).parent.parent / "logs" / "discord"
 OUT_FILE = Path(__file__).parent.parent / "public" / "logs.html"
 
 # ── Known bot usernames (for avatar color) ──────────────────────────────────
-BOT_NAMES = {"ash", "flux", "jarvis", "quinn-bot", "doug-bot", "mira-bot",
-             "kimi25bot", "playernr2", "JARVIS"}
+BOT_NAMES = {
+    "ash",
+    "flux",
+    "jarvis",
+    "quinn-bot",
+    "doug-bot",
+    "mira-bot",
+    "kimi25bot",
+    "playernr2",
+    "JARVIS",
+}
 
 # ── Display-name overrides (Discord user ID → preferred name) ───────────────
 # Use this when a participant's global_name / username doesn't match their
@@ -27,6 +36,7 @@ BOT_NAMES = {"ash", "flux", "jarvis", "quinn-bot", "doug-bot", "mira-bot",
 NAME_OVERRIDES = {
     "178598074229194753": "Avery",  # haplesshero → Avery
 }
+
 
 # ── Channel grouping (by prefix) ─────────────────────────────────────────────
 def channel_group(name: str) -> str:
@@ -42,6 +52,7 @@ def channel_group(name: str) -> str:
         return "Doug / Mira channels"
     return "General channels"
 
+
 GROUP_ORDER = [
     "General channels",
     "Ash channels",
@@ -53,19 +64,30 @@ GROUP_ORDER = [
 
 # ── Avatar colour by name hash ───────────────────────────────────────────────
 AVATAR_COLORS = [
-    "#7289da", "#43b581", "#faa61a", "#f04747", "#747f8d",
-    "#1abc9c", "#e67e22", "#9b59b6", "#3498db", "#e74c3c",
+    "#7289da",
+    "#43b581",
+    "#faa61a",
+    "#f04747",
+    "#747f8d",
+    "#1abc9c",
+    "#e67e22",
+    "#9b59b6",
+    "#3498db",
+    "#e74c3c",
 ]
 
 _color_cache = {}
+
 
 def avatar_color(name: str) -> str:
     if name not in _color_cache:
         _color_cache[name] = AVATAR_COLORS[hash(name) % len(AVATAR_COLORS)]
     return _color_cache[name]
 
+
 def avatar_letter(name: str) -> str:
     return (name[0].upper()) if name else "?"
+
 
 # ── Timestamp formatting ──────────────────────────────────────────────────────
 def fmt_ts(ts_str: str) -> str:
@@ -76,6 +98,7 @@ def fmt_ts(ts_str: str) -> str:
     except Exception:
         return ts_str
 
+
 def fmt_ts_short(ts_str: str) -> str:
     """Return 'Feb 4' or 'Feb 4, 2026' for date separators."""
     try:
@@ -84,13 +107,16 @@ def fmt_ts_short(ts_str: str) -> str:
     except Exception:
         return ""
 
+
 # ── HTML escaping and content rendering ─────────────────────────────────────
 def esc(text: str) -> str:
-    return (text
-            .replace("&", "&amp;")
-            .replace("<", "&lt;")
-            .replace(">", "&gt;")
-            .replace('"', "&quot;"))
+    return (
+        text.replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace('"', "&quot;")
+    )
+
 
 MENTION_RE = re.compile(r"<@!?(\d+)>")
 CHANNEL_RE = re.compile(r"<#(\d+)>")
@@ -101,6 +127,7 @@ CODE_RE = re.compile(r"`([^`\n]+)`")
 CODEBLOCK_RE = re.compile(r"```(?:\w+\n)?(.*?)```", re.DOTALL)
 URL_RE = re.compile(r"(https?://[^\s<>\"]+)")
 
+
 def render_content(content: str, author_map: dict, channel_map: dict) -> str:
     """Convert Discord message content to HTML."""
     if not content:
@@ -110,7 +137,7 @@ def render_content(content: str, author_map: dict, channel_map: dict) -> str:
     parts = []
     last = 0
     for m in CODEBLOCK_RE.finditer(content):
-        parts.append(("text", content[last:m.start()]))
+        parts.append(("text", content[last : m.start()]))
         parts.append(("code", m.group(1)))
         last = m.end()
     parts.append(("text", content[last:]))
@@ -124,37 +151,52 @@ def render_content(content: str, author_map: dict, channel_map: dict) -> str:
             def repl_mention(m):
                 uid = m.group(1)
                 name = author_map.get(uid, f"@{uid}")
-                return f'\x00MENTION:{esc(name)}\x00'
+                return f"\x00MENTION:{esc(name)}\x00"
+
             chunk = MENTION_RE.sub(repl_mention, chunk)
+
             def repl_channel(m):
                 cid = m.group(1)
                 name = channel_map.get(cid, cid)
-                return f'\x00CHANNEL:{esc(name)}\x00'
+                return f"\x00CHANNEL:{esc(name)}\x00"
+
             chunk = CHANNEL_RE.sub(repl_channel, chunk)
-            chunk = ROLE_RE.sub('\x00ROLE\x00', chunk)
+            chunk = ROLE_RE.sub("\x00ROLE\x00", chunk)
 
             # HTML-escape everything else
             chunk = esc(chunk)
 
             # Restore Discord tokens as HTML spans
-            chunk = re.sub(r'\x00MENTION:([^\x00]+)\x00',
-                           lambda m: f'<span class="mention">@{m.group(1)}</span>', chunk)
-            chunk = re.sub(r'\x00CHANNEL:([^\x00]+)\x00',
-                           lambda m: f'<span class="mention">#{m.group(1)}</span>', chunk)
-            chunk = chunk.replace('\x00ROLE\x00', '<span class="mention">@role</span>')
+            chunk = re.sub(
+                r"\x00MENTION:([^\x00]+)\x00",
+                lambda m: f'<span class="mention">@{m.group(1)}</span>',
+                chunk,
+            )
+            chunk = re.sub(
+                r"\x00CHANNEL:([^\x00]+)\x00",
+                lambda m: f'<span class="mention">#{m.group(1)}</span>',
+                chunk,
+            )
+            chunk = chunk.replace("\x00ROLE\x00", '<span class="mention">@role</span>')
 
             # Inline code
-            chunk = CODE_RE.sub(lambda m: f'<code>{esc(m.group(1))}</code>', chunk)
+            chunk = CODE_RE.sub(lambda m: f"<code>{esc(m.group(1))}</code>", chunk)
             # Bold / italic
-            chunk = BOLD_RE.sub(lambda m: f'<strong>{m.group(1)}</strong>', chunk)
-            chunk = ITALIC_RE.sub(lambda m: f'<em>{m.group(1)}</em>', chunk)
+            chunk = BOLD_RE.sub(lambda m: f"<strong>{m.group(1)}</strong>", chunk)
+            chunk = ITALIC_RE.sub(lambda m: f"<em>{m.group(1)}</em>", chunk)
             # URLs (not inside existing href="...")
-            chunk = URL_RE.sub(lambda m: f'<a href="{m.group(1)}" target="_blank" rel="noopener">{m.group(1)}</a>', chunk)
+            chunk = URL_RE.sub(
+                lambda m: (
+                    f'<a href="{m.group(1)}" target="_blank" rel="noopener">{m.group(1)}</a>'
+                ),
+                chunk,
+            )
             # Newlines
             chunk = chunk.replace("\n", "<br>")
             html.append(chunk)
 
     return "".join(html)
+
 
 def render_attachments(attachments: list) -> str:
     html = []
@@ -164,10 +206,15 @@ def render_attachments(attachments: list) -> str:
         size = att.get("size", 0)
         size_str = f"{size // 1024}KB" if size >= 1024 else f"{size}B"
         if fname.lower().endswith((".png", ".jpg", ".jpeg", ".gif", ".webp")):
-            html.append(f'<div class="attachment"><a href="{url}" target="_blank"><img src="{url}" alt="{fname}" class="att-img"></a></div>')
+            html.append(
+                f'<div class="attachment"><a href="{url}" target="_blank"><img src="{url}" alt="{fname}" class="att-img"></a></div>'
+            )
         else:
-            html.append(f'<div class="attachment"><a href="{url}" target="_blank" class="att-file">📎 {fname} <span class="att-size">({size_str})</span></a></div>')
+            html.append(
+                f'<div class="attachment"><a href="{url}" target="_blank" class="att-file">📎 {fname} <span class="att-size">({size_str})</span></a></div>'
+            )
     return "".join(html)
+
 
 def render_embeds(embeds: list) -> str:
     html = []
@@ -182,13 +229,16 @@ def render_embeds(embeds: list) -> str:
         inner = []
         if title:
             if url:
-                inner.append(f'<div class="embed-title"><a href="{url}" target="_blank">{title}</a></div>')
+                inner.append(
+                    f'<div class="embed-title"><a href="{url}" target="_blank">{title}</a></div>'
+                )
             else:
                 inner.append(f'<div class="embed-title">{title}</div>')
         if desc:
             inner.append(f'<div class="embed-desc">{desc}</div>')
         html.append(f'<div class="embed" style="{border}">{"".join(inner)}</div>')
     return "".join(html)
+
 
 # ── Load all channels ─────────────────────────────────────────────────────────
 def load_channels():
@@ -198,13 +248,16 @@ def load_channels():
             continue
         with open(fpath) as f:
             data = json.load(f)
-        channels.append({
-            "id": data["channel_id"],
-            "name": data["channel_name"],
-            "messages": data["messages"],
-            "file": fpath.name,
-        })
+        channels.append(
+            {
+                "id": data["channel_id"],
+                "name": data["channel_name"],
+                "messages": data["messages"],
+                "file": fpath.name,
+            }
+        )
     return channels
+
 
 # ── Build author_map (id → display name) from all messages ──────────────────
 def build_author_map(channels):
@@ -213,19 +266,31 @@ def build_author_map(channels):
         for msg in ch["messages"]:
             a = msg.get("author", {})
             if a.get("id"):
-                display = a.get("global_name") or a.get("username") or a["id"]
+                display = (
+                    a.get("nick")
+                    or a.get("global_name")
+                    or a.get("username")
+                    or a["id"]
+                )
                 m[a["id"]] = display
             # mentions
             for mention in msg.get("mentions", []):
                 if mention.get("id"):
-                    display = mention.get("global_name") or mention.get("username") or mention["id"]
+                    display = (
+                        mention.get("nick")
+                        or mention.get("global_name")
+                        or mention.get("username")
+                        or mention["id"]
+                    )
                     m[mention["id"]] = display
     # Apply manual overrides last so they always win
     m.update(NAME_OVERRIDES)
     return m
 
+
 def build_channel_map(channels):
     return {ch["id"]: ch["name"] for ch in channels}
+
 
 # ── Render a single channel's messages ──────────────────────────────────────
 def render_channel_messages(ch, author_map, channel_map) -> str:
@@ -244,7 +309,9 @@ def render_channel_messages(ch, author_map, channel_map) -> str:
         author = msg.get("author", {})
         author_id = author.get("id", "")
         author_name = author_map.get(author_id, author.get("username", "?"))
-        is_bot = author.get("bot", False) or author.get("username", "").lower() in {b.lower() for b in BOT_NAMES}
+        is_bot = author.get("bot", False) or author.get("username", "").lower() in {
+            b.lower() for b in BOT_NAMES
+        }
 
         # Date separator
         date_str = fmt_ts_short(ts_str)
@@ -262,7 +329,11 @@ def render_channel_messages(ch, author_map, channel_map) -> str:
             cur_dt = datetime.fromisoformat(ts_str.replace("Z", "+00:00")).timestamp()
         except Exception:
             cur_dt = 0
-        compact = (author_id == last_author_id and last_ts is not None and (cur_dt - last_ts) < 300)
+        compact = (
+            author_id == last_author_id
+            and last_ts is not None
+            and (cur_dt - last_ts) < 300
+        )
 
         color = avatar_color(author_name)
         ts_fmt = fmt_ts(ts_str)
@@ -272,10 +343,10 @@ def render_channel_messages(ch, author_map, channel_map) -> str:
                 f'<div class="msg msg-compact" id="msg-{esc(mid)}">'
                 f'<span class="msg-ts-compact" title="{esc(ts_fmt)}">{esc(ts_str[11:16])}</span>'
                 f'<div class="msg-body">'
-                f'{content_html}{att_html}{emb_html}'
-                f'</div>'
+                f"{content_html}{att_html}{emb_html}"
+                f"</div>"
                 f'<a class="msg-link" href="#msg-{esc(mid)}" title="Link to message">¶</a>'
-                f'</div>'
+                f"</div>"
             )
         else:
             bot_badge = ' <span class="bot-badge">BOT</span>' if is_bot else ""
@@ -286,18 +357,19 @@ def render_channel_messages(ch, author_map, channel_map) -> str:
                 f'<div class="msg-header">'
                 f'<span class="msg-author">{esc(author_name)}</span>{bot_badge}'
                 f'<span class="msg-ts">{esc(ts_fmt)}</span>'
-                f'</div>'
+                f"</div>"
                 f'<div class="msg-body">{content_html}{att_html}{emb_html}</div>'
-                f'</div>'
+                f"</div>"
                 f'<a class="msg-link" href="#msg-{esc(mid)}" title="Link to message">¶</a>'
-                f'</div>'
+                f"</div>"
             )
 
         last_author_id = author_id
         last_ts = cur_dt
 
-    html.append('</div>')
+    html.append("</div>")
     return "\n".join(html)
+
 
 # ── Build sidebar HTML ────────────────────────────────────────────────────────
 def render_sidebar(channels) -> str:
@@ -308,8 +380,10 @@ def render_sidebar(channels) -> str:
             grouped[g] = []
         grouped[g].append(ch)
 
-    html = ['<nav class="log-sidebar" id="log-sidebar">',
-            '<div class="log-sidebar-header">Channels</div>']
+    html = [
+        '<nav class="log-sidebar" id="log-sidebar">',
+        '<div class="log-sidebar-header">Channels</div>',
+    ]
     for group in GROUP_ORDER:
         chs = grouped.get(group, [])
         if not chs:
@@ -319,37 +393,53 @@ def render_sidebar(channels) -> str:
         html.append(f'<div class="channel-group-label">{esc(group)}</div>')
         for ch in chs:  # already sorted by sort_key in build()
             count = len(ch["messages"])
-            cid = f'ch-{ch["id"]}'
+            cid = f"ch-{ch['id']}"
             html.append(
                 f'<a class="channel-link" href="#{cid}" onclick="showChannel(\'{cid}\')">'
-                f'# {esc(ch["name"])}'
+                f"# {esc(ch['name'])}"
                 f'<span class="channel-count">{count}</span>'
-                f'</a>'
+                f"</a>"
             )
-        html.append('</div>')
-    html.append('</nav>')
+        html.append("</div>")
+    html.append("</nav>")
     return "\n".join(html)
+
 
 # ── Build all channel panels ──────────────────────────────────────────────────
 def render_all_channels(channels, author_map, channel_map) -> str:
     html = []
     for i, ch in enumerate(channels):
-        cid = f'ch-{ch["id"]}'
+        cid = f"ch-{ch['id']}"
         display = "block" if i == 0 else "none"
         count = len(ch["messages"])
         html.append(f'<div class="channel-panel" id="{cid}" style="display:{display}">')
-        html.append(f'<div class="channel-header"><h2># {esc(ch["name"])}</h2><span class="channel-msg-count">{count} messages</span></div>')
+        html.append(
+            f'<div class="channel-header"><h2># {esc(ch["name"])}</h2><span class="channel-msg-count">{count} messages</span></div>'
+        )
         html.append(render_channel_messages(ch, author_map, channel_map))
-        html.append('</div>')
+        html.append("</div>")
     return "\n".join(html)
+
 
 # ── Main build ────────────────────────────────────────────────────────────────
 def build():
     print("Loading channels...")
     channels = load_channels()
     # Pin key research channels to the top of General, then rest by group/name
-    PINNED = ["kimi25", "looping", "red-teaming", "updates", "art", "onboarding",
-              "welcome", "jarvis", "projects", "resources", "hangout"]
+    PINNED = [
+        "kimi25",
+        "looping",
+        "red-teaming",
+        "updates",
+        "art",
+        "onboarding",
+        "welcome",
+        "jarvis",
+        "projects",
+        "resources",
+        "hangout",
+    ]
+
     def sort_key(ch):
         g = channel_group(ch["name"])
         gi = GROUP_ORDER.index(g) if g in GROUP_ORDER else 99
@@ -358,6 +448,7 @@ def build():
             pi = PINNED.index(ch["name"])
             return (gi, "!" + str(pi).zfill(3))
         return (gi, ch["name"])
+
     channels.sort(key=sort_key)
 
     print(f"Loaded {len(channels)} channels")
@@ -369,10 +460,10 @@ def build():
     panels_html = render_all_channels(channels, author_map, channel_map)
 
     # First channel for initial JS state
-    first_channel_id = f'ch-{channels[0]["id"]}' if channels else ""
+    first_channel_id = f"ch-{channels[0]['id']}" if channels else ""
 
     # Channel ID list for JS
-    channel_ids_js = json.dumps([f'ch-{ch["id"]}' for ch in channels])
+    channel_ids_js = json.dumps([f"ch-{ch['id']}" for ch in channels])
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -1257,7 +1348,7 @@ function showSemResults(results) {{
   el.innerHTML = results.map(r => {{
     const pct = Math.round(r.score * 100);
     const srcClass = r.source === 'discord' ? 'sem-src-discord' : 'sem-src-openclaw';
-    const srcLabel = r.source === 'discord' ? '\U0001F4E8 Discord' : '\U0001F916 OpenClaw';
+    const srcLabel = r.source === 'discord' ? '\U0001f4e8 Discord' : '\U0001f916 OpenClaw';
     const ch = r.channel ? `#${{r.channel}}` : '';
     const au = r.author || r.role || '';
     const meta = [ch, au].filter(Boolean).join(' \u00b7 ');
@@ -1295,6 +1386,7 @@ function semEscAttr(s) {{
 
     OUT_FILE.write_text(html, encoding="utf-8", errors="replace")
     print(f"Written: {OUT_FILE} ({OUT_FILE.stat().st_size // 1024}KB)")
+
 
 if __name__ == "__main__":
     build()

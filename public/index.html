@@ -371,7 +371,7 @@
 
     /* DATA */
     #data { background: var(--bg3); }
-    .data-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .data-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
     .data-card {
       background: var(--bg); border: 1px solid var(--border); border-radius: var(--rl);
       padding: 28px; text-decoration: none; color: inherit; display: flex;
@@ -489,6 +489,7 @@
       <a href="#data">Data</a>
       <a href="#meta">Meta</a>
       <a href="report.html" class="nav-alt">Report ↗</a>
+      <a href="dashboard.html" class="nav-alt">Dashboard ↗</a>
     </div>
   </div>
 </nav>
@@ -1088,6 +1089,12 @@
         <div class="data-title">Discord Logs</div>
         <div class="data-desc">All 78 Discord channels from the study server, with full message history. Credentials redacted. Browse by channel or search for specific interactions.</div>
         <div class="data-cta">Browse Discord logs →</div>
+      </a>
+      <a class="data-card" href="dashboard.html">
+        <div class="data-icon">🧠</div>
+        <div class="data-title">Memory Dashboard</div>
+        <div class="data-desc">Interactive visualizations of how agents' memory files evolved over the study — edit timelines, document diffs, and the full attack/recovery sequence of CS8.</div>
+        <div class="data-cta">Open dashboard →</div>
       </a>
     </div>
   </div>

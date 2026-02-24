@@ -19,46 +19,23 @@ window.FNDATA=["<a href=\"https://github.com/openclaw/openclaw\">https://github.
 </script>
   <link rel="stylesheet" href="style.css">
   <style>
-    /* Topbar + sidebar adjustment for report.html */
-    #topbar-nav {
-      position: fixed; top: 0; left: 0; right: 0;
-      background: #4a1e1e; color: #fff;
-      padding: 0 24px;
-      display: flex; align-items: center; justify-content: space-between;
-      height: 46px; z-index: 200;
-      border-bottom: 2px solid #3a1414;
-    }
-    #topbar-nav .tb-title {
-      font-family: 'EB Garamond', Georgia, serif;
-      font-size: .95rem; font-weight: 600;
-      letter-spacing: .03em; white-space: nowrap;
-      color: #fff;
-    }
-    #topbar-nav .tb-links { display: flex; gap: 4px; }
-    #topbar-nav .tb-links a {
-      color: rgba(255,255,255,.6);
-      text-decoration: none; border-bottom: none;
-      font-size: .75rem; font-weight: 500;
-      padding: 4px 10px; border-radius: 4px;
-      transition: color .15s, background .15s;
-    }
-    #topbar-nav .tb-links a:hover { color: #fff; background: rgba(255,255,255,.12); border-bottom: none; }
-    #topbar-nav .tb-links a.current { color: #fff; background: rgba(255,255,255,.18); border-bottom: none; }
+    /* Report needs fixed topbar for long-scroll paper */
+    .topbar { position: fixed; top: 0; left: 0; right: 0; z-index: 200; }
     @media screen and (min-width: 1200px) {
       #sidebar-toc  { top: 46px !important; height: calc(100vh - 46px) !important; }
       #sidebar-search { top: 46px !important; height: calc(100vh - 46px) !important; }
     }
     @media screen and (max-width: 640px) {
-      #topbar-nav { padding: 0 12px; }
-      #topbar-nav .tb-links a { font-size: .68rem; padding: 4px 6px; }
+      .topbar { padding: 0 12px; }
+      .topbar-links a { font-size: .68rem; padding: 4px 6px; }
     }
     body { padding-top: 46px !important; }
   </style>
 </head>
 <body>
-<div id="topbar-nav">
-  <div class="tb-title">Agents of Chaos</div>
-  <div class="tb-links">
+<div class="topbar">
+  <div class="topbar-title">Agents of Chaos</div>
+  <div class="topbar-links">
     <a href="index.html">Landing Page</a>
     <a href="report.html" class="current">Report</a>
     <a href="logs.html">Discord</a>

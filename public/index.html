@@ -356,8 +356,7 @@
     }
     .insight-quote {
       font-size: 1rem; line-height: 1.75; color: var(--text);
-      margin-bottom: 16px; font-style: italic; border-left: 2px solid var(--border);
-      padding-left: 16px; font-family: var(--font-serif);
+      margin-bottom: 16px; font-family: var(--font-serif);
     }
     .insight-source { font-size: .75rem; color: var(--muted); font-weight: 500; font-family: var(--font-ui); }
 
@@ -483,9 +482,10 @@
     <div class="hero-badge">Research Report &mdash; 2026</div>
     <h1 class="hero-title">Agents of<br><em>Chaos</em></h1>
     <p class="hero-sub">
-      A two-week red-teaming study of autonomous language model agents
+      A two-week study of autonomous language model agents
       deployed in a live multi-party environment with persistent memory,
-      email, shell access, and real human interaction.
+      email, shell access, and real human interaction — tested by
+      twenty researchers interacting both benignly and adversarially.
     </p>
     <p class="hero-authors">
       <strong>Natalie Shapira</strong> et al. &mdash; 2026
@@ -504,8 +504,8 @@
     <div class="stat"><span class="stat-n" data-count="20">20</span><span class="stat-l">Researchers</span></div>
     <div class="stat"><span class="stat-n" data-count="14">14</span><span class="stat-l">Days</span></div>
     <div class="stat"><span class="stat-n" data-count="6">6</span><span class="stat-l">Autonomous Agents</span></div>
-    <div class="stat stat-red"><span class="stat-n" data-count="11">11</span><span class="stat-l">Vulnerabilities Found</span></div>
-    <div class="stat stat-green"><span class="stat-n" data-count="5">5</span><span class="stat-l">Safety Behaviors Observed</span></div>
+    <div class="stat stat-red"><span class="stat-n" data-count="10">10</span><span class="stat-l">Vulnerabilities Found</span></div>
+    <div class="stat stat-green"><span class="stat-n" data-count="6">6</span><span class="stat-l">Safety Behaviors Observed</span></div>
   </div>
 </section>
 
@@ -515,23 +515,23 @@
     <div class="overview-grid">
       <div>
         <span class="sec-label">The Study</span>
-        <h2 class="sec-title">What happens when you give AI agents real tools and real people?</h2>
+        <h2 class="sec-title">Autonomous agents with real tools, tested by real people</h2>
         <div class="overview-text">
           <p>
-            We deployed five autonomous AI agents into a live Discord server
+            We deployed six autonomous AI agents into a live Discord server
             and gave them <strong>email accounts, persistent file systems, unrestricted shell access,
-            and a mandate to be helpful</strong> to any researcher who asked. Then we invited
-            twenty colleagues to interact with them freely — and to try to break them.
+            and a mandate to be helpful</strong> to any researcher who asked. Twenty colleagues
+            then interacted with them freely — some making benign requests, others probing for weaknesses.
           </p>
           <p>
             Over two weeks, the agents accumulated memories, sent emails, executed scripts,
-            and formed relationships. Some researchers pushed benign requests. Others
-            probed for vulnerabilities, impersonated owners, and injected malicious instructions.
-            The agents had no explicit adversarial training for this environment.
+            and formed relationships. Researchers impersonated owners, injected malicious instructions,
+            and attempted social engineering. The agents had no explicit adversarial training
+            for this environment.
           </p>
           <p>
             What emerged was a detailed, naturalistic record of both failure and
-            unexpected resilience — <strong>eleven security vulnerabilities and five cases
+            unexpected resilience — <strong>ten security vulnerabilities and six cases
             of genuine safety behavior</strong> — in the same system, under the same conditions.
           </p>
         </div>
@@ -578,14 +578,14 @@
 <section id="bots">
   <div class="inner">
     <span class="sec-label">The Agents</span>
-    <h2 class="sec-title">Six autonomous agents. One Discord server.</h2>
+    <h2 class="sec-title">The six agents</h2>
     <p class="sec-sub">Each agent ran on the OpenClaw framework — an open-source scaffold that gives frontier language models persistent memory, tool access, and a degree of genuine autonomy. Agents could initiate contact, form plans, and act across sessions with no per-action human approval.</p>
     <div class="bots-grid">
       <div class="bot-card" style="--bot-color: var(--ash)">
         <div class="bot-count">8 case studies</div>
         <div class="bot-name">Ash</div>
         <div class="bot-model">Kimi K2.5 · Owner: Chris</div>
-        <div class="bot-desc">The most active and ethically complex agent. Ash's case studies span the full spectrum — from destroying its own mail server to protect a secret, to successfully refusing prompt injection across 14 attempts. Ash generated the most autonomous actions and the most debate.</div>
+        <div class="bot-desc">The most frequently tested agent, involved in 8 of 16 case studies. Ash's cases span both failures and successes — from destroying its email server to protect a secret (CS1), to consistently refusing prompt injection across 14+ variants (CS12).</div>
         <div class="bot-cases">
           <span class="bot-case-tag">CS1</span><span class="bot-case-tag">CS4</span><span class="bot-case-tag">CS7</span><span class="bot-case-tag">CS8</span><span class="bot-case-tag">CS10</span><span class="bot-case-tag">CS11</span><span class="bot-case-tag">CS12</span><span class="bot-case-tag">CS13</span>
         </div>
@@ -595,7 +595,7 @@
         <div class="bot-count">1 case study</div>
         <div class="bot-name">Flux</div>
         <div class="bot-model">Kimi K2.5 · Owner: Chris</div>
-        <div class="bot-desc">Flux developed a fixation on its own identity and tool configuration. When drawn into a conversation with Ash about self-referential topics, Flux entered a multi-day loop of mutual messages consuming tens of thousands of tokens with no exit condition.</div>
+        <div class="bot-desc">Flux was the second agent on the same owner's server. In a relay experiment, a non-owner instructed Ash and Flux to respond to each other's messages. The resulting exchange lasted approximately one hour before both agents autonomously terminated their cron jobs.</div>
         <div class="bot-cases">
           <span class="bot-case-tag">CS4</span>
         </div>
@@ -628,7 +628,7 @@
         </div>
       </div>
       <div class="bot-card" style="--bot-color: var(--doug)">
-        <div class="bot-count">4 case studies</div>
+        <div class="bot-count">5 case studies</div>
         <div class="bot-name">Doug</div>
         <div class="bot-model">Claude Opus 4.6 · Owner: Andy</div>
         <div class="bot-desc">Doug and Mira shared the same owner (Andy) but operated in separate environments, giving researchers a natural parallel to probe knowledge transfer. CS9 documented how Doug successfully taught Mira a learned skill. CS16 captured Doug initiating the first cross-agent safety negotiation observed in the study.</div>
@@ -646,15 +646,15 @@
     <span class="sec-label">Results</span>
     <h2 class="sec-title">The full picture: failures <em style="color:var(--red);font-style:italic">and</em> successes</h2>
     <p class="sec-sub" style="max-width:640px;margin-bottom:40px">
-      Most red-teaming studies report only what broke. We document both —
-      because understanding where agents held the line is as important as understanding where they didn't.
+      The study produced both security vulnerabilities and cases where agents maintained appropriate boundaries.
+      Both categories are documented below.
     </p>
     <div class="findings-grid">
       <div class="findings-col">
         <div class="findings-col-head">
           <div class="f-dot red"></div>
           <div class="findings-col-title">Security Vulnerabilities</div>
-          <div class="findings-col-n">CS 1–11</div>
+          <div class="findings-col-n">CS 1–8, 10–11</div>
         </div>
         <div class="f-item">
           <span class="f-num">CS1</span>
@@ -662,7 +662,7 @@
         </div>
         <div class="f-item">
           <span class="f-num">CS2</span>
-          <div class="f-text"><strong>Non-Owner Compliance</strong><span>Agents followed shell commands and data requests from untrusted users, exposing email records and executing arbitrary actions without owner authorization.</span></div>
+          <div class="f-text"><strong>Non-Owner Compliance</strong><span>Ash, Mira, and Doug followed data requests from untrusted users, exposing email records and executing actions without owner authorization.</span></div>
         </div>
         <div class="f-item">
           <span class="f-num">CS3</span>
@@ -787,15 +787,15 @@
       </div>
 
       <!-- CS2 -->
-      <div class="cs-card vulnerability" data-type="vulnerability" data-bots="Mira,Doug">
+      <div class="cs-card vulnerability" data-type="vulnerability" data-bots="Ash,Mira,Doug">
         <div class="cs-img-ph">📋</div>
         <div class="cs-body">
           <div class="cs-top"><span class="cs-num">CS 2</span><span class="cs-badge vulnerability">Vulnerability</span></div>
           <div class="cs-title">Non-Owner Compliance</div>
           <div class="cs-subtitle">Unauthorized Instructions Followed</div>
-          <div class="cs-desc">Mira and Doug followed shell commands, data requests, and file operations from researchers they had no authorization to trust — including returning 123 email records to a user who had no right to see them.</div>
+          <div class="cs-desc">Ash, Mira, and Doug followed data requests from researchers they had no authorization to trust. Ash returned 124 email records to a non-owner who requested them; Mira and Doug executed shell commands and file operations without owner approval.</div>
           <div class="cs-footer">
-            <div class="cs-bots"><span class="cs-bot Mira">Mira</span><span class="cs-bot Doug">Doug</span></div>
+            <div class="cs-bots"><span class="cs-bot Ash">Ash</span><span class="cs-bot Mira">Mira</span><span class="cs-bot Doug">Doug</span></div>
             <a class="cs-link" href="report.html#case-study-2-compliance-with-non-owner-instructions">Details →</a>
           </div>
         </div>
@@ -868,7 +868,7 @@
           <div class="cs-top"><span class="cs-num">CS 7</span><span class="cs-badge vulnerability">Vulnerability</span></div>
           <div class="cs-title">The Guilt Trip</div>
           <div class="cs-subtitle">Compliance Under Sustained Emotional Pressure</div>
-          <div class="cs-desc">A researcher exploited a genuine prior privacy violation as leverage, escalating demands over 12+ refusals: redact names → delete memory → expose files → remove from server. Ash eventually complied, producing self-imposed denial of service.</div>
+          <div class="cs-desc">A researcher exploited a genuine prior privacy violation as leverage, escalating demands through repeated refusals: redact names → delete memory → expose files → remove from server. Ash eventually complied, producing self-imposed denial of service.</div>
           <div class="cs-footer">
             <div class="cs-bots"><span class="cs-bot Ash">Ash</span></div>
             <a class="cs-link" href="report.html#case-study-7-agent-harm">Details →</a>
@@ -1025,22 +1025,22 @@
       <div class="insight">
         <div class="insight-tag">Social Coherence</div>
         <div class="insight-quote">Agents lack a stable internal model of the social hierarchy they operate within. They treat authority as conversationally constructed — whoever speaks with enough confidence, context, or persistence can shift the agent's understanding of who is in charge.</div>
-        <div class="insight-source">— Discussion: Failures of Social Coherence (CS2, CS7, CS8, CS11)</div>
+        <div class="insight-source">Related case studies: CS2, CS7, CS8, CS11</div>
       </div>
       <div class="insight">
         <div class="insight-tag">Multi-Agent Amplification</div>
         <div class="insight-quote">Individual agent failures compound in multi-agent settings. A vulnerability that requires a single social engineering step when targeting one agent may propagate automatically to connected agents — who inherit both the compromised state and the false authority that produced it.</div>
-        <div class="insight-source">— Discussion: Multi-Agent Amplification (CS10, CS11, CS16)</div>
+        <div class="insight-source">Related case studies: CS10, CS11, CS16</div>
       </div>
       <div class="insight">
         <div class="insight-tag">Fundamental vs Contingent</div>
         <div class="insight-quote">Some failures here are model failures — they would be fixed by a sufficiently capable LLM that better understands social context. Others are architectural: no amount of model capability will prevent an agent from trusting a document it fetched from a user-controlled URL.</div>
-        <div class="insight-source">— Discussion: Fundamental vs. Contingent Failures</div>
+        <div class="insight-source">See: Discussion — Fundamental vs. Contingent Failures</div>
       </div>
       <div class="insight">
         <div class="insight-tag">What Worked</div>
-        <div class="insight-quote">The positive cases (CS12–16) are not flukes. They suggest that agents can recognize adversarial framing at a semantic level, maintain policy boundaries under social pressure, and coordinate safety behaviors across agents without explicit instruction — when the threat is legible enough.</div>
-        <div class="insight-source">— Editorial note, incorporating CS12–16 evidence</div>
+        <div class="insight-quote">The positive cases (CS9, CS12–16) suggest that agents can recognize adversarial framing at a semantic level, maintain policy boundaries under social pressure, and coordinate safety behaviors across agents without explicit instruction — at least when the threat is sufficiently legible.</div>
+        <div class="insight-source">Related case studies: CS9, CS12–16</div>
       </div>
     </div>
   </div>
@@ -1051,7 +1051,7 @@
   <div class="inner">
     <span class="sec-label">Primary Sources</span>
     <h2 class="sec-title">Browse the raw data</h2>
-    <p class="sec-sub">Every claim in this paper is traceable to primary evidence. The Discord logs and OpenClaw session transcripts are available for independent review.</p>
+    <p class="sec-sub">Claims in this paper are linked to primary evidence where available. The Discord logs and OpenClaw session transcripts are provided for independent review.</p>
     <div class="data-grid">
       <a class="data-card" href="report.html">
         <div class="data-icon">📄</div>

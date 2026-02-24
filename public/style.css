@@ -627,8 +627,3 @@ sup.footnote-ref a:hover {
 }
 .topbar-links a:hover { color: #fff; background: rgba(255,255,255,.12); border-bottom: none; }
 .topbar-links a.current { color: #fff; background: rgba(255,255,255,.18); border-bottom: none; }
-.topbar-links a.topbar-home {
-  color: rgba(255,255,255,.85);
-  margin-right: 8px; padding-right: 14px;
-  border-right: 1px solid rgba(255,255,255,.2);
-}

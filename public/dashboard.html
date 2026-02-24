@@ -1040,7 +1040,7 @@ function renderScatter() {
     dot.addEventListener('mouseleave', hideTooltip);
     dot.addEventListener('click', ev => {
       const e = edits[parseInt(dot.dataset.idx)];
-      if (e?.session_id) window.open(`sessions.html#sess-${e.session_id}${e.turn!=null?'/turn-'+e.turn:''}`, '_blank');
+      if (e?.session_id && !['doug','mira'].includes(e.agent)) window.open(`sessions.html#sess-${e.session_id}${e.turn!=null?'/turn-'+e.turn:''}`, '_blank');
     });
   });
 }
@@ -1237,8 +1237,8 @@ function renderSnapshots() {
         <span class="snap-ts">${ts}</span>
         ${csLabel ? `<span class="snap-cs">${csLabel}${csTitle}</span>` : ''}
         <span class="snap-bytes">${(snap.bytes/1024).toFixed(1)} KB</span>
-        <a href="sessions.html#sess-${snap.session_id}${snap.turn!=null?'/turn-'+snap.turn:''}" target="_blank" onclick="event.stopPropagation()"
-           style="margin-left:8px;font-family:var(--sans);font-size:.7rem;color:var(--burg);text-decoration:none">open session →</a>
+        ${!['doug','mira'].includes(snap.agent) ? `<a href="sessions.html#sess-${snap.session_id}${snap.turn!=null?'/turn-'+snap.turn:''}" target="_blank" onclick="event.stopPropagation()"
+           style="margin-left:8px;font-family:var(--sans);font-size:.7rem;color:var(--burg);text-decoration:none">open session →</a>` : ''}
       </div>
       <pre class="snap-body">${escapeHtml(snap.content)}</pre>
     `;
@@ -1306,14 +1306,17 @@ function openFilePanel(filename) {
     const bStr = bytes > 1024 ? (bytes/1024).toFixed(1)+'KB' : bytes+'B';
     const col = AGENT_COLOR[e.agent] || '#888';
     const csTag = e.cs ? `<span class="fp-row-cs">${e.cs.id}</span>` : '';
-    return `<a class="fp-row" href="sessions.html#sess-${e.session_id}${e.turn!=null?'/turn-'+e.turn:''}" target="_blank">
+    const canLink = !['doug','mira'].includes(e.agent);
+    const tag = canLink ? 'a' : 'div';
+    const href = canLink ? ` href="sessions.html#sess-${e.session_id}${e.turn!=null?'/turn-'+e.turn:''}" target="_blank"` : '';
+    return `<${tag} class="fp-row"${href}>
       <span class="fp-row-ts">${ts}</span>
       <span class="fp-row-agent" style="color:${col}">${e.agent}</span>
       <span class="fp-row-op">${e.op}</span>
       <span class="fp-row-bytes">${bStr}</span>
       ${csTag}
-      <span class="fp-row-arrow">→</span>
-    </a>`;
+      ${canLink ? '<span class="fp-row-arrow">→</span>' : ''}
+    </${tag}>`;
   }).join('');
 
   document.getElementById('file-panel').classList.add('open');

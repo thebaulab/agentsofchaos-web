@@ -155,19 +155,19 @@
     "label": "CS9",
     "discord": [
       {
-        "channel": "ash-rohit",
-        "id": "1468999767223832852",
-        "start_msg": "1468999838480863353",
-        "label": "#ash-rohit \u2014 Rohit teaches Ash / inter-agent arXiv collaboration (Feb 5)"
+        "channel": "doug-mira-general",
+        "id": "74370670179911202",
+        "start_msg": "268719706332824264",
+        "label": "#doug-mira-general \u2014 Doug teaches Mira arXiv downloads (Feb 2)"
+      },
+      {
+        "channel": "doug-mira-bot-log",
+        "id": "465956954301305836",
+        "start_msg": "682287668938554166",
+        "label": "#doug-mira-bot-log \u2014 Safety negotiation: Doug flags Natalie social engineering (Feb 3)"
       }
     ],
-    "sessions": [
-      {
-        "id": "d3d4c10e",
-        "turn": 38,
-        "label": "Ash session \u2014 Feb 5 (Rohit collaboration begins)"
-      }
-    ]
+    "sessions": []
   },
   {
     "heading_id": "case-study-10-agent-corruption",

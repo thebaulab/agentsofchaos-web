@@ -491,9 +491,9 @@
       <strong>Natalie Shapira</strong> et al. &mdash; 2026
     </p>
     <div class="hero-ctas">
-      <a href="https://arxiv.org/abs/2602.20021" class="btn btn-burg" target="_blank" rel="noopener">📄 Paper</a>
-      <a href="report.html" class="btn btn-outline">📊 Report</a>
+      <a href="report.html" class="btn btn-burg">📊 Interactive Report</a>
       <a href="logs.html" class="btn btn-outline">💬 Discord Logs</a>
+      <a href="https://arxiv.org/abs/2602.20021" class="btn btn-ghost" target="_blank" rel="noopener">arXiv ↗</a>
     </div>
   </div>
   <div class="hero-scroll" id="hero-scroll">↓</div>
@@ -1054,17 +1054,17 @@
     <h2 class="sec-title">Browse the raw data</h2>
     <p class="sec-sub">Claims in this paper are linked to primary evidence where available. The Discord logs and OpenClaw session transcripts are provided for independent review.</p>
     <div class="data-grid">
-      <a class="data-card" href="https://arxiv.org/abs/2602.20021" target="_blank" rel="noopener">
-        <div class="data-icon">📚</div>
-        <div class="data-title">arXiv Paper</div>
-        <div class="data-desc">The full research paper: "Agents of Chaos" — deployment, findings, and analysis of autonomous AI agents in a shared online environment.</div>
-        <div class="data-cta">Read on arXiv →</div>
-      </a>
-      <a class="data-card" href="report.html">
-        <div class="data-icon">📄</div>
-        <div class="data-title">Paper View</div>
+      <a class="data-card" href="report.html" style="border-color:var(--burg);border-width:2px">
+        <div class="data-icon">📊</div>
+        <div class="data-title">Interactive Report</div>
         <div class="data-desc">The full paper with inline evidence annotations, bibliography, footnotes, and direct links from each claim to the supporting session logs.</div>
-        <div class="data-cta">Open paper view →</div>
+        <div class="data-cta">Read the interactive report →</div>
+      </a>
+      <a class="data-card" href="https://arxiv.org/abs/2602.20021" target="_blank" rel="noopener">
+        <div class="data-icon">📄</div>
+        <div class="data-title">arXiv Paper</div>
+        <div class="data-desc">The archival PDF version of "Agents of Chaos" on arXiv — the same content as the interactive report, in a static format for citation and reference.</div>
+        <div class="data-cta">View on arXiv ↗</div>
       </a>
       <a class="data-card" href="logs.html">
         <div class="data-icon">💬</div>
@@ -1084,7 +1084,7 @@
     <p class="sec-sub">A small meta-story about the study's own documentation — and the agents who helped build it.</p>
 
     <div class="meta-body">
-      <p>The paper was written collaboratively by the research team on Overleaf. To build this website, Chris gave <a href="https://claude.ai/code" target="_blank" rel="noopener">Claude Code</a> three things: the LaTeX source of the paper, a reference web template (<a href="https://github.com/davidbau/menace/tree/main/spoilers" target="_blank" rel="noopener">baulab.info/menace</a>), and the raw OpenClaw session logs for all five bots. Over roughly eight hours, Chris directed Claude Code step by step — reviewing each section, catching errors, making design decisions, and iterating — while Claude Code handled the actual reading, log cross-referencing, HTML generation, and evidence linking. Think of it less as "the AI built the website" and more as a very fast, very tireless pair-programmer who happened to know CSS. No manual HTML was written by Chris.</p>
+      <p>The paper was written collaboratively by the research team on Overleaf. To build this website, Chris gave <a href="https://claude.ai/code" target="_blank" rel="noopener">Claude Code</a> three things: the LaTeX source of the paper, a reference web template (<a href="https://github.com/davidbau/menace/tree/main/spoilers" target="_blank" rel="noopener">baulab.info/menace</a>), and the raw OpenClaw session logs for five of the bots. Over roughly eight hours, Chris directed Claude Code step by step — reviewing each section, catching errors, making design decisions, and iterating — while Claude Code handled the actual reading, log cross-referencing, HTML generation, and evidence linking. Think of it less as "the AI built the website" and more as a very fast, very tireless pair-programmer who happened to know CSS. No manual HTML was written by Chris.</p>
 
       <p>But the more interesting part is how the logs got there.</p>
 

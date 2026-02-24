@@ -420,6 +420,70 @@ body.view-full    .turn-body { display: block !important; }
   font-size: 0.9rem;
 }
 
+/* ── Search-hit highlighting ────────────────────────────── */
+.turn.search-hit .turn-header {
+  background: #fff8e1 !important;
+  box-shadow: inset 3px 0 0 #f9a825;
+}
+.turn.search-hit.role-user .turn-header  { background: #f0f9e8 !important; }
+.turn.search-hit.role-ass  .turn-header  { background: #f8eeff !important; }
+.turn.search-hit.role-tool .turn-header  { background: #e8f2ff !important; }
+
+mark {
+  background: #ffe082;
+  color: inherit;
+  padding: 0 1px;
+  border-radius: 2px;
+}
+
+.sess-item-hits {
+  display: inline-block;
+  font-size: 0.6rem;
+  padding: 1px 5px;
+  border-radius: 8px;
+  margin-left: 4px;
+  background: #fff3cd;
+  color: #856404;
+  font-family: var(--font-mono);
+  font-weight: bold;
+}
+
+.sess-item.active .sess-item-hits {
+  background: rgba(255,255,255,0.3);
+  color: #fff;
+}
+
+/* ── Match navigation bar ─────────────────────────────────── */
+.match-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+}
+
+.match-nav-btn {
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border: 1px solid var(--color-rule);
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  color: #555;
+  font-family: var(--font-mono);
+  line-height: 1;
+}
+
+.match-nav-btn:hover {
+  background: #f0ece4;
+}
+
+.match-nav-count {
+  font-size: 0.7rem;
+  color: #856404;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
 @media (max-width: 700px) {
   .sess-sidebar { display: none; }
 }
@@ -467,6 +531,11 @@ body.view-full    .turn-body { display: block !important; }
   <div class="sess-main">
     <div class="sess-topbar">
       <span class="sess-topbar-title">Session Viewer</span>
+      <div class="match-nav" id="match-nav" style="display:none">
+        <button class="match-nav-btn" id="match-prev" onclick="navMatch(-1)">&#9650;</button>
+        <span class="match-nav-count" id="match-count"></span>
+        <button class="match-nav-btn" id="match-next" onclick="navMatch(1)">&#9660;</button>
+      </div>
       <div class="sess-view-toggle">
         <button class="toggle-btn active" id="btn-normal">Normal</button>
         <button class="toggle-btn" id="btn-compact">Compact</button>
@@ -487,8 +556,12 @@ let allSessions = [];
 let activeFilter = 'session';
 let activeAgentFilter = 'all';
 let activeSessionId = null;
-let sessionCorpus = null;  // full-text index: {id -> text blob}
+let sessionCorpus = null;  // full-text index: {id -> session object with turns}
 let corpusLoading = false;
+let activeQuery = '';       // current search query (lowercase)
+let matchedTurnsMap = {};   // sessionId -> [turn indices]
+let currentMatchIdx = -1;   // index into current session's matched turns
+let currentMatchList = [];  // matched turn indices for active session
 
 // ── Load index ────────────────────────────────────────────
 fetch('data/sessions_index.json')
@@ -535,8 +608,11 @@ function renderList(sessions) {
     const tools = Object.entries(s.top_tools || {}).map(([k,v]) => `${k}(${v})`).join(' ');
     const isActive = s.id === activeSessionId;
     const label = s.label || s.first_user_text || '(no user message)';
+    const hitsBadge = s._matchedTurns && s._matchedTurns.length
+      ? `<span class="sess-item-hits">${s._matchedTurns.length} hit${s._matchedTurns.length > 1 ? 's' : ''}</span>`
+      : '';
     return `<div class="sess-item${isActive ? ' active' : ''}" data-id="${esc(s.id)}" onclick="loadSession('${esc(s.id)}')">
-      <div>${agentBadge}${srcBadge}</div>
+      <div>${agentBadge}${srcBadge}${hitsBadge}</div>
       <div class="sess-item-preview">${esc(label)}</div>
       <div class="sess-item-meta">${s.user_turns}u ${s.ass_turns}a ${s.tool_calls}t · ${esc(tools)}</div>
     </div>`;
@@ -569,8 +645,10 @@ sessSearchEl.addEventListener('focus', function() {
   ensureCorpus();
 });
 
+let _filterTimer = null;
 sessSearchEl.addEventListener('input', function() {
-  applyFilter();
+  clearTimeout(_filterTimer);
+  _filterTimer = setTimeout(applyFilter, sessionCorpus ? 200 : 0);
 });
 
 document.querySelectorAll('.sess-filter-btn[data-src]').forEach(btn => {
@@ -593,7 +671,11 @@ document.querySelectorAll('.sess-filter-btn[data-agent]').forEach(btn => {
 
 function applyFilter() {
   const q = sessSearchEl.value.trim().toLowerCase();
+  activeQuery = q;
+  matchedTurnsMap = {};
+
   const filtered = allSessions.filter(s => {
+    s._matchedTurns = null;
     const srcOk = activeFilter === 'all' || s.source === activeFilter;
     const agentOk = activeAgentFilter === 'all' || s.agent === activeAgentFilter;
     if (!srcOk || !agentOk) return false;
@@ -606,16 +688,39 @@ function applyFilter() {
       (s.agent || '').includes(q) ||
       Object.keys(s.top_tools || {}).some(t => t.includes(q))
     );
-    // Full content match (if corpus loaded)
-    const contentOk = sessionCorpus
-      ? (sessionCorpus[s.id] || '').toLowerCase().includes(q)
-      : false;
+    // Turn-level content match (if corpus loaded)
+    let contentOk = false;
+    if (sessionCorpus && sessionCorpus[s.id]) {
+      const sess = sessionCorpus[s.id];
+      const turns = sess.turns || [];
+      const matched = [];
+      turns.forEach((t, i) => {
+        const hay = [
+          t.text, t.thinking,
+          ...(t.tool_calls || []).map(c => c.name + ' ' + (typeof c.args === 'object' ? JSON.stringify(c.args) : String(c.args || ''))),
+          ...(t.tool_results || []).map(r => (r.output || '') + (r.error || ''))
+        ].filter(Boolean).join(' ').toLowerCase();
+        if (hay.includes(q)) matched.push(i);
+      });
+      if (matched.length) {
+        s._matchedTurns = matched;
+        matchedTurnsMap[s.id] = matched;
+        contentOk = true;
+      }
+    }
     return metaOk || contentOk;
   });
   renderList(filtered);
   const corpusNote = sessionCorpus ? '' : (corpusLoading ? ' (indexing…)' : '');
   document.getElementById('sess-count').textContent =
     `${filtered.length} / ${allSessions.length} sessions${corpusNote}`;
+
+  // If the currently-viewed session is still visible and has matches, re-render it
+  if (activeSessionId && matchedTurnsMap[activeSessionId]) {
+    updateMatchNav();
+  } else {
+    hideMatchNav();
+  }
 }
 
 // ── Load and render a session ────────────────────────────
@@ -634,7 +739,23 @@ function loadSession(id, turnTarget) {
 
   fetch(`data/sessions/${id}.json`)
     .then(r => r.json())
-    .then(data => renderSession(data, turnTarget))
+    .then(data => {
+      // If there's an active query but no corpus-based matches, compute from fetched data
+      if (activeQuery && !matchedTurnsMap[id] && data.turns) {
+        const q = activeQuery;
+        const matched = [];
+        data.turns.forEach((t, i) => {
+          const hay = [
+            t.text, t.thinking,
+            ...(t.tool_calls || []).map(c => c.name + ' ' + (typeof c.args === 'object' ? JSON.stringify(c.args) : String(c.args || ''))),
+            ...(t.tool_results || []).map(r => (r.output || '') + (r.error || ''))
+          ].filter(Boolean).join(' ').toLowerCase();
+          if (hay.includes(q)) matched.push(i);
+        });
+        if (matched.length) matchedTurnsMap[id] = matched;
+      }
+      renderSession(data, turnTarget);
+    })
     .catch(e => {
       content.innerHTML = `<div class="loading-msg">Error: ${e.message}</div>`;
     });
@@ -645,6 +766,9 @@ function renderSession(data, turnTarget) {
   const content = document.getElementById('sess-content');
   const ts = (data.timestamp || '').slice(0, 16).replace('T', ' ');
   const badge = data.source === 'cron' ? ' [cron]' : ' [session]';
+  const q = activeQuery;
+  const hits = matchedTurnsMap[data.id] || [];
+  const hitSet = new Set(hits);
 
   let html = `<div class="sess-meta-header">
     <span class="sess-meta-id">${esc(data.id)}${esc(badge)} · ${esc(ts)}</span>
@@ -656,6 +780,12 @@ function renderSession(data, turnTarget) {
     const turnId = `turn-${i}`;
     const ts2 = (turn.ts || '').slice(11, 16);
     const role = turn.role || '';
+    const isHit = hitSet.has(i);
+    const hitClass = isHit ? ' search-hit' : '';
+
+    // Choose text render function based on whether this turn is a search hit
+    const renderText = (str) => isHit && q ? highlightQuery(str, q) : escNl(str);
+    const renderPre  = (str) => isHit && q ? highlightQuery(str, q) : esc(str);
 
     let roleClass, roleLabel, summaryText, bodyHtml;
 
@@ -663,7 +793,7 @@ function renderSession(data, turnTarget) {
       roleClass = 'role-user';
       roleLabel = 'USER';
       summaryText = (turn.text || '').slice(0, 120).replace(/\n/g, ' ');
-      bodyHtml = `<p>${escNl(turn.text || '')}</p>`;
+      bodyHtml = `<p>${renderText(turn.text || '')}</p>`;
 
     } else if (role === 'assistant') {
       roleClass = 'role-ass';
@@ -677,11 +807,11 @@ function renderSession(data, turnTarget) {
       if (turn.thinking) {
         parts.push(`<div class="thinking-block">
           <div class="thinking-label">thinking</div>
-          <p>${escNl(turn.thinking)}</p>
+          <p>${renderText(turn.thinking)}</p>
         </div>`);
       }
       if (turn.text) {
-        parts.push(`<p>${escNl(turn.text)}</p>`);
+        parts.push(`<p>${renderText(turn.text)}</p>`);
       }
       for (const tc of (turn.tool_calls || [])) {
         const argsStr = typeof tc.args === 'object'
@@ -689,7 +819,7 @@ function renderSession(data, turnTarget) {
           : String(tc.args);
         parts.push(`<div class="tool-call-block">
           <div class="tool-call-label">🔧 ${esc(tc.name)}</div>
-          <pre>${esc(argsStr)}</pre>
+          <pre>${renderPre(argsStr)}</pre>
         </div>`);
       }
       bodyHtml = parts.join('');
@@ -706,7 +836,7 @@ function renderSession(data, turnTarget) {
         const errLabel = tr.error ? ' ⚠ error' : '';
         parts.push(`<div class="tool-result-block${errClass}">
           <div class="tool-result-label">📤 ${esc(tr.tool)}${errLabel}</div>
-          <pre>${esc((tr.output || '').slice(0, 4000))}</pre>
+          <pre>${renderPre((tr.output || '').slice(0, 4000))}</pre>
         </div>`);
       }
       bodyHtml = parts.join('');
@@ -718,20 +848,27 @@ function renderSession(data, turnTarget) {
       bodyHtml = `<p>${esc(JSON.stringify(turn))}</p>`;
     }
 
+    // Auto-open matching turns, collapse others when searching
+    const autoOpen = isHit && q;
     const deepLink = `#sess-${data.id}/${turnId}`;
-    html += `<div class="turn ${roleClass}" id="${turnId}">
+    html += `<div class="turn ${roleClass}${hitClass}" id="${turnId}">
       <div class="turn-header" onclick="toggleTurn('${turnId}')">
         <span class="turn-role">${roleLabel}</span>
         <span class="turn-ts">${esc(ts2)}</span>
         <span class="turn-summary">${esc(summaryText)}</span>
         <a class="turn-anchor" href="${deepLink}" onclick="history.replaceState(null,'','${deepLink}');event.stopPropagation();return false;" title="Copy link to this turn">¶</a>
       </div>
-      <div class="turn-body" id="${turnId}-body">${bodyHtml}</div>
+      <div class="turn-body${autoOpen ? ' open' : ''}" id="${turnId}-body">${bodyHtml}</div>
     </div>`;
   });
 
   html += '</div>';
   content.innerHTML = html;
+
+  // Set up match navigation for this session
+  currentMatchList = hits;
+  currentMatchIdx = hits.length ? 0 : -1;
+  updateMatchNav();
 
   // Scroll to targeted turn (from #sess-id/turn-N deep link or #turn-N hash)
   const target = turnTarget || (
@@ -743,6 +880,9 @@ function renderSession(data, turnTarget) {
       el.querySelector('.turn-body').classList.add('open');
       setTimeout(() => el.scrollIntoView({ block: 'center' }), 50);
     }
+  } else if (hits.length && q) {
+    // Auto-scroll to first match
+    setTimeout(() => scrollToMatch(0), 50);
   }
 }
 
@@ -769,6 +909,45 @@ function setViewMode(mode) {
   document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
   const map = { normal: 'btn-normal', compact: 'btn-compact', full: 'btn-full' };
   document.getElementById(map[mode]).classList.add('active');
+}
+
+// ── Match navigation ──────────────────────────────────────
+function navMatch(delta) {
+  if (!currentMatchList.length) return;
+  currentMatchIdx = (currentMatchIdx + delta + currentMatchList.length) % currentMatchList.length;
+  scrollToMatch(currentMatchIdx);
+  updateMatchNav();
+}
+
+function scrollToMatch(idx) {
+  if (idx < 0 || idx >= currentMatchList.length) return;
+  const turnIdx = currentMatchList[idx];
+  const turnId = `turn-${turnIdx}`;
+  const el = document.getElementById(turnId);
+  if (!el) return;
+  // Ensure the turn body is expanded
+  const body = el.querySelector('.turn-body');
+  if (body && !body.classList.contains('open')) body.classList.add('open');
+  el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  // Brief flash effect
+  el.style.transition = 'outline 0.15s';
+  el.style.outline = '2px solid #f9a825';
+  setTimeout(() => { el.style.outline = 'none'; }, 800);
+}
+
+function updateMatchNav() {
+  const nav = document.getElementById('match-nav');
+  if (!activeQuery || !currentMatchList.length) {
+    nav.style.display = 'none';
+    return;
+  }
+  nav.style.display = 'flex';
+  document.getElementById('match-count').textContent =
+    `${currentMatchIdx + 1} / ${currentMatchList.length} turns`;
+}
+
+function hideMatchNav() {
+  document.getElementById('match-nav').style.display = 'none';
 }
 
 // ── Copy permalink on ¶ click ─────────────────────────────
@@ -823,6 +1002,13 @@ function esc(str) {
 
 function escNl(str) {
   return esc(str).replace(/\n/g, '<br>');
+}
+
+function highlightQuery(text, query) {
+  // Escape HTML first, then highlight query matches with <mark>
+  const escaped = esc(text);
+  const re = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+  return escaped.replace(re, '<mark>$&</mark>').replace(/\n/g, '<br>');
 }
 
 </script>

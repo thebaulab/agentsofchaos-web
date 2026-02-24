@@ -48,6 +48,10 @@ window.FNDATA=["<a href=\"https://github.com/openclaw/openclaw\">https://github.
       #sidebar-toc  { top: 46px !important; height: calc(100vh - 46px) !important; }
       #sidebar-search { top: 46px !important; height: calc(100vh - 46px) !important; }
     }
+    @media screen and (max-width: 640px) {
+      #topbar-nav { padding: 0 12px; }
+      #topbar-nav .tb-links a { font-size: .68rem; padding: 4px 6px; }
+    }
     body { padding-top: 46px !important; }
   </style>
 </head>
@@ -1888,6 +1892,9 @@ experience in Appendix <a href="#sec:email">[ref]</a>. <a href="#fnref4">↩</a
   border: 1px solid transparent;
   transition: opacity .15s;
   white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .cs-src-link:hover { opacity: .75; }
 .cs-src-discord {

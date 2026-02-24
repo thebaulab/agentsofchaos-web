@@ -33,21 +33,23 @@
     html { scroll-behavior: smooth; }
     body { font-family: var(--serif); color: var(--text); background: var(--bg); font-size: 17px; line-height: 1.6; }
 
-    /* ── TOPBAR ──────────────────────────────── */
+    /* ── TOPBAR (matches style.css shared topbar) ── */
     .topbar {
-      background: var(--burg3); color: #fff; padding: 0 28px;
+      background: #4a1e1e; color: #fff; padding: 0 24px;
       display: flex; align-items: center; justify-content: space-between;
-      height: 46px; position: sticky; top:0; z-index: 100;
-      border-bottom: 2px solid #3a1414;
+      height: 46px; z-index: 100;
+      border-bottom: 2px solid #3a1414; flex-shrink: 0;
     }
-    .topbar-title { font-family: var(--serif); font-size: .95rem; font-weight: 600; letter-spacing: .03em; }
+    .topbar-title { font-family: var(--serif); font-size: .95rem; font-weight: 600; letter-spacing: .03em; white-space: nowrap; color: #fff; }
     .topbar-links { display: flex; gap: 4px; }
     .topbar-links a {
-      color: rgba(255,255,255,.6); text-decoration: none; font-family: var(--sans);
-      font-size: .75rem; font-weight: 500; padding: 4px 10px; border-radius: var(--radius); transition: .15s;
+      color: rgba(255,255,255,.6); text-decoration: none; border-bottom: none;
+      font-size: .75rem; font-weight: 500; padding: 4px 10px; border-radius: 4px;
+      transition: color .15s, background .15s;
     }
-    .topbar-links a:hover { color:#fff; background: rgba(255,255,255,.12); }
-    .topbar-links a.current { color:#fff; background: rgba(255,255,255,.18); }
+    .topbar-links a:hover { color:#fff; background: rgba(255,255,255,.12); border-bottom: none; }
+    .topbar-links a.current { color:#fff; background: rgba(255,255,255,.18); border-bottom: none; }
+    .topbar-links a.topbar-home { color: rgba(255,255,255,.85); margin-right: 8px; padding-right: 14px; border-right: 1px solid rgba(255,255,255,.2); }
 
     /* ── LAYOUT ──────────────────────────────── */
     .page { max-width: 1300px; margin: 0 auto; padding: 0 24px 100px; }
@@ -338,7 +340,7 @@
 <div class="topbar">
   <div class="topbar-title">Agents of Chaos — Memory Dashboard</div>
   <div class="topbar-links">
-    <a href="index.html">Landing Page</a>
+    <a href="index.html" class="topbar-home">Landing Page</a>
     <a href="report.html">Report</a>
     <a href="logs.html">Discord</a>
     <a href="sessions.html">Sessions</a>

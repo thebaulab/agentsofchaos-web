@@ -2,7 +2,6 @@
 paper/
 
 # Development scripts and local files (not part of deployed site)
-scripts/
 proofreading/
 cloudflare-redirect/
 README.md

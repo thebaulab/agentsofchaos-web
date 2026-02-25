@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agents of Chaos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Source+Code+Pro:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<!-- INLINE_DATA -->
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Report needs fixed topbar for long-scroll paper */
+    .topbar { position: fixed; top: 0; left: 0; right: 0; z-index: 200; }
+    @media screen and (min-width: 1200px) {
+      #sidebar-toc  { top: 46px !important; height: calc(100vh - 46px) !important; }
+      #sidebar-search { top: 46px !important; height: calc(100vh - 46px) !important; }
+    }
+    @media screen and (max-width: 640px) {
+      .topbar { padding: 0 12px; }
+      .topbar-links a { font-size: .68rem; padding: 4px 6px; }
+    }
+    body { padding-top: 46px !important; }
+  </style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-title">Agents of Chaos</div>
+  <div class="topbar-links">
+    <a href="index.html" class="topbar-home">Landing Page</a>
+    <a href="report.html" class="current">Report</a>
+    <a href="logs.html">Discord</a>
+    <a href="sessions.html">Sessions</a>
+    <a href="dashboard.html">Dashboard</a>
+  </div>
+</div>
+<nav id="sidebar-toc" aria-label="Table of contents">
+  <div class="sidebar-title">Contents</div>
+  <ul id="sidebar-toc-list"></ul>
+</nav>
+<aside id="sidebar-search" aria-label="Search">
+  <div class="sidebar-title">Search</div>
+  <input type="text" id="search-input" placeholder="Search the paper...">
+  <div id="search-results" style="flex:1"></div>
+  <div style="padding:14px 0 4px;border-top:1px solid var(--border,#c8bfa8);font-size:.7rem;color:var(--muted,#7a6a5a);flex-shrink:0">
+    Created with <a href="https://claude.ai/code" style="color:inherit;text-decoration:underline">Claude Code</a>
+  </div>
+</aside>
+<main id="guide-content">
+
+<h1>Agents of Chaos</h1>
+<p class="authors-names">
+Natalie Shapira<sup>1</sup>&thinsp;
+Andy Arditi<sup>1</sup>&thinsp;
+Chris Wendler<sup>1</sup>&thinsp;
+Avery Yen<sup>1</sup><br>
+Gabriele Sarti<sup>1</sup>&thinsp;
+Koyena Pal<sup>1</sup>&thinsp;
+Olivia Floody<sup>2</sup>&thinsp;
+Adam Belfki<sup>1</sup>&thinsp;
+Alex Loftus<sup>1</sup><br>
+Aditya Ratan Jannali<sup>2</sup>&thinsp;
+Nikhil Prakash<sup>1</sup>&thinsp;
+Jasmine Cui<sup>2</sup>&thinsp;
+Giordano Rogers<sup>1</sup><br>
+Jannik Brinkmann<sup>14</sup>&thinsp;
+Can Rager<sup>2</sup>&thinsp;
+Amir Zur<sup>3</sup>&thinsp;
+Michael Ripa<sup>1</sup>&thinsp;
+Aruna Sankaranarayanan<sup>8</sup><br>
+David Atkinson<sup>1</sup>&thinsp;
+Rohit Gandikota<sup>1</sup>&thinsp;
+Jaden Fiotto-Kaufman<sup>1</sup>&thinsp;
+EunJeong Hwang<sup>4,13</sup><br>
+Hadas Orgad<sup>5</sup>&thinsp;
+P Sam Sahil<sup>2</sup>&thinsp;
+Negev Taglicht<sup>2</sup>&thinsp;
+Tomer Shabtay<sup>2</sup>&thinsp;
+Atai Ambus<sup>2</sup><br>
+Nitay Alon<sup>6,7</sup>&thinsp;
+Shiri Oron<sup>2</sup>&thinsp;
+Ayelet Gordon-Tapiero<sup>6</sup>&thinsp;
+Yotam Kaplan<sup>6</sup>&thinsp;
+Vered Shwartz<sup>4,13</sup><br>
+Tamar Rott Shaham<sup>8</sup>&thinsp;
+Christoph Riedl<sup>1</sup>&thinsp;
+Reuth Mirsky<sup>9</sup>&thinsp;
+Maarten Sap<sup>10</sup><br>
+David Manheim<sup>11,12</sup>&thinsp;
+Tomer Ullman<sup>5</sup>&thinsp;
+David Bau<sup>1</sup>
+</p>
+<p class="authors-affiliations">
+<span style="white-space:nowrap"><sup>1</sup>&thinsp;Northeastern University</span> &ensp;
+<span style="white-space:nowrap"><sup>2</sup>&thinsp;Independent Researcher</span> &ensp;
+<span style="white-space:nowrap"><sup>3</sup>&thinsp;Stanford University</span> &ensp;
+<span style="white-space:nowrap"><sup>4</sup>&thinsp;University of British Columbia</span> &ensp;
+<span style="white-space:nowrap"><sup>5</sup>&thinsp;Harvard University</span> &ensp;
+<span style="white-space:nowrap"><sup>6</sup>&thinsp;Hebrew University</span> &ensp;
+<span style="white-space:nowrap"><sup>7</sup>&thinsp;Max Planck Institute for Biological Cybernetics</span> &ensp;
+<span style="white-space:nowrap"><sup>8</sup>&thinsp;MIT</span> &ensp;
+<span style="white-space:nowrap"><sup>9</sup>&thinsp;Tufts University</span> &ensp;
+<span style="white-space:nowrap"><sup>10</sup>&thinsp;Carnegie Mellon University</span> &ensp;
+<span style="white-space:nowrap"><sup>11</sup>&thinsp;Alter</span> &ensp;
+<span style="white-space:nowrap"><sup>12</sup>&thinsp;Technion</span> &ensp;
+<span style="white-space:nowrap"><sup>13</sup>&thinsp;Vector Institute</span> &ensp;
+<span style="white-space:nowrap"><sup>14</sup>&thinsp;University of Mannheim</span>
+</p>
+<p class="authors-affiliations">Corresponding author: Natalie Shapira (<a href="mailto:nd1234@gmail.com">nd1234@gmail.com</a>)</p>
+<p class="paper-links">
+  <a href="logs.html">📜 Browse Interaction Logs</a>
+</p>
+<hr>
+
+<!-- BODY -->
+
+<!-- FOOTNOTES -->
+
+<!-- BIBLIOGRAPHY -->
+
+</main>
+<script>
+// ── TOC generation ──────────────────────────────────────────────────────────
+(function() {
+  const toc = document.getElementById('sidebar-toc-list');
+  const headings = Array.from(document.querySelectorAll('main h2, main h3'));
+  headings.forEach(h => {
+    const li = document.createElement('li');
+    li.className = h.tagName === 'H2' ? 'toc-part' : 'toc-chapter';
+    const a = document.createElement('a');
+    a.href = '#' + (h.id || '');
+    a.textContent = h.textContent.replace(/\[\d+\]/g, '').trim();
+    li.appendChild(a);
+    toc.appendChild(li);
+  });
+
+  // Active section highlighting: track which section we're currently scrolled into
+  function updateActiveToc() {
+    const threshold = window.scrollY + window.innerHeight * 0.25;
+    let active = null;
+    for (const h of headings) {
+      if (h.getBoundingClientRect().top + window.scrollY <= threshold) active = h;
+      else break;
+    }
+    toc.querySelectorAll('li').forEach(li => li.classList.remove('active'));
+    if (active) {
+      const link = toc.querySelector(`a[href="#${active.id}"]`);
+      if (link) {
+        link.parentElement.classList.add('active');
+        link.scrollIntoView({ block: 'nearest' });
+      }
+    }
+  }
+  window.addEventListener('scroll', updateActiveToc, { passive: true });
+  updateActiveToc();
+})();
+
+// ── Search ──────────────────────────────────────────────────────────────────
+(function() {
+  const input = document.getElementById('search-input');
+  const results = document.getElementById('search-results');
+  const content = document.getElementById('guide-content');
+
+  function clearHighlights() {
+    content.querySelectorAll('.search-highlight').forEach(el => {
+      el.replaceWith(el.textContent);
+    });
+    content.normalize(); // merge fragmented text nodes left by replaceWith()
+  }
+
+  function highlight(node, re) {
+    if (node.nodeType === 3) {
+      const text = node.textContent;
+      re.lastIndex = 0; // reset stateful g-flag regex before each text node test
+      if (!re.test(text)) return;
+      re.lastIndex = 0; // reset again before replace() uses it
+      const frag = document.createDocumentFragment();
+      let last = 0;
+      text.replace(re, (match, offset) => {
+        frag.appendChild(document.createTextNode(text.slice(last, offset)));
+        const mark = document.createElement('mark');
+        mark.className = 'search-highlight';
+        mark.textContent = match;
+        frag.appendChild(mark);
+        last = offset + match.length;
+      });
+      frag.appendChild(document.createTextNode(text.slice(last)));
+      node.parentNode.replaceChild(frag, node);
+    } else if (node.nodeType === 1 && !['SCRIPT','STYLE'].includes(node.tagName)) {
+      [...node.childNodes].forEach(c => highlight(c, re));
+    }
+  }
+
+  // Find the last h2/h3 that precedes `node` in document order
+  function findPrecedingHeading(node) {
+    const allH = Array.from(document.querySelectorAll('main h2, main h3'));
+    let result = null;
+    for (const h of allH) {
+      if (h.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING) result = h;
+      else break;
+    }
+    return result;
+  }
+
+  input.addEventListener('input', () => {
+    const q = input.value.trim();
+    clearHighlights();
+    results.innerHTML = '';
+    if (q.length < 2) return;
+
+    const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+    highlight(content, re);
+
+    // One result per section — keyed by preceding heading id
+    const marks = Array.from(content.querySelectorAll('.search-highlight'));
+    const sectionMap = new Map();
+
+    marks.forEach(mark => {
+      const heading = findPrecedingHeading(mark);
+      const hId = heading?.id || '_top';
+      if (!sectionMap.has(hId)) {
+        const para = mark.closest('p, li, td, blockquote') || mark.parentElement;
+        const paraText = para?.textContent || '';
+        const idx = paraText.indexOf(mark.textContent);
+        const start = Math.max(0, idx - 40);
+        const end = Math.min(paraText.length, idx + mark.textContent.length + 40);
+        sectionMap.set(hId, {
+          heading,
+          firstMark: mark,
+          snippet: (start > 0 ? '…' : '') + paraText.slice(start, end) + (end < paraText.length ? '…' : '')
+        });
+      }
+    });
+
+    if (sectionMap.size === 0) {
+      results.innerHTML = '<div class="search-empty">No results</div>';
+      return;
+    }
+
+    const frag = document.createDocumentFragment();
+    for (const [, info] of sectionMap) {
+      const a = document.createElement('a');
+      a.className = 'search-result';
+      a.href = info.heading ? '#' + info.heading.id : '#';
+
+      const t = document.createElement('span');
+      t.className = 'search-result-title';
+      t.textContent = (info.heading?.textContent || '(top)').replace(/\[\d+\]/g, '').trim();
+
+      const s = document.createElement('span');
+      s.className = 'search-result-snippet';
+      s.textContent = info.snippet;
+
+      a.appendChild(t); a.appendChild(s);
+
+      // Click: snap to section heading, then smooth-scroll to first match
+      a.addEventListener('click', ev => {
+        ev.preventDefault();
+        const h = info.heading;
+        const m = info.firstMark;
+        if (h) {
+          h.scrollIntoView({ behavior: 'instant', block: 'start' });
+          setTimeout(() => m.scrollIntoView({ behavior: 'smooth', block: 'center' }), 80);
+        } else {
+          m.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      });
+
+      frag.appendChild(a);
+    }
+    results.appendChild(frag);
+  });
+})();
+</script>
+
+<!-- ── Evidence annotation engine + hover previews ─────────────────────── -->
+<style>
+.ev-badge {
+  display: inline-flex; gap: 2px; margin-left: 4px; vertical-align: middle;
+  font-size: 0.72em; white-space: nowrap;
+}
+.ev-link {
+  display: inline-flex; align-items: center; gap: 2px;
+  padding: 1px 5px; border-radius: 10px;
+  text-decoration: none; font-weight: 500; line-height: 1.4;
+  border: 1px solid transparent; cursor: pointer;
+  transition: opacity .15s;
+}
+.ev-link:hover { opacity: .75; }
+.ev-discord { background: #eef3ff; color: #4a6fa5; border-color: #c5d3ef; }
+.ev-session { background: #fff7e6; color: #8a5a00; border-color: #f0d9a0; }
+.ev-sugg    { background: #fef0f0; color: #9b2020; border-color: #f0c5c5; }
+.ev-highlight { background: #fff0b3; border-radius: 2px; padding: 0 1px; }
+
+/* ── Hover preview popover ── */
+#ev-popover {
+  position: fixed; z-index: 9999; display: none;
+  max-width: 340px; min-width: 200px;
+  background: #fffff8;
+  border: 1px solid #c8b88a;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(107,44,44,.2);
+  padding: 10px 14px;
+  font-family: 'EB Garamond', Georgia, serif;
+  font-size: 0.86em; line-height: 1.5;
+  pointer-events: none;
+}
+.evp-hdr {
+  font-weight: 600; color: #6b2c2c;
+  margin-bottom: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.evp-meta {
+  font-size: 0.85em; color: #999;
+  margin-bottom: 6px; border-bottom: 1px solid #e8dcc8; padding-bottom: 4px;
+}
+.evp-role {
+  font-size: 0.78em; color: #8a5a00; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .06em; margin-bottom: 2px;
+}
+.evp-body {
+  color: #333; white-space: pre-wrap; word-break: break-word;
+  max-height: 130px; overflow: hidden;
+}
+
+/* ── Case-study source bars ── */
+.cs-sources {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+  margin: 0.5em 0 1.2em 0;
+  padding: 6px 10px;
+  background: #f9f5ed;
+  border-left: 3px solid #c8b88a;
+  border-radius: 0 4px 4px 0;
+  font-size: 0.82em;
+}
+.cs-sources-label {
+  color: #999; font-weight: 500; white-space: nowrap;
+}
+.cs-src-link {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 12px;
+  text-decoration: none; font-weight: 500;
+  border: 1px solid transparent;
+  transition: opacity .15s;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cs-src-link:hover { opacity: .75; }
+.cs-src-discord {
+  background: #eef3ff; color: #4a6fa5; border-color: #c5d3ef;
+}
+.cs-src-session {
+  background: #fff7e6; color: #8a5a00; border-color: #f0d9a0;
+}
+</style>
+<script>
+// ── Evidence annotation engine + hover previews ──────────────────────────
+(function() {
+  // Data is inlined at build time in window.EVDATA — no fetches needed
+  const D = window.EVDATA || {};
+  const annotations = D.annotations || [];
+  const msgIndex    = D.msgIndex    || {};
+  const sessMap     = D.sessMap     || {};
+  const sessCache   = {};
+
+  // ── Popover singleton ────────────────────────────────────────────────────
+  const pop = document.createElement('div');
+  pop.id = 'ev-popover';
+  document.body.appendChild(pop);
+  let hideTimer = null;
+
+  function escH(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  function trunc(s, n) {
+    s = (s || '').trim();
+    return s.length > n ? s.slice(0, n).trimEnd() + '\u2026' : s;
+  }
+  function positionPop(a) {
+    const r = a.getBoundingClientRect();
+    const pw = pop.offsetWidth, ph = pop.offsetHeight;
+    let left = r.left + r.width / 2 - pw / 2;
+    let top  = r.top - ph - 10;
+    if (top < 8) top = r.bottom + 8;
+    left = Math.max(8, Math.min(left, window.innerWidth - pw - 8));
+    pop.style.left = left + 'px';
+    pop.style.top  = top  + 'px';
+  }
+  function showPop(a, html) {
+    clearTimeout(hideTimer);
+    pop.innerHTML = html;
+    pop.style.display = 'block';
+    positionPop(a);
+  }
+  function hidePop() {
+    hideTimer = setTimeout(() => { pop.style.display = 'none'; }, 160);
+  }
+
+  function renderSessPop(a, lnk, data, turnIdx) {
+    const agent = escH(data.agent || '');
+    const ts    = escH((data.timestamp || '').slice(0, 16).replace('T', ' '));
+    const sid   = escH((lnk.id || '').slice(0, 8));
+    let body = '';
+    if (turnIdx !== null && data.turns && data.turns[turnIdx]) {
+      const t = data.turns[turnIdx];
+      body = `<div class="evp-role">${escH(t.role)}</div>` +
+             `<div class="evp-body">${escH(trunc(t.text || '', 320))}</div>`;
+    } else if (data.turns) {
+      const t = data.turns.find(x => x.role === 'assistant');
+      if (t) body = `<div class="evp-role">assistant</div>` +
+                    `<div class="evp-body">${escH(trunc(t.text || '', 320))}</div>`;
+    }
+    showPop(a,
+      `<div class="evp-hdr">🤖 ${agent}</div>` +
+      `<div class="evp-meta">Session ${sid}${turnIdx !== null ? ' · turn ' + turnIdx : ''} · ${ts}</div>` +
+      body
+    );
+  }
+
+  function attachHover(a, lnk) {
+    a.addEventListener('mouseenter', () => {
+      clearTimeout(hideTimer);
+      if (lnk.type === 'discord_msg') {
+        const m = msgIndex[lnk.id];
+        if (!m) {
+          showPop(a,
+            `<div class="evp-hdr">💬 Discord message</div>` +
+            `<div class="evp-meta">${escH(lnk.label || lnk.id)}</div>`);
+          return;
+        }
+        showPop(a,
+          `<div class="evp-hdr">💬 #${escH(m.channel)}</div>` +
+          `<div class="evp-meta">${escH(m.author)} · ${escH(m.ts)}</div>` +
+          `<div class="evp-body">${escH(trunc(m.content, 320))}</div>`
+        );
+      } else if (lnk.type === 'discord_channel') {
+        showPop(a,
+          `<div class="evp-hdr">💬 ${escH(lnk.label || lnk.id)}</div>` +
+          `<div class="evp-meta">Discord channel log</div>`
+        );
+      } else if (lnk.type === 'session') {
+        const turnMatch = (a.getAttribute('href') || '').match(/\/turn-(\d+)/);
+        const turnIdx   = turnMatch ? +turnMatch[1] : null;
+        const prefix  = (lnk.id || '').slice(0, 8);
+        const fullId  = sessMap[prefix] || prefix;
+        if (sessCache[fullId]) {
+          renderSessPop(a, lnk, sessCache[fullId], turnIdx);
+          return;
+        }
+        showPop(a,
+          `<div class="evp-hdr">🤖 Session ${escH(prefix)}</div>` +
+          `<div class="evp-meta">Loading\u2026</div>`
+        );
+        fetch(`data/sessions/${fullId}.json`)
+          .then(r => r.json())
+          .then(d => { sessCache[fullId] = d; renderSessPop(a, lnk, d, turnIdx); })
+          .catch(() => showPop(a,
+            `<div class="evp-hdr">🤖 Session ${escH(prefix)}</div>` +
+            `<div class="evp-meta">Could not load session data</div>`
+          ));
+      }
+    });
+    a.addEventListener('mouseleave', hidePop);
+  }
+
+  // ── Annotation injection ─────────────────────────────────────────────────
+  annotations.forEach(ann => {
+    const text = ann.find_text;
+    if (!text) return;
+    const walker = document.createTreeWalker(
+      document.getElementById('guide-content'),
+      NodeFilter.SHOW_TEXT, null
+    );
+    let node;
+    while (node = walker.nextNode()) {
+      const idx = node.textContent.indexOf(text);
+      if (idx === -1) continue;
+      const before = node.textContent.slice(0, idx);
+      const match  = node.textContent.slice(idx, idx + text.length);
+      const after  = node.textContent.slice(idx + text.length);
+      const frag   = document.createDocumentFragment();
+      if (before) frag.appendChild(document.createTextNode(before));
+      const span = document.createElement('span');
+      span.className = 'ev-highlight';
+      span.textContent = match;
+      frag.appendChild(span);
+      const badge = document.createElement('span');
+      badge.className = 'ev-badge';
+      ann.links.forEach(lnk => {
+        const a = document.createElement('a');
+        if (lnk.type === 'discord_msg') {
+          a.href      = `logs.html#msg-${lnk.id}`;
+          a.className = 'ev-link ev-discord';
+          a.textContent = '💬';
+          a.title = lnk.label;
+          attachHover(a, lnk);
+        } else if (lnk.type === 'discord_channel') {
+          a.href      = `logs.html#${lnk.id}`;
+          a.className = 'ev-link ev-discord';
+          a.textContent = '💬';
+          a.title = lnk.label;
+          attachHover(a, lnk);
+        } else if (lnk.type === 'session') {
+          const turnSuffix = lnk.turn ? `/${lnk.turn}` : '';
+          a.href      = `sessions.html#sess-${lnk.id}${turnSuffix}`;
+          a.className = 'ev-link ev-session';
+          a.textContent = '🤖';
+          a.title = lnk.label;
+          attachHover(a, lnk);
+        } else if (lnk.type === 'suggestion') {
+          a.href      = `suggestions.html#sugg-${lnk.sugg_id}`;
+          a.className = 'ev-link ev-sugg';
+          a.textContent = '✏️';
+          a.title = lnk.label || 'Edit suggestion';
+        }
+        a.target = '_blank';
+        a.rel = 'noopener';
+        badge.appendChild(a);
+      });
+      frag.appendChild(badge);
+      if (after) frag.appendChild(document.createTextNode(after));
+      node.parentNode.replaceChild(frag, node);
+      break; // annotate only first occurrence
+    };
+  });
+
+  // ── Source-bar hover previews ─────────────────────────────────────────────
+  document.querySelectorAll('.cs-src-discord[data-msg-id]').forEach(a => {
+    const msgId = a.getAttribute('data-msg-id');
+    const fakeLnk = { type: 'discord_msg', id: msgId, label: a.textContent.trim() };
+    attachHover(a, fakeLnk);
+  });
+  document.querySelectorAll('.cs-src-session[data-sess-id]').forEach(a => {
+    const sessId = a.getAttribute('data-sess-id');
+    const turn   = a.getAttribute('data-turn');
+    const fakeLnk = { type: 'session', id: sessId, label: a.textContent.trim(), turn: turn ? `turn-${turn}` : null };
+    attachHover(a, fakeLnk);
+  });
+
+
+  // Auto-label [ref] links with figure numbers / section names
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    if (a.textContent.trim() !== '[ref]') return;
+    const id = a.getAttribute('href').slice(1);
+    const target = document.getElementById(id);
+    if (!target) return;
+    if (id.startsWith('fig:')) {
+      const figNum = target.querySelector('.fig-num');
+      if (figNum) {
+        const m = figNum.textContent.match(/\d+/);
+        if (m) { a.textContent = 'Figure\u00a0' + m[0]; }
+      }
+    } else if (id.startsWith('sec:')) {
+      let heading = /^H[1-6]$/.test(target.tagName) ? target
+                  : target.closest('h1,h2,h3,h4,h5,h6')
+                  || target.querySelector('h1,h2,h3,h4,h5,h6');
+      if (!heading) {
+        let sib = target.previousElementSibling;
+        while (sib && !/^H[1-6]$/.test(sib.tagName)) sib = sib.previousElementSibling;
+        heading = sib;
+      }
+      if (!heading) {
+        let sib = target.nextElementSibling;
+        while (sib && !/^H[1-6]$/.test(sib.tagName)) sib = sib.nextElementSibling;
+        heading = sib;
+      }
+      if (heading) {
+        const txt = heading.textContent.trim();
+        a.textContent = txt.length > 35 ? txt.slice(0, 33) + '\u2026' : txt;
+      }
+    }
+  });
+})();
+</script>
+
+<script>
+// ── Citation & Footnote Tooltips + Bibliography Numbering ─────────────────
+(function() {
+  var tip = document.createElement('div');
+  tip.id = 'cite-tip';
+  document.body.appendChild(tip);
+  var timer = null;
+  var B = window.BIBDATA || {};
+  var F = window.FNDATA || [];
+
+  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  // Trim author lists: >3 authors → "First et al."
+  function trimAuthors(s) {
+    if (!s) return '';
+    if (s.indexOf(',') === -1 && s.indexOf(' and ') === -1) return s;
+    var parts = s.replace(/,?\s+and\s+/g, ', ').split(/,\s*/);
+    if (parts.length > 3) return parts[0] + ' et al.';
+    if (parts.length === 3) return parts[0] + ', ' + parts[1] + ', and ' + parts[2];
+    if (parts.length === 2) return parts[0] + ' and ' + parts[1];
+    return s;
+  }
+
+  // Extract URL from bibliography DOM entry
+  function getBibUrl(citeKey) {
+    var li = document.getElementById('ref-' + citeKey);
+    if (!li) return null;
+    var a = li.querySelector('.bib-url');
+    return a ? a.href : null;
+  }
+
+  function show(el) {
+    clearTimeout(timer);
+    tip.classList.add('visible');
+    var r = el.getBoundingClientRect();
+    var tw = tip.offsetWidth, th = tip.offsetHeight;
+    var left = r.left + r.width / 2 - tw / 2;
+    var top = r.top - th - 8;
+    if (top < 8) top = r.bottom + 8;
+    left = Math.max(8, Math.min(left, innerWidth - tw - 8));
+    tip.style.left = left + 'px';
+    tip.style.top = top + 'px';
+  }
+
+  function hide() { timer = setTimeout(function() { tip.classList.remove('visible'); }, 160); }
+
+  tip.addEventListener('mouseenter', function() { clearTimeout(timer); });
+  tip.addEventListener('mouseleave', hide);
+
+  // ── Citation tooltips ──────────────────────────────────────────────────
+  document.querySelectorAll('a.citation[data-cite-key]').forEach(function(a) {
+    a.addEventListener('mouseenter', function() {
+      tip.className = 'ct-citation';
+      tip.id = 'cite-tip';
+      var key = a.getAttribute('data-cite-key');
+      var b = B[key];
+      if (!b) return;
+      var h = '<span class="ct-num">[' + b.n + ']</span>';
+      h += '<span class="ct-authors">' + esc(trimAuthors(b.a)) + '</span>';
+      if (b.t) h += '<span class="ct-title">' + esc(b.t) + '</span>';
+      var v = [b.v, b.y].filter(Boolean).join(', ');
+      if (v) h += '<span class="ct-venue">' + esc(v) + '</span>';
+      var url = getBibUrl(key);
+      if (url) h += '<span class="ct-url"><a href="' + esc(url) + '" target="_blank" rel="noopener">Link ↗</a></span>';
+      tip.innerHTML = h;
+      show(a);
+    });
+    a.addEventListener('mouseleave', hide);
+  });
+
+  // ── Footnote tooltips ──────────────────────────────────────────────────
+  document.querySelectorAll('sup.footnote-ref[data-fn]').forEach(function(sup) {
+    sup.addEventListener('mouseenter', function() {
+      tip.className = 'ct-footnote';
+      tip.id = 'cite-tip';
+      var i = +sup.getAttribute('data-fn');
+      if (!F[i - 1]) return;
+      tip.innerHTML = '<span class="ct-fn-body">' + F[i - 1] + '</span>';
+      show(sup);
+    });
+    sup.addEventListener('mouseleave', hide);
+  });
+
+  // ── Bibliography numbering + sort ──────────────────────────────────────
+  var refNumMap = {};
+  for (var key in B) {
+    if (B.hasOwnProperty(key)) refNumMap['ref-' + key] = B[key].n;
+  }
+  document.querySelectorAll('.bib-entry').forEach(function(li) {
+    var n = refNumMap[li.id];
+    if (n == null) return;
+    var span = document.createElement('span');
+    span.className = 'bib-num';
+    span.textContent = '[' + n + ']';
+    li.insertBefore(span, li.firstChild);
+  });
+  // Sort entries in the list by citation number
+  var bibList = document.querySelector('.bib-list');
+  if (bibList) {
+    var entries = Array.from(bibList.querySelectorAll('.bib-entry'));
+    entries.sort(function(a, b) {
+      return (refNumMap[a.id] || 999) - (refNumMap[b.id] || 999);
+    });
+    entries.forEach(function(li) { bibList.appendChild(li); });
+  }
+})();
+</script>
+</body>
+</html>

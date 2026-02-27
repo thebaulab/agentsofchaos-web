@@ -14,7 +14,7 @@
   --color-code-bg: #f5f0e8;
   --color-table-border: #c4a882;
   --color-table-stripe: #fcfaf5;
-  --color-link: #4a2020;
+  --color-link: #8b3a3a;
   --color-blockquote-border: #c4a882;
   --color-blockquote-bg: #faf6ef;
 }
@@ -104,8 +104,8 @@ h4 { font-size: 1.05em; margin-top: 1.5em; }
 p { margin: 0.8em 0; hyphens: auto; -webkit-hyphens: auto; }
 
 /* ── Links ────────────────────────────────────────────────── */
-a { color: var(--color-link); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
-a:hover { border-bottom-color: var(--color-link); }
+a { color: var(--color-link); text-decoration: underline; text-decoration-color: rgba(139, 58, 58, 0.35); text-underline-offset: 2px; transition: text-decoration-color 0.15s; }
+a:hover { text-decoration-color: var(--color-link); }
 
 /* ── Abstract ─────────────────────────────────────────────── */
 .abstract {

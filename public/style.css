@@ -340,6 +340,38 @@ blockquote {
   font-style: italic;
 }
 
+/* ── Key Finding highlight box ────────────────────────────── */
+.env-keyfinding {
+  position: relative;
+  margin: 1.8em 0;
+  padding: 1.2em 1.5em;
+  background: #fdf9f0;
+  border-left: 4px solid #b48232;
+  border-radius: 0 4px 4px 0;
+  box-shadow: 0 1px 4px rgba(140, 100, 40, 0.08);
+}
+
+.env-keyfinding p {
+  margin: 0.4em 0;
+}
+
+.env-keyfinding p:first-child {
+  margin-top: 0;
+}
+
+.env-keyfinding p:last-child {
+  margin-bottom: 0;
+}
+
+.env-keyfinding a {
+  color: #9a6414;
+  text-decoration-color: rgba(154, 100, 20, 0.4);
+}
+
+.env-keyfinding a:hover {
+  text-decoration-color: #9a6414;
+}
+
 /* ── HR ────────────────────────────────────────────────────── */
 hr {
   border: none;

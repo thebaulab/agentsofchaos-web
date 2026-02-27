@@ -895,20 +895,12 @@ def convert_block(text, refs, paper_dir):
                     if candidate.exists():
                         src = src + ext
                         break
+            # Browsers can't display PDF images inline; use PNG version
+            if src.endswith(".pdf"):
+                src = src[:-4] + ".png"
             imgs.append(src)
 
         id_attr = f' id="{label}"' if label else ""
-
-        # Interactive dashboard embed
-        if label == "fig:MD_file_edits.png":
-            parts = [f'<figure{id_attr} style="margin: 0; padding: 0;">']
-            parts.append('<iframe src="https://bots.baulab.info/dashboard/" width="100%" height="480" '
-                         'style="border: 1px solid var(--color-rule); border-radius: 4px; display: block;" '
-                         'loading="lazy" title="Interactive MD file edit dashboard"></iframe>')
-            if caption_html:
-                parts.append(f"<figcaption><span class='fig-num'>Figure {fig_num}.</span> {caption_html}</figcaption>")
-            parts.append("</figure>")
-            return "\n".join(parts)
 
         html_parts = [f"<figure{id_attr}>"]
         for src in imgs:

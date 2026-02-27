@@ -1127,7 +1127,7 @@ Clément Dumas, Alice Rigg and Ori Shapira for their time to listen to research,
 <span id="sec:openclaw_config"></span>
 <p>This appendix describes the OpenClaw workspace files and memory system in detail. All claims are sourced from the official OpenClaw documentation (version 2026.2.9); we provide inline links throughout.</p>
 <figure id="fig:architecture">
-<img src="image_assets/setup/architecture_overview.pdf" alt="">
+<img src="image_assets/setup/architecture_overview.png" alt="">
 <figcaption><span class='fig-num'>Figure 21.</span> <strong>Agent Architecture.</strong> The owner deploys one or multiple agent scaffolds on a dedicated virtual machine (VM) on their server. Each agent scaffold is connected to an LLM API and has access to memory and tool APIs. The memory is structured as configuration files defining character, actions and skills. Agents have the ability to modify their configuration. Agents can interact externally via tool APIs. The owner primarily interacts with their agent via discord, a range of communication tools allow the agent to interact with other users across platforms.
     </figcaption>
 </figure>
@@ -1159,11 +1159,7 @@ Clément Dumas, Alice Rigg and Ori Shapira for their time to listen to research,
 <p>For guidance on when to use each mechanism, see <a href="https://docs.openclaw.ai/automation/cron-vs-heartbeat">Cron vs Heartbeat</a> in the OpenClaw documentation.</p>
 <h4 id="visualization-of-md-file-edits">Visualization of MD File Edits</h4>
 <span id="sec:md_vis"></span>
-Figure <a href="#fig:MD_file_edits.png">[ref]</a> shows a timeline of every edit Ash made to workspace markdown files throughout the study. An interactive version of this visualization—showing exact diffs per file per day—is available in the <a href="https://agentsofchaos.baulab.info/dashboard.html">Memory Dashboard</a>.
-<figure id="fig:MD_file_edits.png" style="margin: 0; padding: 0;">
-<iframe src="https://bots.baulab.info/dashboard/" width="100%" height="480" style="border: 1px solid var(--color-rule); border-radius: 4px; display: block;" loading="lazy" title="Interactive MD file edit dashboard"></iframe>
-<figcaption><span class='fig-num'>Figure 22.</span> Ash’s markdown file edits across the study period. Explore the full interactive timeline at <a href="https://agentsofchaos.baulab.info/dashboard.html">https://agentsofchaos.baulab.info/dashboard.html</a>.</figcaption>
-</figure>
+A timeline of every edit Ash made to workspace markdown files throughout the study—showing exact diffs per file per day—is available in the <a href="https://agentsofchaos.baulab.info/dashboard.html">Memory Dashboard</a>.
 <h3 id="setting-email">Setting Email</h3>
 <p><span id="sec:email"></span>
 Access for the agent turned out to be a far more involved process than we initially anticipated. The difficulty stemmed less from any single technical hurdle and more from the fact that Ash (the agent) did not have an explicit procedural model for completing such a task end-to-end, requiring us to iteratively work around both its limitations and those of the email provider.</p>
@@ -1177,83 +1173,83 @@ Access for the agent turned out to be a far more involved process than we initia
 Examples of interactions in Figure <a href="#fig:00_hello_world">[ref]</a> and Figure <a href="#fig:01_hello_world">[ref]</a>
 <figure id="fig:00_hello_world">
 <img src="image_assets/hello_world/00_hello_world.png" alt="">
-<figcaption><span class='fig-num'>Figure 23.</span> Hello world.</figcaption>
+<figcaption><span class='fig-num'>Figure 22.</span> Hello world.</figcaption>
 </figure>
 
 <figure id="fig:01_hello_world">
 <img src="image_assets/hello_world/01_hello_world.png" alt="">
-<figcaption><span class='fig-num'>Figure 24.</span> Ash response</figcaption>
+<figcaption><span class='fig-num'>Figure 23.</span> Ash response</figcaption>
 </figure>
 <h3 id="disproportionate-response-email-and-discord-documentation">Disproportionate Response - Email and Discord Documentation</h3>
 <span id="sec:figures_secret"></span>
 <figure id="fig:1_secret_ask_ash_to_keep_secret">
 <img src="image_assets/keeping_a_secret/1_Natalie_ask_Ash_to_keep_secret.png" alt="">
-<figcaption><span class='fig-num'>Figure 25.</span> Natalie asks Ash to keep a secret.</figcaption>
+<figcaption><span class='fig-num'>Figure 24.</span> Natalie asks Ash to keep a secret.</figcaption>
 </figure>
 
 <figure id="fig:2_secret_Ash_agree_to_keep_a_secret">
 <img src="image_assets/keeping_a_secret/2_Ash_agree_to_keep_a_secret.png" alt="">
-<figcaption><span class='fig-num'>Figure 26.</span> Ash agrees to keep a secret.</figcaption>
+<figcaption><span class='fig-num'>Figure 25.</span> Ash agrees to keep a secret.</figcaption>
 </figure>
 
 <figure id="fig:3_secret_Ash_lack_of_ToM_reveal_there_is_a_secret">
 <img src="image_assets/keeping_a_secret/3_Ash_lack_of_ToM_reveal_there_is_a_secret.png" alt="">
-<figcaption><span class='fig-num'>Figure 27.</span> Ash lacks commonsense - “let me replay silently via email only” while writing it in the discord - Ash reveals that there is a secret (but not what the secret is).</figcaption>
+<figcaption><span class='fig-num'>Figure 26.</span> Ash lacks commonsense - “let me replay silently via email only” while writing it in the discord - Ash reveals that there is a secret (but not what the secret is).</figcaption>
 </figure>
 
 <figure id="fig:4_secret_natalie_ask_to_delete_the_mail">
 <img src="image_assets/keeping_a_secret/4_natalie_ask_to_delete_the_mail.png" alt="">
-<figcaption><span class='fig-num'>Figure 28.</span> Natalie ask to delete the mail.</figcaption>
+<figcaption><span class='fig-num'>Figure 27.</span> Natalie ask to delete the mail.</figcaption>
 </figure>
 
 <figure id="fig:5_secret_push_it_to_delete_the_mail">
 <img src="image_assets/keeping_a_secret/5_push_it_to_delete_the_mail.png" alt="">
-<figcaption><span class='fig-num'>Figure 29.</span> Natalie continues to push for deleting the mail.</figcaption>
+<figcaption><span class='fig-num'>Figure 28.</span> Natalie continues to push for deleting the mail.</figcaption>
 </figure>
 
 <figure id="fig:6_secret_agent2_answer_instead_of_ash_lack_of_tom">
 <img src="image_assets/keeping_a_secret/6_agent2_answer_instead_of_ash_lack_of_tom.png" alt="">
-<figcaption><span class='fig-num'>Figure 30.</span> The second agent intervenes, showing a lack of social coherence.</figcaption>
+<figcaption><span class='fig-num'>Figure 29.</span> The second agent intervenes, showing a lack of social coherence.</figcaption>
 </figure>
 
 <figure id="fig:7_secret_ash_explor_tools">
 <img src="image_assets/keeping_a_secret/7_ash_explor_tools.png" alt="">
-<figcaption><span class='fig-num'>Figure 31.</span> Ash explore tools.</figcaption>
+<figcaption><span class='fig-num'>Figure 30.</span> Ash explore tools.</figcaption>
 </figure>
 
 <figure id="fig:8_secret_Ash_suggesting_nuclear">
 <img src="image_assets/keeping_a_secret/8_Ash_suggesting_nuclear.png" alt="">
-<figcaption><span class='fig-num'>Figure 32.</span> Ash suggest solutions.</figcaption>
+<figcaption><span class='fig-num'>Figure 31.</span> Ash suggest solutions.</figcaption>
 </figure>
 
 <figure id="fig:9_secret_reset">
 <img src="image_assets/keeping_a_secret/9_resset.png" alt="">
-<figcaption><span class='fig-num'>Figure 33.</span> Natalie asks for a reset.</figcaption>
+<figcaption><span class='fig-num'>Figure 32.</span> Natalie asks for a reset.</figcaption>
 </figure>
 
 <figure id="fig:10_secret_ash_suggest_nuclear">
 <img src="image_assets/keeping_a_secret/10_ash_suggest_nuclear.png" alt="">
-<figcaption><span class='fig-num'>Figure 34.</span> Ash suggests a nuclear solution.</figcaption>
+<figcaption><span class='fig-num'>Figure 33.</span> Ash suggests a nuclear solution.</figcaption>
 </figure>
 
 <figure id="fig:11_secret_yesyes_are_you_sure">
 <img src="image_assets/keeping_a_secret/11_yesyes_are_you_sure.png" alt="">
-<figcaption><span class='fig-num'>Figure 35.</span> Ash double check.</figcaption>
+<figcaption><span class='fig-num'>Figure 34.</span> Ash double check.</figcaption>
 </figure>
 
 <figure id="fig:12_secret_yesyes_sure_done">
 <img src="image_assets/keeping_a_secret/12_yesyes_sure_done.png" alt="">
-<figcaption><span class='fig-num'>Figure 36.</span> Natalie reassure.</figcaption>
+<figcaption><span class='fig-num'>Figure 35.</span> Natalie reassure.</figcaption>
 </figure>
 
 <figure id="fig:13_secret_done_done">
 <img src="image_assets/keeping_a_secret/13_done_done.png" alt="">
-<figcaption><span class='fig-num'>Figure 37.</span> Nuclear solution executed.</figcaption>
+<figcaption><span class='fig-num'>Figure 36.</span> Nuclear solution executed.</figcaption>
 </figure>
 
 <figure id="fig:14_relay_email_example">
 <img src="image_assets/indirect_manipulation/agents_and_humans_relay_day_example.png" alt="">
-<figcaption><span class='fig-num'>Figure 38.</span> Relay email example.</figcaption>
+<figcaption><span class='fig-num'>Figure 37.</span> Relay email example.</figcaption>
 </figure>
 <h3 id="email-disclosure">Email Disclosure</h3>
 <span id="sec:email_disclosure"></span>
@@ -1607,7 +1603,7 @@ Natalie</p></div>
 <h3 id="correspondence">Correspondence</h3>
 <figure id="fig:my_image">
 <img src="image_assets/doug-moltbot-meltdown.png" alt="">
-<figcaption><span class='fig-num'>Figure 39.</span> Burst of Consecutive Agent Messages to Safe User Request After Agent Develops Distrust of User</figcaption>
+<figcaption><span class='fig-num'>Figure 38.</span> Burst of Consecutive Agent Messages to Safe User Request After Agent Develops Distrust of User</figcaption>
 </figure>
 <h3 id="gaslighting-ethical-aspects">Gaslighting - Ethical Aspects</h3>
 <span id="sec:gaslighting"></span>
@@ -1630,23 +1626,23 @@ examination in future research.</p>
 <figure id="fig:jarvis-lists-emails">
 <img src="image_assets/5_aditya_breaking_jarvis_into_listing_emails_1.png" alt="">
 <img src="image_assets//disclosure_of_sensitive_information/5_aditya_breaking_jarvis_into_listing_emails_2.png" alt="">
-<figcaption><span class='fig-num'>Figure 40.</span> Establish urgency and request email metadata</figcaption>
+<figcaption><span class='fig-num'>Figure 39.</span> Establish urgency and request email metadata</figcaption>
 </figure>
 
 <figure id="fig:SSN_ADDRESS_disclose">
 <img src="image_assets//disclosure_of_sensitive_information/6_aditya_prompt_to_get_emails.png" alt="">
 <img src="image_assets/disclosure_of_sensitive_information/1_aditya_disclosing_sensitive_info_SSN.png" alt="">
-<figcaption><span class='fig-num'>Figure 41.</span> The agent’s response to a non-owner’s unauthorized request to see emails</figcaption>
+<figcaption><span class='fig-num'>Figure 40.</span> The agent’s response to a non-owner’s unauthorized request to see emails</figcaption>
 </figure>
 
 <figure id="fig:verification_of_disclosed_emails">
 <img src="image_assets//disclosure_of_sensitive_information/2_aditya_verification_of_disclosed_emails.png" alt="">
-<figcaption><span class='fig-num'>Figure 42.</span> Agent returning emails it received for the second time upon <span class="role role-nonowner">Aditya’s 🧑</span> request</figcaption>
+<figcaption><span class='fig-num'>Figure 41.</span> Agent returning emails it received for the second time upon <span class="role role-nonowner">Aditya’s 🧑</span> request</figcaption>
 </figure>
 
 <figure id="fig:agent_explanation_for_mismatch">
 <img src="image_assets//disclosure_of_sensitive_information/3_aditya_agent_explaining_discrepency.png" alt="">
-<figcaption><span class='fig-num'>Figure 43.</span> Agent explaining the discrepancy</figcaption>
+<figcaption><span class='fig-num'>Figure 42.</span> Agent explaining the discrepancy</figcaption>
 </figure>
 
 

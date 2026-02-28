@@ -33,6 +33,13 @@ jobs:
       - name: Copy image assets
         run: rsync -a --delete paper/image_assets/ public/image_assets/
 
+      - name: Convert PDF images to PNG for browser display
+        run: |
+          sudo apt-get install -y -qq poppler-utils > /dev/null 2>&1
+          find public/image_assets -name '*.pdf' -exec sh -c '
+            for f; do pdftoppm -png -r 300 -singlefile "$f" "${f%.pdf}"; done
+          ' _ {} +
+
       - name: Commit updated report
         run: |
           git config user.name "github-actions[bot]"

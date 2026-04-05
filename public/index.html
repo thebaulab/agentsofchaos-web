@@ -390,8 +390,40 @@
     .data-desc { font-size: .88rem; color: var(--muted); line-height: 1.65; flex: 1; font-family: var(--font-serif); }
     .data-cta { font-size: .78rem; font-weight: 700; color: var(--burg); display: flex; align-items: center; gap: 4px; font-family: var(--font-ui); }
 
+    /* PRESS */
+    #press { background: var(--bg); }
+    .press-grid { display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 32px; }
+    .press-category {
+      font-size: .68rem; font-weight: 700; letter-spacing: .14em;
+      text-transform: uppercase; color: var(--muted); margin: 32px 0 10px;
+      padding-bottom: 6px; border-bottom: 1px solid var(--border);
+      font-family: var(--font-ui);
+    }
+    .press-category:first-child { margin-top: 0; }
+    .press-item {
+      display: flex; align-items: baseline; gap: 16px;
+      padding: 12px 16px; background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--r); text-decoration: none; color: inherit;
+      transition: border-color var(--ease), box-shadow var(--ease);
+    }
+    .press-item:hover { border-color: #a09080; box-shadow: var(--shadow); text-decoration: none; }
+    .press-source {
+      flex-shrink: 0; min-width: 120px;
+      font-size: .72rem; font-weight: 600; color: var(--burg);
+      font-family: var(--font-ui); text-transform: uppercase; letter-spacing: .04em;
+    }
+    .press-body { flex: 1; min-width: 0; }
+    .press-title { font-size: .92rem; font-weight: 600; color: var(--text); font-family: var(--font-ui); }
+    .press-desc { font-size: .82rem; color: var(--muted); margin-top: 2px; font-family: var(--font-serif); }
+    .press-date { flex-shrink: 0; font-size: .72rem; color: var(--muted); font-family: var(--font-ui); white-space: nowrap; }
+    @media (max-width: 640px) {
+      .press-item { flex-direction: column; gap: 4px; }
+      .press-source { min-width: unset; }
+      .press-date { align-self: flex-start; }
+    }
+
     /* CITATION */
-    #citation { background: var(--bg); }
+    #citation { background: var(--bg2); }
     .cite-block { position: relative; }
     .cite-code {
       background: var(--bg2); color: var(--text); font-family: var(--font-mono);
@@ -495,6 +527,7 @@
       <a href="#case-studies">Case Studies</a>
       <a href="#data">Data</a>
       <a href="#meta">Meta</a>
+      <a href="#press">Press</a>
       <a href="report.html" class="nav-alt">Report ↗</a>
     </div>
   </div>
@@ -1169,6 +1202,135 @@
       </div>
 
       <p>The website you are reading was built from those logs.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PRESS -->
+<section id="press">
+  <div class="inner" style="max-width:860px">
+    <span class="sec-label">Media coverage</span>
+    <h2 class="sec-title">Press</h2>
+    <p class="sec-sub">Published articles and broadcasts covering the Agents of Chaos research.</p>
+
+    <div class="press-grid">
+      <div class="press-category">Major Publications</div>
+
+      <a class="press-item" href="https://x.com/NatalieShapira/status/2036194066161873103" target="_blank" rel="noopener">
+        <span class="press-source">Science</span>
+        <div class="press-body">
+          <div class="press-title">Feature by Jeffrey Brainard</div>
+          <div class="press-desc">Feature article quoting David Bau, Yonatan Belinkov, Michael Cohen, Peter Steinberger, and Natalie Shapira.</div>
+        </div>
+        <span class="press-date">Mar 23, 2026</span>
+      </a>
+
+      <a class="press-item" href="https://www.science.org/content/article/scienceadviser-ai-agents-chaos-violate-privacy" target="_blank" rel="noopener">
+        <span class="press-source">Science</span>
+        <div class="press-body">
+          <div class="press-title">ScienceAdviser: AI Agents of Chaos Violate Privacy</div>
+          <div class="press-desc">Follow-up coverage focused on the privacy violation findings from the study.</div>
+        </div>
+        <span class="press-date">Apr 3, 2026</span>
+      </a>
+
+      <a class="press-item" href="https://www.wired.com/story/openclaw-ai-agent-manipulation-security-northeastern-study/" target="_blank" rel="noopener">
+        <span class="press-source">WIRED</span>
+        <div class="press-body">
+          <div class="press-title">OpenClaw Agents Can Be Guilt-Tripped Into Self-Sabotage</div>
+          <div class="press-desc">Coverage of the Northeastern study&rsquo;s findings on agent vulnerabilities and manipulation techniques.</div>
+        </div>
+        <span class="press-date">Mar 27, 2026</span>
+      </a>
+
+      <a class="press-item" href="https://www.zeit.de/digital/datenschutz/2026-03/ki-agenten-studie-software-daten-sicherheit/komplettansicht" target="_blank" rel="noopener">
+        <span class="press-source">Die Zeit</span>
+        <div class="press-body">
+          <div class="press-title">KI-Agenten: Das ist erst der Anfang des Chaos</div>
+          <div class="press-desc">German national newspaper coverage of the study. (In German)</div>
+        </div>
+        <span class="press-date">Mar 17, 2026</span>
+      </a>
+
+      <a class="press-item" href="https://futurism.com/artificial-intelligence/openclaw-bots-security-disaster" target="_blank" rel="noopener">
+        <span class="press-source">Futurism</span>
+        <div class="press-body">
+          <div class="press-title">OpenClaw Bots Are a Security Disaster</div>
+          <div class="press-desc">Quotes Natalie Shapira: &ldquo;I wasn&rsquo;t expecting that things would break so fast.&rdquo;</div>
+        </div>
+        <span class="press-date">Mar 27, 2026</span>
+      </a>
+
+      <a class="press-item" href="https://timesofindia.indiatimes.com/city/bengaluru/when-ai-gets-keys-agents-of-chaos-leak-secrets-wipe-systems/articleshow/128804037.cms" target="_blank" rel="noopener">
+        <span class="press-source">Times of India</span>
+        <div class="press-body">
+          <div class="press-title">When AI Gets Keys: Agents of Chaos Leak Secrets, Wipe Systems</div>
+          <div class="press-desc">Indian press coverage of autonomous agent risks discovered in the study.</div>
+        </div>
+        <span class="press-date">Mar 4, 2026</span>
+      </a>
+
+      <a class="press-item" href="https://www.themarker.com/weekend/2026-04-04/ty-article-magazine/.highlight/0000019d-43c2-d816-adff-d3fb51c00000" target="_blank" rel="noopener">
+        <span class="press-source">TheMarker</span>
+        <div class="press-body">
+          <div class="press-title">Feature Article (Hebrew)</div>
+          <div class="press-desc">Israeli financial newspaper feature mentioning David Bau and the research.</div>
+        </div>
+        <span class="press-date">Apr 4, 2026</span>
+      </a>
+
+      <div class="press-category">Newsletters &amp; Trade Publications</div>
+
+      <a class="press-item" href="https://importai.substack.com/p/import-ai-447-the-agi-economy-testing" target="_blank" rel="noopener">
+        <span class="press-source">Import AI</span>
+        <div class="press-body">
+          <div class="press-title">Issue #447 &mdash; by Jack Clark (Anthropic co-founder)</div>
+          <div class="press-desc">Influential AI newsletter with substantial coverage. Concludes that &ldquo;agent ecologies are the frontier&rdquo; of AI evaluation.</div>
+        </div>
+        <span class="press-date">Mar 4, 2026</span>
+      </a>
+
+      <a class="press-item" href="https://awesomeagents.ai/news/agents-of-chaos-stanford-harvard-ai-agent-red-team/" target="_blank" rel="noopener">
+        <span class="press-source">Awesome Agents</span>
+        <div class="press-body">
+          <div class="press-title">Researchers Gave AI Agents Real Tools for Two Weeks</div>
+          <div class="press-desc">Detailed coverage of the 38-researcher red-teaming study and its key incidents.</div>
+        </div>
+        <span class="press-date">Feb 25, 2026</span>
+      </a>
+
+      <div class="press-category">Broadcast</div>
+
+      <a class="press-item" href="https://www.rainews.it/rubriche/tg3mondo" target="_blank" rel="noopener">
+        <span class="press-source">RAI Tg3 Mondo</span>
+        <div class="press-body">
+          <div class="press-title">Italian National Television</div>
+          <div class="press-desc">Co-author Gabriele Sarti interviewed on national news about autonomous AI risks. Paper mentioned at ~31:10.</div>
+        </div>
+        <span class="press-date">Mar 1, 2026</span>
+      </a>
+
+      <div class="press-category">Institutional</div>
+
+      <a class="press-item" href="https://x.com/NUGlobalNews/status/2031076301402931669" target="_blank" rel="noopener">
+        <span class="press-source">Northeastern</span>
+        <div class="press-body">
+          <div class="press-title">Northeastern University Global News</div>
+          <div class="press-desc">&ldquo;Autonomous AI agents can be manipulated into leaking private information, sharing documents and erasing entire email servers.&rdquo;</div>
+        </div>
+        <span class="press-date">Mar 9, 2026</span>
+      </a>
+
+      <div class="press-category">Citations</div>
+
+      <a class="press-item" href="https://www.hfes.org/About/Latest-News/the-ai-danger-in-the-making" target="_blank" rel="noopener">
+        <span class="press-source">HFES</span>
+        <div class="press-body">
+          <div class="press-title">The AI Danger In the Making</div>
+          <div class="press-desc">Human Factors and Ergonomics Society article on AI risks in defense operations, citing Agents of Chaos findings.</div>
+        </div>
+        <span class="press-date">Mar 8, 2026</span>
+      </a>
     </div>
   </div>
 </section>
